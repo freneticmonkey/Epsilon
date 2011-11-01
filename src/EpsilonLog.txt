@@ -1,0 +1,7 @@
+21:24:45: Initialising Core Systems
+21:24:45: Initialised EventCore
+21:24:45: Created ScriptManager
+21:24:45: Texture Loaded: /Users/scottporter/Development/Projects/python_tests/my_projects/src/Epsilon/src/UnitTests/checkerboard64.png
+21:24:54: Finished
+21:24:54: EventCore Shutdown
+21:24:54: Logger Shutdown

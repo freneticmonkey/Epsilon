@@ -1,0 +1,5 @@
+12:46:52: Initialised EventCore
+12:46:52: Initialised EventCore
+12:46:52: EventCore Shutdown
+12:46:52: EventCore Shutdown
+12:46:52: Logger Shutdown
