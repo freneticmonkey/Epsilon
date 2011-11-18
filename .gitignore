@@ -2,3 +2,11 @@
 Thumbs.db
 .DS_Store
 docs/research
+
+src/EpsilonLog.txt
+
+.settings/org.eclipse.wst.html.core.prefs
+
+EpsilonLog.txt
+
+src/Environment
