@@ -131,7 +131,7 @@ class EpsilonCore:
 #        octo2.AddChild(octo3)
         
         # Add a red light
-        if True:
+        if False:
             red_light = GLLight()
             red_light.diffuse = Preset.red
             red_light.specular = Preset.red
@@ -147,21 +147,21 @@ class EpsilonCore:
             root.AddChild(blue_light)
         
         # Add a light
-        light = GLLight(name="light")#Node(name="light")
-        light.attenuation = 0.25
-#        light.local_position = Vector3(0, 0.5, 0)
-#        light.AddScript(MoveController())
-
-        marker = Node(name="marker")
-        marker.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
-        marker.local_scale = Vector3(0.2, 0.2, 0.2)
-        marker.material = GLMaterial()
-        marker.material.shader = "comp_lighting"
-        light.AddChild(marker)
-
-#        root.AddChild(light)
-        light.local_position = Vector3(0, 0.0, 10)
-        camera.AddChild(light)
+#        light = GLLight(name="light")#Node(name="light")
+#        light.attenuation = 0.01
+##        light.local_position = Vector3(0, 0.5, 0)
+##        light.AddScript(MoveController())
+#
+#        marker = Node(name="marker")
+#        marker.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
+#        marker.local_scale = Vector3(0.2, 0.2, 0.2)
+#        marker.material = GLMaterial()
+#        marker.material.shader = "comp_lighting"
+#        light.AddChild(marker)
+#
+##        root.AddChild(light)
+#        light.local_position = Vector3(0, 0.0, 10)
+#        camera.AddChild(light)
 
         hidetail = Node()
         hidetail.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
@@ -189,6 +189,47 @@ class EpsilonCore:
         ground.material.shader = "comp_lighting"
         ground.material.texture = sstex
         root.AddChild(ground)
+        
+        # Left Plane
+        left = Node()
+        left.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+        left.local_scale = Vector3(10,1,10)
+        left.local_rotation = Quaternion().new_rotate_axis(1.5707, Vector3(0,0,1) )
+        left.local_position = Vector3(5,5,0)
+        left.material = GLMaterial()
+        left.material.shader = "comp_lighting"
+        left.material.texture = sstex
+        root.AddChild(left)
+        
+        right = Node()
+        right.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+        right.local_scale = Vector3(10,1,10)
+        right.local_rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(0,0,1) )
+        right.local_position = Vector3(-5,5,0)
+        right.material = GLMaterial()
+        right.material.shader = "comp_lighting"
+        right.material.texture = sstex
+        root.AddChild(right)
+        
+        rear = Node()
+        rear.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+        rear.local_scale = Vector3(10,1,10)
+        rear.local_rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(1,0,0) )
+        rear.local_position = Vector3(0,5,5)
+        rear.material = GLMaterial()
+        rear.material.shader = "comp_lighting"
+        rear.material.texture = sstex
+        root.AddChild(rear)
+        
+        top = Node()
+        top.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+        top.local_scale = Vector3(10,1,10)
+        top.local_rotation = Quaternion().new_rotate_axis(-3.141562, Vector3(1,0,0) )
+        top.local_position = Vector3(0,10,0)
+        top.material = GLMaterial()
+        top.material.shader = "comp_lighting"
+        top.material.texture = sstex
+        root.AddChild(top)
         
 #        # Scripts that run in the scene
         scene_scripts = Node()
