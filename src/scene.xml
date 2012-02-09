@@ -1,0 +1,22 @@
+<scene name="basic_scene">
+	<camera>
+		<transform position="2 1 -10" rotation="0 0 0 0" scale="1 1 1"/>		
+	</camera>
+	<light>
+		<transform position="2 1 -10"/>
+		<colour diffuse="1.0 1.0 1.0 1.0"/>
+		<attenuation value="1.0"/>
+	</light>
+	<node>
+		<transform position="0 0 0" rotation="0 0 0 0" scale="1 1 1"/>
+		<mesh preset="CUBE"/>
+	</node>
+	<node>
+		<transform position="1 0 0"/>
+		<children>
+			<node>
+				<mesh preset="OCTOHEDRON"/>
+			</node>
+		</children>
+	</node>
+</scene>
