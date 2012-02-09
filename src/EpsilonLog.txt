@@ -1,7 +1,0 @@
-22:38:44: Initialising Core Systems
-22:38:44: Initialised EventCore
-22:38:45: Created ScriptManager
-22:38:45: TextureERROR: Texture file /Users/scottporter/Development/Projects/python_tests/my_projects/src/Epsilon/src/UnitTests/checkerboard64.png doesn't exist
-22:39:26: Finished
-22:39:26: EventCore Shutdown
-22:39:26: Logger Shutdown
