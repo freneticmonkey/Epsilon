@@ -22,7 +22,7 @@ varying vec3 baseNormal;
 //                    );
 
 // Vertex-shader pre-calculation for lighting...
-void phong_preCalc( 
+vec3 phong_preCalc( 
                    in vec3 vertex_position,
                    in vec4 light_position,
                    out float light_distance,
@@ -37,6 +37,8 @@ void phong_preCalc(
     // light_distance -- output giving world-space distance-to-light 
     // ec_light_location -- output giving location of light in eye coords 
     // ec_light_half -- output giving the half-vector optimization
+    vec3 ms_vec;
+    
     if (light_position.w == 0.0) 
     {
         // directional rather than positional light...
@@ -51,7 +53,7 @@ void phong_preCalc(
         // positional light, we calculate distance in 
         // model-view space here, so we take a partial 
         // solution...
-        vec3 ms_vec = (
+        ms_vec = (
                        light_position.xyz -
                        vertex_position
                        );
@@ -63,9 +65,10 @@ void phong_preCalc(
     ec_light_half = normalize(
                               ec_light_location + vec3( 0,0,1 )
                               );
+    return ms_vec;
 }
 
-void light_preCalc( in vec3 vertex_position ) 
+void light_preCalc( in vec3 vertex_position, out vec3 dist_vec ) 
 {
     // This function is dependent on the uniforms and 
     // varying values we've been using, it basically 
@@ -75,7 +78,7 @@ void light_preCalc( in vec3 vertex_position )
     for (int i = 0; i< LIGHT_COUNT; i++ ) 
     {
         int j = i * LIGHT_SIZE;
-        phong_preCalc(
+        dist_vec = phong_preCalc(
                       vertex_position,
                       lights[j+POSITION],
                       // following are the values to fill in...
@@ -88,11 +91,20 @@ void light_preCalc( in vec3 vertex_position )
 
 attribute vec3 Vertex_position;
 attribute vec3 Vertex_normal;
+
+//varying vec3 N;
+varying vec4 v;
+varying vec3 dist_vec;
+
 void main() 
 {
+    
+    //v = gl_ModelViewMatrix * gl_Vertex;//vec4(gl_Vertex,1.0));
     gl_Position = gl_ModelViewProjectionMatrix * vec4( 
                                                       Vertex_position, 1.0
                                                       );
+    v = gl_Position;
     baseNormal = gl_NormalMatrix * normalize(Vertex_normal);
-    light_preCalc(Vertex_position);
+    light_preCalc(Vertex_position, dist_vec);
+    
 }
