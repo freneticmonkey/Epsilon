@@ -20,10 +20,10 @@ def DrawNode(node):
         glPushMatrix()
             
         # Translate    
-        glTranslate(*node.local_position)
+        glTranslate(*node.position)
         
         # Rotate
-        glMultMatrixf(matrix_type(*node.local_rotation.get_matrix()))
+        glMultMatrixf(matrix_type(*node.rotation.get_matrix()))
         
         # Scale
         glScalef(*node.local_scale)

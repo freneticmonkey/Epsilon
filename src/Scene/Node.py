@@ -3,30 +3,31 @@
 	Note: The Transform code has been ported from OGRE www.ogre3d.org
 
 """
-
+from Scripting.ScriptManager import ScriptManager
 
 from Geometry.euclid import Vector3, Quaternion, Matrix4
 from Scripting.ScriptManager import ScriptManager
 from Render.MeshFactory import *
-
-_next_id = 0
+from Render.Material import GLMaterial
 
 class Space:
 	SELF = 0
 	WORLD = 1
 	PARENT = 2
 
-def GetId():
-	global _next_id
-	_next_id += 1
-	return _next_id
-
 class Node(object):
+	
+	_next_id = 0
+	
+	@classmethod
+	def get_id(cls):
+		cls._next_id += 1
+		return cls._next_id
 	
 	def __init__(self, name=None, pos=None, rot=None, scale=None, parent=None):
 		
 		# Node Properties
-		self._id = GetId()
+		self._id = Node.get_id()
 		
 		# Generate a name if one has not been supplied
 		if not name:
@@ -75,14 +76,20 @@ class Node(object):
 		self._forward = Vector3(0,0,1)
 		self._up = Vector3(0,1,0)
 		self._right = Vector3(1,0,0)
-		
+				
 		# Bounds?
+		
+		# Setup Default Material
+		self._material = GLMaterial()
+		self._material.shader = "phong"
+		
+		# No default texture for now		
 	
 	# If deleted
 	def __del__(self):
 		# Kill any scripts
 		for script in self._scripts:
-			ScriptManager.GetInstance().RemoveScript(script)
+			ScriptManager.get_instance().RemoveScript(script)
 		
 		# Detach any children
 		for child in self._children:
@@ -97,7 +104,7 @@ class Node(object):
 	# Node Property access
 	
 	@property
-	def id(self):
+	def node_id(self):
 		return self._id
 	
 	@property
@@ -190,7 +197,7 @@ class Node(object):
 	def GetChildWithId(self, id):
 		ret_child = None
 		for child in self._children:
-			if child.id == id:
+			if child.node_id == id:
 				ret_child = child
 				break
 		return ret_child
@@ -239,7 +246,7 @@ class Node(object):
 			# Update only the children that have requested updates
 			for id in self._children_to_update:
 				for child_node in self._children:
-					if id == child_node.id:
+					if id == child_node.node_id:
 						child_node._Update(True,False)
 						break
 			self._children_to_update = []
@@ -287,7 +294,7 @@ class Node(object):
 		
 		# if this not is not the root and the parent hasn't already been notified
 		if self._parent and ( not self._parent_notified or self._force_parent_update):
-			self._parent.RequestUpdate(self.id, force_parent_update)
+			self._parent.RequestUpdate(self.node_id, force_parent_update)
 			self._parent_notified = True
 		
 		# All children will be updated
@@ -302,7 +309,7 @@ class Node(object):
 		self._children_to_update.append(child_node_id)
 		# Request selective update of this node, if it hasn't already been done
 		if self._parent and (not self._parent_notified or self._force_parent_update):
-			self._parent.RequestUpdate(self.id, force_parent_update)
+			self._parent.RequestUpdate(self.node_id, force_parent_update)
 			self._parent_notified = True
 			
 	# Cancel an update for a child node
@@ -311,22 +318,24 @@ class Node(object):
 		
 		# Propagate this up the hierarchy if we are done
 		if len(self._children_to_update) == 0 and self._parent and not self._need_child_update:
-			self._parent.CancelUpdate(self.id)
+			self._parent.CancelUpdate(self.node_id)
 			self._parent_notified = True
 	
 	# Transform properties
 	@property
 	def parent(self):
 		return self._parent
+	
+	# Positions are all relative.  using a local_ prefix is redundant.
 		
 	# get local position
 	@property
-	def local_position(self):
+	def position(self):
 		return self._local_position
 		
 	# set position relative to parent
-	@local_position.setter
-	def local_position(self, new_pos):
+	@position.setter
+	def position(self, new_pos):
 		# Calculate local position
 		self._local_position = new_pos# - self._parent_matrix.get_translation()
 		self._NeedUpdate()
@@ -336,19 +345,15 @@ class Node(object):
 	def world_position(self):
 		return self._world_position
 	
-	# Another world position access
-	@property
-	def position(self):
-		return self.world_position
 		
 	# get local rotation
 	@property
-	def local_rotation(self):
+	def rotation(self):
 		return self._local_rotation
 	
 	# set local rotation
-	@local_rotation.setter
-	def local_rotation(self, new_rot):
+	@rotation.setter
+	def rotation(self, new_rot):
 		self._local_rotation = new_rot
 		self._NeedUpdate()
 	
@@ -356,10 +361,6 @@ class Node(object):
 	@property
 	def world_rotation(self):
 		return self._world_rotation
-	
-	@property
-	def rotation(self):
-		return self.world_rotation
 		
 	# Get local scale
 	@property
