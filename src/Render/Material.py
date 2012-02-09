@@ -4,8 +4,8 @@ Created on Sep 22, 2011
 @author: scottporter
 '''
 from Render.Colour import Preset
-from Render import TextureManager
-from Render.ShaderManager import *
+from Render.TextureManager import TextureManager
+from Render.ShaderManager import ShaderManager
 from Render.GLUtilities import *
 from OpenGL.GL import *
  
@@ -78,7 +78,7 @@ class BaseMaterial(object):
     @texture.setter
     def texture(self, tex_name):
         # Get Texture from TextureManager
-        tex = TextureManager.GetTextureManager().GetTexture(tex_name)
+        tex = TextureManager.get_instance().get_texture(tex_name)
         if tex is not None:
             self._tex_obj = tex
             self._tex_name = tex_name
@@ -87,7 +87,9 @@ class GLMaterial(BaseMaterial):
     def __init__(self, ambient=None, diffuse=None, specular=None, emission=None, shininess=None):
         BaseMaterial.__init__(self, ambient, diffuse, specular, emission, shininess)
         
+        # Set default Shader        
         self._shader = None
+        self.shader = "phong"
         
     @property
     def shader(self):
@@ -98,7 +100,7 @@ class GLMaterial(BaseMaterial):
         # If the parameter is a string name of the shader
         if isinstance(new_shader, str):
             # Get the appropriate shader from the ShaderManager
-            self._shader = GetShaderManager().GetShader(new_shader)
+            self._shader = ShaderManager.get_instance().GetShader(new_shader)
         else:
             # Otherwise treat it as an instanced shader
             self._shader = new_shader
