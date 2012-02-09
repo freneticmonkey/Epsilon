@@ -1,7 +1,7 @@
 {\rtf1\ansi\ansicpg1252\cocoartf1138
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11760\viewh15020\viewkind0
+\paperw11900\paperh16840\margl1440\margr1440\vieww16600\viewh15020\viewkind0
 \deftab720
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
 
@@ -10,36 +10,49 @@
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
 
 \b0 \cf0 Immediate Goals\
-- Fix Spherical Mapping\
-- Create Repo and check code in.\
-\
-End of the week(end) goals\
-- Shaders. / Multi-texturing.\
-- Shadows? - Maybe near term instead\
+- Check in latest changes\
+- Swap existing Phong Renderer for a simpler model that actually uses a varying distance variable for proper attenuation\
 \
 Near-term goals\
-- Clean up code.  Refactor classes somewhat.\
-	- All Rendering code should go with the Renderer Object.\
-	- Scene Manager organisation.  Finds default/only camera. Performs basic frustum culling.\
-	- Make Objects easier to create.  Node or Mesh can be easily inherited from to generate new meshes.\
+- Clean up code.  Refactor classes somewhat. \
+	- This has been started.\
+	- All existing code has to have it's functions switched from CamelCase to python PEP standard. e.g.\
+		AddChild() to add_child()\
+\
+- All Rendering code should go with the Renderer Object.\
+	- Scene Manager organisation.  Finds default/only camera. -Done\
+	- Performs basic frustum culling. <---- Still needs to be done\
+	- Make Objects easier to create.  Node or Mesh can be easily inherited from to generate new meshes. <-- Still needs to be done\
+\
 \
 - Create GUI, Console, debugging tools.\
+	- GUI code could be boring.  Maybe just some button objects initially? <-- integrated PyUI, clunky but better than writing a bunch of UI code\
+	- Console - Embedding interactive python console with access to the scene <-- Done\
+	- Auto-reload if a source file changes.  Like the Django dev server\
 \
-- Define Scene format. XML? Write a loader.\
-- Model Importer, FBX, Collada or Obj.\
+- Start working towards developing the AI Sim system the engine was originally developed for.\
+	- Integrate Physics to aid with Ai calculations\
+	\
 \
-- Create a scene editor. Write an exporter!\
+Complicated Problems that aren't particularly fun to solve\
+---\
+	- Shadows? - This is pretty complicated and requires a restructuring of the Render class to get it to work correctly.  While this restructuring is occurring I could look at developing engine 'stages' whereby pre and post processing could be implemented.\
 \
 - Integrate pyODE.\
 \
 Long Term\
 - Networking, Verse Integration\
 - Basic Scene Editing functionality\
+	- Define Scene format. XML? Write a loader.\
+	- Model Importer, FBX, Collada or Obj.\
+	- Create a scene editor. Write an exporter!\
+- 3D UI. Change the UI and Renderer implementation to have 'Overlays' a'la Ogre3D and enable the UI to be drawn on planes which \
+  can be positioned in 3D space.\
 \
 - AI framework. Look at Recast and Detour for pathing libraries.\
 \
 Nice to have\
 \
 \
-\
+KH67*$kl\
 }
