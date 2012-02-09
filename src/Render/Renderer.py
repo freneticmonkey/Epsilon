@@ -1,5 +1,7 @@
-from Core.Window import Window
 import pygame
+
+from Core.Window import Window
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -7,12 +9,14 @@ from Logging import Logger
 from Geometry.euclid import Vector3
 
 from Render.Projection import Projection 
-from Scene import SceneManager
+from Scene.SceneManager import SceneManager
 from Scene import NodeDrawGL
 
 from Render.Font import *
 from Render.Shader import *
-from Render.ShaderManager import *
+from Render.ShaderManager import ShaderManager
+
+from UI.UIManager import UIManager
 
 import os
 
@@ -58,6 +62,7 @@ class GLRenderer(Renderer):
 		self._camera = None
 		self._print_font = None
 		self._shader_manager = None
+		self._ui_manager = None
 		
 		# Render Settings
 		self._wireframe = False
@@ -67,18 +72,39 @@ class GLRenderer(Renderer):
 		self._last_time = 0.0 
 		
 	def InitialiseDisplay(self, width, height, title):
+		pygame.init()
 		pygame.display.set_mode((width,height), pygame.OPENGL|pygame.DOUBLEBUF)
 		pygame.display.set_caption(title)
 		
 		# If there isn't a camera set get the active camera from the SceneManager
 		if self._camera is None:
 			#self._camera = SceneManager.GetSceneManager().root.GetChildWithName('camera')
-			self._camera = GetSceneManager().active_camera
+			self._camera = SceneManager.get_instance().active_camera
+			
+		self._ui_manager = UIManager.get_instance()
 		
 		# Create projection object
 		self._projection = Projection(width, height)
 		
 		# Initialise OpenGL Display
+		self.Setup3D()
+		
+		# Create the ShaderManager
+		self._shader_manager = ShaderManager.get_instance()
+		
+		self._print_font = font_data("/Library/Fonts/Arial.ttf", 16)
+		
+		# Get the Scene Root
+		self._scene_root = SceneManager.get_instance().root
+		
+		# Get the camera
+		self._camera = self._scene_root.GetChildWithName("camera")
+		
+		# Indicate that the renderer has finished initialising
+		self._has_initialised = True
+	
+	def Setup3D(self):
+		# Configure OpenGL Settings for drawing 3D
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_POLYGON_SMOOTH)
 		glEnable(GL_BLEND)
@@ -94,30 +120,25 @@ class GLRenderer(Renderer):
 		glCullFace(GL_BACK)
 		glEnable(GL_CULL_FACE)
 				
-		# Clear to Black
-#		glClearColor(0.0, 0.0, 0.0, 1.0)
+		# Clear to Light Blue
 		glClearColor(180/255, 218/255, 1.0, 1.0)
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		
-		# Create the ShaderManager
-		self._shader_manager = GetShaderManager()
+		if self._wireframe:
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+		else:
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 		
-		self._print_font = font_data("/Library/Fonts/Arial.ttf", 16)
-		
-		# Get the Scene Root
-		self._scene_root = GetSceneManager().root
-		
-		# Get the camera
-		self._camera = self._scene_root.GetChildWithName("camera")
-		
-		# Indicate that the renderer has finished initialising
-		self._has_initialised = True
+	def Teardown3D(self):
+		glDisable(GL_CULL_FACE)
 		
 	def LoadMeshes(self, Nodes=[]):
 		# Load the meshes from the Scene
 		pass
 		
 	def DrawMeshes(self):
+		# Set 3D Drawing settings
+		self.Setup3D()
 		
 		#execute the camera's look at
 		self._camera.LookAt()
@@ -131,6 +152,7 @@ class GLRenderer(Renderer):
 		# Draw the scene meshes here
 		NodeDrawGL.DrawNode(self._scene_root)
 		
+		self.Teardown3D()
 		#glEnd()
 		
 	def DrawGUI(self):
@@ -144,11 +166,13 @@ class GLRenderer(Renderer):
 		self._print_font.glPrint(5, 35, "Pos: %s" % str(self._camera.position))
 		self._print_font.glPrint(5, 20, "Ori: %s" % str(self._camera.rotation))
 #		fps = ((1/Time.deltaTime))
-		fps = 1 / (Time.deltaTime * 0.9) + (self._last_time * 0.1)
-		self._last_time = Time.deltaTime
+		fps = 1 / (Time.delta_time * 0.9) + (self._last_time * 0.1)
+		self._last_time = Time.delta_time
 		
 		#self._print_font.glPrint(5, 5, "FPS: %.2f" % fps) 
-		self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.GetFPS())
+		self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.Time.get_instance().get_fps())
+		
+		self._ui_manager.draw()
 		
 	def DrawGrid(self):
 		# Simple Grid for the time being
@@ -186,21 +210,7 @@ class GLRenderer(Renderer):
 		if not self._has_initialised:
 			Logger.Log("RENDER ERROR: Render hasn't been initialised")
 			return
-		
-		
-		if self._wireframe:
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-		else:
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-		
-		
-		# Clear to Black
-#		glClearColor(0.0, 0.0, 0.0, 1.0)
-		glClearColor(160/255, 200/255, 1.0, 1.0)
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-#		glLoadIdentity()
-
-		
+				
 		# Set Projection
 		self._projection.SetPerspective(45)
 		
@@ -212,8 +222,8 @@ class GLRenderer(Renderer):
 #		glFlush()
 		
 		self.DrawGUI()
-		
-		self._flip()
+				
+		#self._flip()
 		
 	@property
 	def wireframe(self):
