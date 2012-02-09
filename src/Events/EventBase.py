@@ -1,4 +1,4 @@
-from Events.EventCore import *
+from Events.EventManager import EventManager
 
 
 class EventBase:
@@ -20,6 +20,6 @@ class EventBase:
         return self._isHandled
  
     def Send(self):
-        GetEventCore().FireEvent(self)
+        EventManager.get_instance().FireEvent(self)
         
     

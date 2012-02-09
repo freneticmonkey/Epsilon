@@ -1,7 +1,7 @@
 from Logging import Logger
-from Events.EventCore import *
+from Events.EventManager import EventManager
 
-class ListenerBase:
+class ListenerBase(object):
     def __init__(self, eventTypes):
         #The events that the listener will listen to
         self._EventTypes = eventTypes
@@ -20,7 +20,7 @@ class ListenerBase:
     	return self._EventTypes
  
     def _Register(self):
-        GetEventCore().AddListener(self)
+        EventManager.get_instance().AddListener(self)
         
     #These should only be called by the EventCore Object
     #
@@ -42,6 +42,8 @@ class ListenerBase:
         for newEvent in self._Events:
             if newEvent.name in self.event_types:
                 self._processEvent(newEvent)
+        # Clear events after checking
+        self._Events = []
         
     # This is called when the event list has been updated,
     # this will be overridden in inheriting classes
