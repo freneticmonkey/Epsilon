@@ -4,6 +4,9 @@ class Window(object):
 	def __init__(self):
 		self._width = 800
 		self._height = 600
+		
+		# Start PyGame
+		pygame.init()
 	
 	def __del__(self):
 		self.Shutdown()
@@ -19,9 +22,6 @@ class Window(object):
 	def Init(self, width, height):
 		self._width = width
 		self._height = height
-		
-		# Start PyGame
-		pygame.init()
 		
 		# Kick off initialisation of the Window
 		self.InitialiseDisplay(width, height)
