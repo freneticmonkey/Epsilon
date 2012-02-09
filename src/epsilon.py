@@ -1,10 +1,10 @@
-from Core.EpsilonCore import EpsilonCore
+from Core.EpsilonManager import EpsilonManager
 import sys, traceback
 
 if __name__ == "__main__":
         core = None
         try:
-                core = EpsilonCore()
+                core = EpsilonManager()
                 core.SetScene()
                 core.Run()
         except:
