@@ -18,6 +18,7 @@ from OpenGL.raw import GL
 from OpenGL.arrays import ArrayDatatype as ADT
 from OpenGL.arrays import vbo
 import numpy
+from Logging import Logger
 
 
 from Geometry.euclid import Vector3

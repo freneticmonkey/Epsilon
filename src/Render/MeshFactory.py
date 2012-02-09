@@ -108,12 +108,21 @@ class Polyhedra(object):
         e2 = size / 2
         verts = list(itertools.product(*repeat([-e2, +e2], 3)))
         faces = [
-            [0, 1, 3, 2], # left
-            [4, 6, 7, 5], # right
-            [7, 3, 1, 5], # front
-            [0, 2, 6, 4], # back
-            [3, 7, 6, 2], # top
-            [1, 0, 4, 5], # bottom
+            [0, 1, 3],
+            [3, 2, 0],#, 2], # left
+            [4, 6, 7],
+            [7, 5, 4],
+#            [4, 6, 7, 5], # right
+            [7, 3, 1],
+            [1, 5, 7],
+#            [7, 3, 1, 5], # front
+            [0, 2, 6],
+            [6, 4, 0],
+#            [0, 2, 6, 4], # back
+            [3, 7, 2], # top
+            [7, 6, 2],
+            [5, 1, 4], # bottom
+            [1, 0, 4]
         ]
         return verts, faces
     
@@ -228,6 +237,15 @@ class MeshTypes:
     SPHERE = 3
     CUBE = 4
     PLANE_HI = 5
+    
+class MeshTypesString:
+    MESHES = {"PLANE" : 0,
+              "OCTOHEDRON" : 1, 
+              "ICOHEDRON" : 2,
+              "SPHERE" : 3,
+              "CUBE" : 4,
+              "PLANE_HI" : 5,
+              }
 
 class MeshFactory(object):
     
