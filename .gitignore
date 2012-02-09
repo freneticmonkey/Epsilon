@@ -14,3 +14,13 @@ src/Environment
 media
 
 src/pyui
+
+src/profile.txt
+
+src/EpsilonLog.txt
+
+src/UnitTests/InteractiveConsoleTest.py
+
+src/UnitTests/InheritanceTest.py
+
+src/UnitTests/SingletonTest.py
