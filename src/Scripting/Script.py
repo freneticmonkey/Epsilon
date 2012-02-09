@@ -19,9 +19,7 @@ class Script(object):
         # This indicates whether Start has been called
         self._has_started = False
         
-        self._check_valid_node()
-        
-        self.input = Input.GetInput() 
+        self._check_valid_node() 
             
     # This function checks whether the Script is correctly attached
     # to a Node object or not.  This way the Script is only active
@@ -29,9 +27,9 @@ class Script(object):
     def _check_valid_node(self):
         if self._node:
             # Add the Script to the ScriptManager
-            ScriptManager.GetInstance().AddScript(self)
+            ScriptManager.get_instance().AddScript(self)
         else:
-            ScriptManager.GetInstance().RemoveScript(self)
+            ScriptManager.get_instance().RemoveScript(self)
         
     @property
     def name(self):

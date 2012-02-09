@@ -7,6 +7,8 @@ Created on Sep 17, 2011
 from Scene.Node import Node
 from Events.ListenerBase import *
 
+from Core.BaseManager import BaseSingleton
+
 # Events used by the SceneManager
 class SceneManagerEvents:
     events = ['CameraAdded',
@@ -19,16 +21,8 @@ class SceneManagerEvents:
 # This class holds all of the scenes objects.
 # It performs any scene culling on objects that don't need
 # to be sent to the Card
-#1
-_instance = None
 
-def GetSceneManager():
-    global _instance
-    if _instance is None:
-        _instance = SceneManager()
-    return _instance
-
-class SceneManager(object):
+class SceneManager(BaseSingleton):
     
     def __init__(self):
         self._root = None
@@ -109,7 +103,7 @@ class SceneManagerListener(ListenerBase):
 
     def __init__(self):
         ListenerBase.__init__(self, SceneManagerEvents.events)
-        self._sm = GetSceneManager()
+        self._sm = SceneManager.get_instance()
         
     def _processEvent(self, new_event):
         if new_event.name == 'CameraAdded':

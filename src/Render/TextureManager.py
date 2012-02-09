@@ -10,42 +10,31 @@ from Logging import Logger
 
 # This class holds all of the Texture objects
 
-_instance = None
+from Core.BaseManager import BaseSingleton
 
-def GetTextureManager():
-    global _instance
-    if _instance is None:
-        _instance = TextureManager()
-    return _instance
-
-_texture_id = 0
-
-def GetTexId():
-	global _texture_id
-	
-	_texture_id += 1
-	return _texture_id
-
-class TextureManager(object):
+class TextureManager(BaseSingleton):
+	_texture_id = 0
 	
 	def __init__(self):
 		self._textures = []
-	
-	def CreateTexture(self, filename):
 		
+	def _get_texture_id(self):
+		self._texture_id += 1
+		return self._texture_id
+	
+	def create_texture(self, filename):
 		if os.path.exists(filename):
-			name = "Texture_" + str(GetTexId())
+			name = "Texture_" + str(self._get_texture_id())
 			new_tex = Texture(filename, name )
 			
 			self._textures.append(new_tex)
-						
 		else:
 			Logger.Log("TextureERROR: Texture file %s doesn't exist" % filename)
 			name = "Load Fail."
-			
+		
 		return name
 			
-	def DeleteTexture(self, name):
+	def delete_texture(self, name):
 		del_tex = None
 		for tex in self._textures:
 			if tex.name == name:
@@ -54,11 +43,11 @@ class TextureManager(object):
 		del_tex.Delete()
 		self._textures.remove(del_tex)
 		
-	def GetTexture(self, name):
+	def get_texture(self, name):
 		for tex in self._textures:
 			if tex.name == name:
 				return tex
 	
-	def LoadTextures(self):
+	def load_textures(self):
 		for tex in self._textures:
 			tex.Load()

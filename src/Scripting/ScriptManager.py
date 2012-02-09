@@ -5,20 +5,12 @@ Created on Sep 20, 2011
 '''
 from Logging import Logger
 
-_instance = None
-
+from Core.BaseManager import FrameListenerManager
 
 # Manages all of the Script Objects loaded in the Engine.
-class ScriptManager(object):
+class ScriptManager(FrameListenerManager):
     
-    @staticmethod
-    def GetInstance():
-        global _instance
-        if not _instance:
-            _instance = ScriptManager()
-        return _instance
-    
-    def __init__(self):
+    def init(self):
         Logger.Log("Created ScriptManager")
         self._scripts = []
         
@@ -28,7 +20,10 @@ class ScriptManager(object):
     def Shutdown(self):
         for script in self._scripts:
             script.Shutdown()
-        
+    
+    def on_frame_start(self):
+        self.Update()
+    
     def AddScript(self, new_script):
         self._scripts.append(new_script)
         
@@ -65,7 +60,6 @@ class ScriptManager(object):
                 script._has_started = True
     
     def Update(self):
-        
         for script in self._scripts:
             script.Update()
             
