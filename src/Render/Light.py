@@ -101,8 +101,9 @@ class GLLight(LightBase):
 #        pos = self.parent.local_position
 #        pos  = CreateGLArray(GLfloat, (pos.x, pos.y, pos.z, 1.0), 4 )
 
-        pos  = CreateGLArray(GLfloat, (0, 0, 0, 1.0), 4 )
+#        pos  = CreateGLArray(GLfloat, (0, 0, 0, 1.0), 4 )
         
         glLightfv(GL_LIGHT0, GL_POSITION, pos)
+        pass
         
         
