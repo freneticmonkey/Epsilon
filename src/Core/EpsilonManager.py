@@ -1,13 +1,15 @@
 from Logging import Logger
-from Events.EventCore import *
-from Input import InputProcessor
-from Render import RenderCore
-from Scene import SceneManager  
+from Events.EventManager import EventManager
+from Events.EventBase import EventBase
+from Input import Input
+from Render.RenderManager import RenderManager
+from Scene.SceneManager import SceneManager  
 from Scripting.ScriptManager import ScriptManager
-from Render import TextureManager
-from Render.Material import GLMaterial
-from Render.ShaderManager import *
-from Render.Shader import PhongShader
+from UI.UIManager import UIManager
+from Render.TextureManager import TextureManager
+from Render.ShaderManager import ShaderManager
+from Render.Shaders.Phong import PhongShader
+from Render.Shaders.PhongSimple import PhongSimple
 
 from CoreEvents import CoreListener
 
@@ -19,7 +21,7 @@ from Scene.Node import Node, Plane
 from Render.MeshFactory import MeshFactory, MeshTypes
 from Geometry.euclid import Vector3, Quaternion
 
-from Core import Time
+from Core.Time import Time
 from time import time
 
 from Scripting.TestScripts import ( RotateScript, 
@@ -27,9 +29,21 @@ from Scripting.TestScripts import ( RotateScript,
                                   CameraMoveController,  
                                   DisplayCoordinate, 
                                   SettingsController )
+
+from Core.Settings import *
+
 ## Central Class to the Epsilon System
 
-class EpsilonCore:
+class FrameStarted(EventBase):
+    def __init__(self):
+        EventBase.__init__(self, "frame_started", True)
+        
+class FrameEnded(EventBase):
+    def __init__(self):
+        EventBase.__init__(self, "frame_ended", True)
+
+
+class EpsilonManager(object):
     #_renderCore = None
     #_eventsCore = None
     #_aiCore = None
@@ -38,34 +52,50 @@ class EpsilonCore:
     
     def __init__(self):
         #Start Logger
-        
-        Logger.Configure('file', 'EpsilonLog.txt', True)
+        Logger.Configure(LoggerSettings.method, LoggerSettings.filename, LoggerSettings.log_to_console)
         Logger.Log('Initialising Core Systems')
         
-        #Start Event System
-        self._eventCore = GetEventCore()
+        
+        # The order of initialisation in this function is extremely important
+        # as it determines the order in which classes will receive events.
+        # For instance it is important that input is processed
+        
+        # Start Event System so it can receive new listeners when the
+        # classes below are initialised 
+        self._eventCore = EventManager.get_instance()
+        
+        # Initialise Time
+        self._time = Time.get_instance()
+        
+        # Create a Scene
+        self._scene = SceneManager.get_instance()
+        self._scene.Init()
+        
+        #Start Render System
+        self._renderCore = RenderManager.get_instance()
+        self._renderCore.Init(DisplaySettings.resolution[0],DisplaySettings.resolution[1],DisplaySettings.window_title)
+                
+        # Initialise Input
+        self._input = Input.get_instance()
+        
+        # Setup Frame Start/End Events
+        self._frame_start = FrameStarted()
+        self._frame_end = FrameEnded()
         
         #Register Core Event Listener for detecting quit
         self._keepAlive = True
         self._coreListener = CoreListener(False)
-        GetEventCore().AddListener(self._coreListener)
-        
-        # Create a Scene
-        self._scene = GetSceneManager()
-        self._scene.Init()
-        
-        #Start Render System
-        self._renderCore = RenderCore.GetRenderCore()
-        self._renderCore.Init(800,600,"Epsilon")
         
         #Get the Texture Manager
-        self._texture_manager = TextureManager.GetTextureManager()
+        self._texture_manager = TextureManager.get_instance()
+        
+        # Start the ShaderManager
+        self._shader_manager = ShaderManager.get_instance()
         
         # Start Scripting System
-        self._scriptCore = ScriptManager.GetInstance()
+        self._scriptCore = ScriptManager.get_instance()
         
-        # Initialise Input
-        self._inputProcessor = InputProcessor()
+        self._ui_manager = UIManager.get_instance()
         
         #Start EnvironmentSystem
         #self._enviroCore = EnvironmentCore()
@@ -79,27 +109,37 @@ class EpsilonCore:
     def SetScene(self):
         
         root = self._scene.root
+                
+        # Scripts that run in the scene - This is done first to
+        # ensure that these scripts are given priority over the scripts
+        # attached to nodes
+
+        scene_scripts = Node()
+        root.AddChild(scene_scripts)
+        scene_scripts.AddScript(SettingsController())
         
         # Load a Texture
-        ssfilename = "/Users/scottporter/Development/Projects/python_tests/my_projects/src/Epsilon/src/UnitTests/checkerboard64.png"
-        sstex = self._texture_manager.CreateTexture(ssfilename)
+        ssfilename = "/Users/scottporter/Development/Projects/Python/Epsilon/src/UnitTests/checkerboard64.png"
+        sstex = self._texture_manager.create_texture(ssfilename)
         
         # Load Shaders
 #        vs = "lighting.vert"
 #        fs = "lighting.frag"
 #        GetShaderManager().AddShaderFromFiles("lighting", vs, fs)
         
-        GetShaderManager().AddShaderObject("comp_lighting", PhongShader())
-        
+        self._shader_manager.AddShaderObject("phong", PhongShader())
+        #self._shader_manager.AddShaderObject("phong_simple", PhongSimple())
         
         # Add a Camera
         camera = CameraGL()
         root.AddChild(camera)
         
-        camera.local_position = Vector3(2,1,-10)
+        camera.position = Vector3(2,1,-10)
         camera.AddScript(CameraMoveController(speed=20))
 #        cameraBase.AddChild(camera)
-        
+
+        self._renderCore.SetCamera(camera)
+                
 #        octom = Node()
 #        root.AddChild(octom)
 #        octom.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
@@ -107,11 +147,8 @@ class EpsilonCore:
         
         octo = Node(name="parent")
         octo.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
-        octo.local_scale = Vector3(1,1,1)
-        octo.local_position = Vector3(0,3,0)
-        octo.material = GLMaterial()
-        octo.material.texture = sstex
-        octo.material.shader = "comp_lighting"
+        octo.scale = Vector3(1,1,1)
+        octo.position = Vector3(0,3,0)
         root.AddChild(octo)
         
         # Add an object
@@ -135,16 +172,24 @@ class EpsilonCore:
             red_light = GLLight()
             red_light.diffuse = Preset.red
             red_light.specular = Preset.red
-            red_light.local_position = Vector3(1.0,1.0,1.0)
+            red_light.position = Vector3(1.0,1.0,0.0)
             root.AddChild(red_light)
         
         # Add a blue light
         if True:
             blue_light = GLLight()
+            blue_light.ambient = Preset.green
             blue_light.diffuse = Preset.blue
-            blue_light.specular = Preset.blue
-            blue_light.local_position = Vector3(-1.0,1.0,2.0)
+            blue_light.specular = Preset.white
+            blue_light.position = Vector3(-1.0,1.0,0.0)
             root.AddChild(blue_light)
+            
+        hidetail2 = Node()
+        hidetail2.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
+        hidetail2.position = Vector3(-1.0,1.0,0.0)
+        hidetail2.local_scale = Vector3(0.2,0.2,0.2)
+        hidetail2.material = GLMaterial()
+        root.AddChild(hidetail2)
         
         # Add a light
 #        light = GLLight(name="light")#Node(name="light")
@@ -165,10 +210,8 @@ class EpsilonCore:
 
         hidetail = Node()
         hidetail.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
-        hidetail.local_position = Vector3(2.0,1,0)
+        hidetail.position = Vector3(2.0,1,0)
         hidetail.material = GLMaterial()
-        hidetail.material.shader = "comp_lighting"
-        hidetail.material.texture = sstex
         root.AddChild(hidetail)
         
 #        # Temp testing - A Grid of Spheres
@@ -184,64 +227,48 @@ class EpsilonCore:
         # Ground plane
         ground = Node()
         ground.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        ground.local_scale = Vector3(10,1,10)
+        #ground.local_scale = Vector3(10,1,10)
+        ground.local_scale = Vector3(100,1,100)
         ground.material = GLMaterial()
-        ground.material.shader = "comp_lighting"
-        ground.material.texture = sstex
+        ground.material.shader = "phong"
+        #ground.material.shader = "phong_simple"
+        ground.material.shininess = 0.01
+#        ground.AddScript(RotateScript(rate=360,axis=Vector3(1,0,0)))
         root.AddChild(ground)
         
         # Left Plane
         left = Node()
         left.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
         left.local_scale = Vector3(10,1,10)
-        left.local_rotation = Quaternion().new_rotate_axis(1.5707, Vector3(0,0,1) )
-        left.local_position = Vector3(5,5,0)
-        left.material = GLMaterial()
-        left.material.shader = "comp_lighting"
-        left.material.texture = sstex
+        left.rotation = Quaternion().new_rotate_axis(1.5707, Vector3(0,0,1) )
+        left.position = Vector3(5,5,0)
         root.AddChild(left)
         
         right = Node()
         right.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
         right.local_scale = Vector3(10,1,10)
-        right.local_rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(0,0,1) )
-        right.local_position = Vector3(-5,5,0)
-        right.material = GLMaterial()
-        right.material.shader = "comp_lighting"
-        right.material.texture = sstex
+        right.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(0,0,1) )
+        right.position = Vector3(-5,5,0)
         root.AddChild(right)
         
         rear = Node()
         rear.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
         rear.local_scale = Vector3(10,1,10)
-        rear.local_rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(1,0,0) )
-        rear.local_position = Vector3(0,5,5)
-        rear.material = GLMaterial()
-        rear.material.shader = "comp_lighting"
-        rear.material.texture = sstex
+        rear.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(1,0,0) )
+        rear.position = Vector3(0,5,5)
         root.AddChild(rear)
         
         top = Node()
         top.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
         top.local_scale = Vector3(10,1,10)
-        top.local_rotation = Quaternion().new_rotate_axis(-3.141562, Vector3(1,0,0) )
-        top.local_position = Vector3(0,10,0)
-        top.material = GLMaterial()
-        top.material.shader = "comp_lighting"
-        top.material.texture = sstex
+        top.rotation = Quaternion().new_rotate_axis(-3.141562, Vector3(1,0,0) )
+        top.position = Vector3(0,10,0)
         root.AddChild(top)
-        
-#        # Scripts that run in the scene
-        scene_scripts = Node()
-        root.AddChild(scene_scripts)
-        scene_scripts.AddScript(SettingsController())
-        
-        self._renderCore.SetCamera(camera)
         
     def Run(self):
         
         # Load Textures
-        self._texture_manager.LoadTextures()
+        self._texture_manager.load_textures()
         
         # Initialise Scripts
         self._scriptCore.InitialiseScripts()
@@ -249,36 +276,24 @@ class EpsilonCore:
         # Start Scripts
         self._scriptCore.StartScripts()
         
-        # Get the current time
-        _frame_start = time()
-        
         # Until a Quit Event is detected process engine systems
         while self._keepAlive == True:
             
-            GetShaderManager().OnFrameStart()
+            self._time.update_delta()
             
-            Time.UpdateDelta()
+            # Send Frame Started Event
+            self._frame_start.Send()
             
-#            self._physicsCore.Update()
-            
-#            self._enviroCore._processEnvironment()
-            
-            #self._aiCore._processAI()
-            
-            # Update Scripts
-            self._scriptCore.Update()
+            # Process Events
+            self._eventCore._processEvents()
             
             # Render the Scene
             self._renderCore.Draw()
             
-            # Process Keyboard input
-            self._inputProcessor._process_input()
-            
-            # Last so that any change to _keepAlive through the event system is detected
-            self._eventCore._processEvents()
-            
             # Update SceneManager
             self._scene.Update()
+            
+#            self._frame_end.Send()
             
             self._keepAlive = not self._coreListener.quitting
             

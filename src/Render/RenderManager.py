@@ -6,15 +6,11 @@
 
 from Renderer import GLRenderer
 
+from Core.BaseManager import BaseSingleton
+
 _instance = None
 
-def GetRenderCore():
-    global _instance
-    if not _instance:
-        _instance = RenderCore()
-    return _instance
-
-class RenderCore:     
+class RenderManager(BaseSingleton):
     
     def __init__(self):
         # create a renderer

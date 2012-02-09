@@ -1,17 +1,9 @@
 from Logging import Logger
-
-
-_instance = None
-
-def GetEventCore():
-	global _instance
-	if _instance is None:
-		_instance = EventCore()
-	return _instance
+from Core.BaseSingleton import BaseSingleton
 
 # Event Core
-class EventCore( object ):
-    
+class EventManager( BaseSingleton ):
+
 	def __init__(self):
 		## a foo class variable
 		# A list of all of the Listeners listening for events
@@ -44,9 +36,10 @@ class EventCore( object ):
 				#listener._notify(newEvent)
 				self._newEvents.append(newEvent)
 				found = True
+				break
 			
 		if not found:
-			Logger.Log('EventsCore: Event' + newEvent._EventType + ' has no listeners.') 
+			Logger.Log('EventsCore: Event ' + newEvent._EventType + ' has no listeners.') 
 		
 	## Process all of the events that haven't been processed yet
 	def _processEvents(self):
@@ -58,3 +51,4 @@ class EventCore( object ):
 					break
 		# Delete all events
 		self._newEvents = []
+		
