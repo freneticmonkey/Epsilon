@@ -89,7 +89,7 @@ class GLMaterial(BaseMaterial):
         
         # Set default Shader        
         self._shader = None
-        self.shader = "phong"
+        self.shader = "phong_simple"
         
     @property
     def shader(self):
