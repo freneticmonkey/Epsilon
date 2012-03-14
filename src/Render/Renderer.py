@@ -12,7 +12,7 @@ from Render.Projection import Projection
 from Scene.SceneManager import SceneManager
 from Scene import NodeDrawGL
 
-from Render.Font import *
+from Render import Font
 from Render.Shader import *
 from Render.ShaderManager import ShaderManager
 
@@ -23,6 +23,8 @@ import os
 from Core import Time
 # This file will contain the renderer class and sub-classes for each renderer mode.
 #
+
+class RendererUninitialisedException(Exception): pass
 
 class Renderer(Window):
 	
@@ -60,6 +62,7 @@ class GLRenderer(Renderer):
 		self._has_initialised = False
 		self._projection = None
 		self._camera = None
+		self._scene_root = None
 		self._print_font = None
 		self._shader_manager = None
 		self._ui_manager = None
@@ -69,41 +72,32 @@ class GLRenderer(Renderer):
 		self._grid = False
 		
 		# For FPS Calc
-		self._last_time = 0.0 
+		self._last_time = 0.0
+		
+		self._fatal_error_displayed = False 
 		
 	def InitialiseDisplay(self, width, height, title):
 		pygame.init()
 		pygame.display.set_mode((width,height), pygame.OPENGL|pygame.DOUBLEBUF)
 		pygame.display.set_caption(title)
-		
-		# If there isn't a camera set get the active camera from the SceneManager
-		if self._camera is None:
-			#self._camera = SceneManager.GetSceneManager().root.GetChildWithName('camera')
-			self._camera = SceneManager.get_instance().active_camera
 			
 		self._ui_manager = UIManager.get_instance()
 		
 		# Create projection object
 		self._projection = Projection(width, height)
 		
-		# Initialise OpenGL Display
-		self.Setup3D()
-		
 		# Create the ShaderManager
 		self._shader_manager = ShaderManager.get_instance()
 		
-		self._print_font = font_data("/Library/Fonts/Arial.ttf", 16)
+		self._print_font = Font.font_data("/Library/Fonts/Arial.ttf", 16)
 		
-		# Get the Scene Root
-		self._scene_root = SceneManager.get_instance().root
-		
-		# Get the camera
-		self._camera = self._scene_root.GetChildWithName("camera")
-		
-		# Indicate that the renderer has finished initialising
-		self._has_initialised = True
+		# Initialise OpenGL Display and set the indicator for initialisation completion
+		self._has_initialised = self.Setup3D()
 	
 	def Setup3D(self):
+		
+		setup_ok = False
+		
 		# Configure OpenGL Settings for drawing 3D
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_POLYGON_SMOOTH)
@@ -129,6 +123,27 @@ class GLRenderer(Renderer):
 		else:
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 		
+		# If the SceneManager instance hasn't been set
+		if not SceneManager.get_instance().current_scene is None:
+			# If there isn't a camera set get the active camera from the SceneManager
+			if self._camera is None:
+				self._camera = SceneManager.get_instance().current_scene.active_camera
+			
+			# Get the Scene Root
+			if self._scene_root is None:	
+				self._scene_root = SceneManager.get_instance().current_scene.root
+		
+		if self._camera is None:
+			setup_ok = False
+			Logger.Log("RENDER ERROR: Camera not found.")
+		elif self._scene_root is None:
+			setup_ok = False
+			Logger.Log("RENDER ERROR: Scene Root not found.")
+		else:
+			setup_ok = True
+		
+		return setup_ok			
+		
 	def Teardown3D(self):
 		glDisable(GL_CULL_FACE)
 		
@@ -138,22 +153,21 @@ class GLRenderer(Renderer):
 		
 	def DrawMeshes(self):
 		# Set 3D Drawing settings
-		self.Setup3D()
-		
-		#execute the camera's look at
-		self._camera.LookAt()
-		
-		
-		if self._grid:
-			self.DrawGrid()
-		
-#		glLoadIdentity()
-		
-		# Draw the scene meshes here
-		NodeDrawGL.DrawNode(self._scene_root)
-		
-		self.Teardown3D()
-		#glEnd()
+		if self.Setup3D():
+			
+			#execute the camera's look at
+			self._camera.LookAt()
+			
+			if self._grid:
+				self.DrawGrid()
+			
+	#		glLoadIdentity()
+			
+			# Draw the scene meshes here
+			NodeDrawGL.DrawNode(self._scene_root)
+			
+			self.Teardown3D()
+			#glEnd()
 		
 	def DrawGUI(self):
 		
@@ -162,6 +176,7 @@ class GLRenderer(Renderer):
 		# Draw the UI - Later
 		self._projection.SetScreen()
 		self._camera.Reset()
+		glColor3f(1.0,1.0,1.0)
 		self._print_font.glPrint(5, 50, "Camera:")
 		self._print_font.glPrint(5, 35, "Pos: %s" % str(self._camera.position))
 		self._print_font.glPrint(5, 20, "Ori: %s" % str(self._camera.rotation))
@@ -201,15 +216,19 @@ class GLRenderer(Renderer):
 			
 			if i == 0.0:
 				glColor3f(0.0,0.0,0.0)
-	    
-	  	glEnd()
+		glEnd()
 		
 		
 	def Draw(self):
 		
-		if not self._has_initialised:
-			Logger.Log("RENDER ERROR: Render hasn't been initialised")
-			return
+		# Make another attempt at initialising the 3D now that all of the 
+		# other Managers have initialised, and should have loaded their content
+		if not self.Setup3D():
+			if not self._fatal_error_displayed:
+				message = "RENDER ERROR: Render hasn't been initialised"
+				Logger.Log(message)
+				self._fatal_error_displayed = True
+				raise RendererUninitialisedException(message)
 				
 		# Set Projection
 		self._projection.SetPerspective(45)
