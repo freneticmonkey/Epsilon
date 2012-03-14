@@ -3,6 +3,8 @@ Created on Sep 21, 2011
 
 @author: scottporter
 '''
+import math
+from Geometry.euclid import Vector3
 from Render import Colour
 from Render.GLUtilities import *
 from Scene.Node import Node
@@ -73,10 +75,15 @@ class LightBase(Node):
         self._attenuation = new_attenuation
         
     def OnAdd(self):
-        LightAddedEvent(self).Send()
+        if not self._scene is None:
+            self._scene.add_light(self)
+        #LightAddedEvent(self).Send()
         
     def OnRemove(self):
-        LightRemovedEvent(self).Send()
+        if not self._scene is None:
+            self._scene.remove_light(self)
+        #LightRemovedEvent(self).Send()
+        
     
 # Use for spotlights - glLightf (GL_LIGHT0, GL_SPOT_CUTOFF, 15.f);
     
@@ -86,22 +93,57 @@ class GLLight(LightBase):
         LightBase.__init__(self,name, ambient, diffuse, specular, attenuation)
     
         
-        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.GetGLColour())
-        glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.GetGLColour())
+#        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
+#        glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.GetGLColour())
+#        glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.GetGLColour())
 #        glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.0)#self._attenuation)
 #        glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0)#self._attenuation)
 #        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0)#self._attenuation)
         
     
     def Draw(self):
+        
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.GetGLColour())
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.GetGLColour())
+        
         # OpenGL uses the MODELVIEW matrix which should already have the lights
         # position from the transform of the Light's parent.
         
-#        pos = self.parent.local_position
-#        pos  = CreateGLArray(GLfloat, (pos.x, pos.y, pos.z, 1.0), 4 )
+        pos = self.parent.position
+        pos  = CreateGLArray(GLfloat, (pos.x, pos.y, pos.z, 1.0), 4 )
 
 #        pos  = CreateGLArray(GLfloat, (0, 0, 0, 1.0), 4 )
+        
+#        glDisable(GL_LIGHTING)
+#        glDisable(GL_BLEND)
+            
+        glBegin(GL_LINE_LOOP)
+        vt = Vector3()
+        
+        # On x-axis
+        radius = 0.25
+        for i in range(0, 50):
+            vt.x = math.cos((2*math.pi/50)*i) * 0.25
+            vt.y = math.sin((2*math.pi/50)*i) * 0.25
+            vt.z = 0
+            glVertex3f(vt.x,vt.y,vt.z)
+        glEnd()
+        
+        glBegin(GL_LINE_LOOP)
+        vt = Vector3()
+        # On z-axis
+        for i in range(0, 50):
+            vt.x = 0
+            vt.z = math.cos((2*math.pi/50)*i) * 0.25
+            vt.y = math.sin((2*math.pi/50)*i) * 0.25
+            glVertex3f(vt.x,vt.y,vt.z)
+        glEnd()
+        
+        
+#        glEnable(GL_LIGHTING)
+#        glEnable(GL_BLEND)
+            
         
         glLightfv(GL_LIGHT0, GL_POSITION, pos)
         pass
