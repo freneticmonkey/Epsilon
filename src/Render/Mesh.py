@@ -25,6 +25,8 @@ from Geometry.euclid import Vector3
 from Render.Colour import Colour, Preset
 from Render.GLUtilities import *
 
+from Resource.ResourceBase import ResourceBase, ResourceType
+
 
 class TextureMappingConstants:
     PLANAR = 1
@@ -45,9 +47,11 @@ class OpenGLConstants:
 
 # This Class is a general mesh container that holds the shape data for
 # a Mesh.
-class Mesh(object):
+class Mesh(ResourceBase):
     
-    def __init__(self, vertices, faces, face_colours=None, tex_coords=None):
+    def __init__(self, vertices, faces, face_colours=None, tex_coords=None, filename=""):
+        ResourceBase.__init__(self, filename=filename)
+        self._type = ResourceType.MESH
         
         # Create Vertices
         # If they are not already in Vector3 format create the necessary 
@@ -446,7 +450,8 @@ class MeshUtilities:
         v2 = vertices[face[2]]
         a = v0 - v1
         b = v2 - v1
-        return b.cross(a).normalize()
+        normal = b.cross(a).normalize()
+        return normal
     
     '''
     Return the given face broken into a list of triangles, wound in the
