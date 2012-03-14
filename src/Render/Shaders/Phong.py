@@ -85,9 +85,9 @@ class PhongShader(ShaderProgram):
         
     # This is called by the Shader Manager at the start of a Frame    
     def OnFrameStart(self):
-         # Configure the scene lights
-         
-        lights = SceneManager.get_instance().lights
+        # Configure the scene lights
+        
+        lights = SceneManager.get_instance().current_scene.lights
         
         light_data = []
         
