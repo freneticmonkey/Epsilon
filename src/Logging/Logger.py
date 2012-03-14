@@ -30,7 +30,7 @@ class ClassLogger(object):
         self._classname = "ClassLogger"
         
     def Log(self, message):
-        Log(self._className + " : " + message)
+        Log(self._classname + " : " + message)
 
 ## Logger Core
 #  A Singleton class
