@@ -11,6 +11,16 @@ from OpenGL.GL import GLfloat
 
 class Colour( namedtuple('Colour','r g b a')):
     
+    @classmethod
+    def from_string(cls,colour_string):
+        rgba = colour_string.split(" ")
+        if len(rgba) == 4:
+            rgba = Colour(float(rgba[0]), float(rgba[1]),float(rgba[2]),float(rgba[3]))
+            return rgba
+        else:
+            print "Colour: Invalid string parameter: " + colour_string
+            return None
+    
     def __repr__(self):
         return 'Colour(%f, %f, %f, %f)' % (self.r, self.g, self.b, self.a)
     
