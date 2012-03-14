@@ -104,7 +104,11 @@ class Shader(object):
 #            glCompileShader(self._id)
             
         if not self.GetCompileStatus():
-            raise CompileError(self.GetInfoLog())
+            info = self.GetInfoLog()
+            if len(info) == 0:
+                print "No error Log for source:"
+                print "\n".join(self._shader_source)
+            raise CompileError(info)
         
 
 class VertexShader(Shader):
