@@ -16,7 +16,7 @@ class CameraRemovedEvent(EventBase):
 		
 class CameraSetActive(EventBase):
 	def __init__(self, camera):
-		EventBase.__init__(self, "SetActive", camera)
+		EventBase.__init__(self, "SetActiveCamera", camera)
 
 class CameraBase(Node):
 	def __init__(self):
@@ -30,12 +30,16 @@ class CameraGL(CameraBase):
 		self._active = False
 		
 	def OnAdd(self):
+		if not self._scene is None:
+			self._scene.add_camera(self)
 		# Send event notifying the SceneManager that a camera has been added to the scene
-		CameraAddedEvent(self).Send()
+		#CameraAddedEvent(self).Send()
 	
 	def OnRemove(self):
+		if not self._scene is None:
+			self._scene.remove_camera(self)
 		# Send event notifying the SceneManager that a camera has been remove from the scene
-		CameraRemovedEvent(self).Send()
+		#CameraRemovedEvent(self).Send()
 		
 	@property
 	def active(self):
