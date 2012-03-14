@@ -73,6 +73,8 @@ class ShaderManager(FrameListenerManager):
     def GetShader(self, name):
         if name in self._shaders:
             return self._shaders[name]
+        else:
+            self._smlog.Log("Requested Shader doesn't exist: " + name)
         
         
     def on_frame_start(self):
