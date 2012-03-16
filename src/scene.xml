@@ -1,22 +1,73 @@
 <scene name="basic_scene">
+	<texture name="checkers" filename="UnitTests/checkerboard64.png"/>
+	<shader name="phong_simple" class="PhongSimple" src="Render/Shaders/PhongSimple.py"/>
 	<camera>
-		<transform position="2 1 -10" rotation="0 0 0 0" scale="1 1 1"/>		
+		<transform position="2 1 -10" rotation="0 0 0 0"/>
+		<scripts>
+			<script name="CameraMoveController" speed="20"/>
+		</scripts>
+		
 	</camera>
-	<light>
-		<transform position="2 1 -10"/>
-		<colour diffuse="1.0 1.0 1.0 1.0"/>
-		<attenuation value="1.0"/>
-	</light>
 	<node>
-		<transform position="0 0 0" rotation="0 0 0 0" scale="1 1 1"/>
-		<mesh preset="CUBE"/>
+		<children>
+			<light>
+				<transform position="2 1 0"/>
+				<colour diffuse="1.0 1.0 1.0 1.0"/>
+				<attenuation value="1.0"/>
+				
+			</light>
+		</children>
 	</node>
 	<node>
-		<transform position="1 0 0"/>
+		<transform position="-2 2 0" rotation="0 0 0 0"/>
+		<mesh preset="CUBE"/>
+	</node>
+	<node name="rotate_base">
+		<transform position="3 1 0" rotation="0 0 0 0"/>
+		<scripts>
+			<script name="RotateScript" rate="90"/>
+		</scripts>
+		<children>
+			<node name="rotator">
+				<transform position="1 1 0" rotation="0 0 0 0"/>
+				<!--<mesh preset="CUBE"/>-->
+				<mesh file="UnitTests/BustedSphere.obj"/>
+				<material>
+					<colour diffuse="1.0 0.0 0.0 1.0"/>
+				</material>
+				<scripts>
+					<script name="RotateScript" rate="180" axis="-1 0 0"/>
+				</scripts>
+			</node>
+			<node name="rotator">
+				<transform position="3 2 0" rotation="0 0 0 0"/>
+				<!--<mesh preset="CUBE"/>-->
+				<mesh file="UnitTests/BustedSphere.obj"/>
+				<material>
+					<colour diffuse="1.0 0.0 0.0 1.0"/>
+				</material>
+				<scripts>
+					<script name="RotateScript" rate="90" axis="1 0 0"/>
+				</scripts>
+			</node>
+		</children>
+	</node>
+	<node name="plane">
+		<transform position="0 0 0" rotation="0 0 0 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+	</node>
+	<node name="octo">
+		<transform position="0 0 0"/>
 		<children>
 			<node>
 				<mesh preset="OCTOHEDRON"/>
 			</node>
 		</children>
+	</node>
+	<!-- Global Scripts.  These need to be in a separate Scene file -->
+	<node name="scene_scripts">
+		<scripts>
+			<script name="SettingsController"/>
+		</scripts>
 	</node>
 </scene>
