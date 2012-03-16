@@ -266,7 +266,7 @@ class MeshFactory(object):
         elif type == MeshTypes.SPHERE:
             verts, faces = Parametric.sphere(16,16)
         elif type == MeshTypes.PLANE_HI:
-            verts, faces, tex_cs = Parametric.plane(16,16)
+            verts, faces, tex_cs = Parametric.plane(1,1)
             return Mesh(verts, faces, Preset.yellow, tex_coords=tex_cs)
         
         return Mesh(verts, faces, Preset.yellow)
