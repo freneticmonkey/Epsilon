@@ -11,6 +11,6 @@ Current Features
 
 Future Development
 ------------------
-I'll be updating this as I go.  I've got a rough guide for the features that I want to add to the engine which is currently very fluid so I'll update this as I go.
+I've got a rough guide for the features that I want to add to the engine which is currently very fluid so I'll update this as I go.
 
 
