@@ -74,8 +74,8 @@ varying vec3 dist_vec;
 
 void main() 
 {
-    vec4 fragColor = Global_ambient * material.ambient;
-//    fragColor = vec4(normalize(EC_Light_location[0]),1.0);
+    vec4 fragColor = Global_ambient;// * material.ambient;
+    fragColor = vec4(normalize(EC_Light_location[0]),1.0);
     int i,j;
     vec3 weight;
     for (i=0;i<1;i++) 
@@ -101,7 +101,7 @@ void main()
         weight = weights;
     }
 //    //fragColor = vec4(Light_distance[1],Light_distance[0],Light_distance[2],1.0);
-//    fragColor = vec4(weight.x,weight.y,weight.z,1.0);
+    fragColor = vec4(weight.x,weight.y,weight.z,1.0);
 //    gl_FragColor = vec4((Light_distance[0]/4.0),0.0,0.0, 1.0);
 //    gl_FragColor = vec4(normalize(dist_vec), 1.0);
     gl_FragColor = fragColor;
