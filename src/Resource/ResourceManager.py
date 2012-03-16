@@ -4,188 +4,155 @@ Created on Nov 19, 2011
 @author: scottporter
 '''
 import os
-from xml.etree import ElementTree as ET
+from os.path import join, realpath, dirname, isabs, splitext, exists
 
 from Core.BaseSingleton import BaseSingleton
 
-from Render.ShaderManager import ShaderManager
-from Render.TextureManager import TextureManager
+from Logging.Logger import ClassLogger
 
-from Scene.SceneManager import SceneManager
+class ResourceManagerLog(ClassLogger):
+    
+    def __init__(self):
+        ClassLogger.__init__(self)
+        self._classname = "ResourceManager"
 
-from Scene.Node import Node
-from Geometry.euclid import Vector3, Quaternion
-from Render.Colour import Colour
-from Render.MeshFactory import MeshTypesString, MeshFactory
+# The ResourceManager reads a resource file which contains the 
+# directories in which resources can be found.  The ResourceManager
+# then parses the directories and builds a dictionary of 
+# Resource objects for each file within the directories.  This 
+# dictionary can then be used by the ResourceManager to keep track of
+# which files are in use. 
+# 
+# Handling resources in this way would allow for things like 
+# zip files to be specified as resource paths the decompression of
+# which would also be handled by the ResourceManager.
+#
+# 
 
 class ResourceManager(BaseSingleton):
     
-    def __init__(self):
-        self._shader_manager = ShaderManager.get_instance()
-        self._texture_manager = TextureManager.get_instance()
+    def __init__(self):        
+        # Set the current path as the current Epsilon execution path
+        self._current_path = os.getcwd()
+        
+        self._log = ResourceManagerLog()
+        
+        self._handlers = []
+        self._resources = {}
+        
+    def init(self):
+        self._load_resources()
+        
+    @property
+    def current_path(self):
+        return self._current_path
+    
+    @current_path.setter
+    def current_path(self, new_current_path):
+        self._current_path = new_current_path
+        
+    # Add a handler for loading specific Resources
+    def add_handler(self, new_handler):
+        
+        # Disabling Class check... and instead checking for raw attributes due to circular import issue with ResourceHandler
+#        if isinstance(new_handler, ResourceHandler):
+        
+        if hasattr(new_handler, "filetypes") and  hasattr(new_handler, "process_resource"):
+            self._handlers.append(new_handler)
+        else:
+            self._log.Log("The Resource Handler class: %s is not derived from ResourceHandler." % (new_handler.__class__.__name__))
+    
+    
+    def _load_resources(self):
+        # Parse resources file
+        pass
+    
+    # External function that can in turn be called by the ResourceHandlers allowing for recursive loading
+    def process_resource(self, filename):
+        
+        # check if this resource has already been loaded
+        new_resource = self.get_resource_by_filename(filename)
+        
+        # If the resource hasn't already been loaded, load it
+        if new_resource is None:
+            # Check file extension to see if this type is handled by this ResourceHandler
+            parts = splitext(filename)
+            # trim the period and ensure lowercase
+            extension = parts[1][1:].lower()
+            
+            the_handler = None
+            for handler in self._handlers:
+                if extension in handler.filetypes:
+                    the_handler = handler
+                    break
+                
+            # If a handler for the filetype is found
+            if not the_handler is None:
+                # Get the current path set in the ResourceManager
+                current_resource_path = self._current_path
+                
+                # get the path of the new Resource
+                abs_filename = filename
+                # if the path is relative
+                if not isabs(filename):
+                    # Make it absolute
+                    abs_filename = realpath(join(current_resource_path, filename))
+                
+                
+                if not exists(filename):
+                    self._log.Log("Resource could not be loaded: %s" % filename)
+                else:
+                    # Set the new path as the path in the ResourceManager
+                    self._current_path = dirname(abs_filename)
+                    
+                    # Process the Resource
+                    new_resource = the_handler.process_resource(abs_filename)
+                    if not new_resource is None:
+                        self._add_resource(new_resource)
+                    
+                    # Rollback the current relative path set in the ResourceManager
+                    self._current_path = current_resource_path
+            else:
+                self._log.Log("There is no handler registered to handle the specified filetype: %s for file: %s" % (extension.upper(), filename))
+        
+        return new_resource
+    
+    def _add_resource(self, new_resource):
+        if not new_resource.rid in self._resources:
+            self._resources[new_resource.rid] = new_resource
+        else:
+            self._log.Log("Resource already exists with id: %d filename: %s" % (new_resource.rid, new_resource.filename))
+    
+    def remove_resource(self, filename="", rid=-1):
+        # Find the resource and remove it using the appropriate handler
+        # Will the resource have to notify its manager owners?  or is this a cleanup
+        pass
+    
+    def get_resource_by_id(self, rid):
+        if rid in self._resources:
+            return self._resources[rid]
+        else:
+            return None
+    
+    def get_resource_by_filename(self, filename):
+        found_resource = None
+        for rid in self._resources:
+            if self._resources[rid].filename == filename:
+                found_resource = self._resources[rid]
+                break
+        return found_resource
+    
+    # Temporary function to test loading the test XML scene.
+    def load_scene(self, scenefile):
+        # In future create full path to file based on ResourceManager file
+        scenefile = os.path.join(os.path.dirname(__file__),"..",scenefile)
+        self._scene_loader.load_scene_file(scenefile)
+        
+        
+            
+            
+            
+            
+        
 
-class InvalidSceneFormat(Exception): pass
-    
-class SceneLoader(object):
-    
-    node_inc = 0
-    
-    @classmethod
-    def get_node_id(cls):
-        cls.node_inc += 1
-        return cls.node_inc
-    
-    def __init__(self):
-        self._scene_manager = SceneManager.get_instance()
-        
-        self._scene = None
-    
-    def load_scene_file(self, filepath):
-        
-        if not os.path.exists(filepath):
-            raise
-        
-        xml_dom = ET.parse(filepath)
-        
-        xml_root = xml_dom.getroot()
-        
-        self.parse_node(xml_root)
-                
-    # Recursive compatible XML parsing function.  Only problem is that the line
-    # number is not printed when an error occurs.  Switching to a different XML
-    # library such as lxml (http://lxml.de) could solve this, but adds additional
-    # dependencies...
-    # @param node: an xml node.
-    # @param parent: a Node() object that is the parent of the current node
-    def parse_node(self, node, parent=None):
-        node_parent = None
-        node_name = None
-        
-        if "name" in node.attrib:
-            node_name = node.attrib["name"]
-                
-        if node.tag == "scene":
-            if node_name is None:
-                node_name = "default_scene" 
-            
-            self._scene = Node(name=node_name)
-            node_parent = self._scene
-        
-        elif node.tag == "camera":
-            if node_name is None:
-                node_name = "default_camera"
-            node_parent = Node(name=node_name)
-                    
-        elif node.tag == "light":
-            if node_name is None:
-                node_name = "default_light"
-            node_parent = Node(name=node_name)
-        
-        elif node.tag == "node":
-            if node_name is None:
-                node_name = "node" + str(SceneLoader.get_node_id())
-            node_parent = Node(name=node_name)
-            
-        # Child Nodes
-        
-        # Transform
-        if node.tag == "transform":
-            if not parent is None:
-                if "position" in node.attrib:
-                    coord = node.attrib["position"].split(" ")
-                    if len(coord) == 3:
-                        coord = Vector3(float(coord[0]), float(coord[1]), float(coord[2]) )
-                    else:
-                        print "Invalid position: [%s]" % (" ".join(coord))
-                        
-                    parent.position = coord
-                
-                if "rotation" in node.attrib:
-                    rot = node.attrib["rotation"].split(" ")
-                    if len(rot) == 4:
-                        rot = Quaternion().new_rotate_axis(float(rot[0]), Vector3(float(rot[1]),float(rot[2]),float(rot[3])))
-                    else:
-                        print "Invalid rotation: [%s]" % (" ".join(rot))
-                        
-                    parent.rotation = rot
-                    
-                if "scale" in node.attrib:
-                    scale = node.attrib["scale"].split(" ")
-                    if len(scale) == 3:
-                        scale = Vector3(float(scale[0]), float(scale[1]), float(scale[2]) )
-                    else:
-                        print "Invalid scale: [%s]" % (" ".join(scale))
-                    parent.scale = scale
-        # Colour
-        if node.tag == "colour":
-            if not parent is None and not parent.light is None:
-                if "ambient" in node.attrib:
-                    rgba = node.attrib["ambient"].split(" ")
-                    if len(rgba) == 4:
-                        rgba = Colour(float(rgba[0]), float(rgba),float(rgba[2]),float(rgba[3]))
-                    else:
-                        print "Invalid rgba value: [%s]" % (" ".join(rgba))
-                    
-                    parent.light.diffuse = rgba
-                
-                if "diffuse" in node.attrib:
-                    rgba = node.attrib["diffuse"].split(" ")
-                    if len(rgba) == 4:
-                        rgba = Colour(float(rgba[0]), float(rgba),float(rgba[2]),float(rgba[3]))
-                    else:
-                        print "Invalid rgba value: [%s]" % (" ".join(rgba))
-                    
-                    parent.light.diffuse = rgba
-                
-                if "specular" in node.attrib:
-                    rgba = node.attrib["specular"].split(" ")
-                    if len(rgba) == 4:
-                        rgba = Colour(float(rgba[0]), float(rgba),float(rgba[2]),float(rgba[3]))
-                    else:
-                        print "Invalid rgba value: [%s]" % (" ".join(rgba))
-                    
-                    parent.light.diffuse = rgba
-                        
-        if node.tag == "attenuation":
-            if not parent is None and not parent.light is None:
-                if "value" in node.attrib:
-                    atten = node.attrib["value"].split(" ")
-                    if len(atten) == 1:
-                        atten = float(atten)
-                    else:
-                        print "Invalid attenuation: [%s]" % (str(atten))
-                        
-                    parent.light.attenuation = float(atten)
-        
-        # Mesh
-        
-        # This currently doesn't check if the node is a Light or camera.  Needs fixing
-        if node.tag == "mesh":
-            if not parent is None:
-                if "preset" in node.attrib:
-                    preset = node.attrib["preset"]
-                    if preset in MeshTypesString.MESHES:
-                        parent.mesh = MeshFactory.GetMesh(MeshTypesString.MESHES[preset])
-                    else:
-                        print "Invalid Mesh Preset: [%s]" % ( preset )
-                        
-                if "file" in node.attrib:
-                    pass # NYI
-                
-        if node.tag == "children":
-            if not parent is None:
-                pass
-                
-                        
-        
-                    
-                    
-        
-        
-        
-            
-            
-            
-            
-        
         
