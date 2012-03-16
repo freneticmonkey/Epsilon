@@ -5,6 +5,7 @@ Created on Sep 18, 2011
 '''
 
 from OpenGL.GL import *
+from Render.Light import GLLight
 #from OpenGL.GLU import *
 
 from Geometry.euclid import Matrix4, Vector3, Quaternion
@@ -41,6 +42,9 @@ def DrawNode(node):
         
         if node.mesh and node.material:
             node.material.Draw(node.mesh.glmesh)
+            
+        if isinstance(node, GLLight):
+            node.Draw()
 #        if node.material:
 #            node.material.SetupMaterial()
 #        
