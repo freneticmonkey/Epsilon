@@ -10,13 +10,14 @@ NOTE: Considering giving scripts priority settings to move them within the
 
 '''
 
-
+from Logging import Logger
 
 from Core import Time
 from Core import Settings
 from Events.EventBase import EventBase
 from Events.ListenerBase import ListenerBase
 from Scripting.Script import Script
+from Scripting.Script import ScriptParamTypes
 from Geometry.euclid import Vector3, Quaternion
 from Render.RenderManager import RenderManager
 
@@ -30,8 +31,12 @@ class RotateScript(Script):
     
     def __init__(self, parent_node=None, rate=15, axis=Vector3(0,1,0)):
         Script.__init__(self, 'RotateScript', parent_node)
+        self._param_types = {"rate":ScriptParamTypes.FLOAT, 
+                             "axis": ScriptParamTypes.VEC3 
+                            }
         self._rate = rate
         self._axis = axis
+        
     
     def Init(self):
         pass
@@ -56,6 +61,11 @@ class MoveController(Script, ListenerBase):
     def __init__(self, parent_node=None,speed=10,angle_speed=120):
         Script.__init__(self, name='MoveController', parent_node=parent_node)
         ListenerBase.__init__(self, eventTypes=self.event_types)
+        
+        self._param_types = {"speed":ScriptParamTypes.FLOAT, 
+                             "angle_speed": ScriptParamTypes.FLOAT 
+                            }
+        
         self._speed = speed
         self._angle_speed = angle_speed
         
@@ -66,6 +76,8 @@ class MoveController(Script, ListenerBase):
         mouse.set_visible(True)
         
         self._mouse_over_ui = False
+        
+        Logger.Log("Initialised MoveController")
     
     def _processEvent(self, new_event):
         if new_event.name == 'MouseEnterUI':
@@ -131,6 +143,10 @@ class MoveController(Script, ListenerBase):
 class CameraMoveController(MoveController):
     def __init__(self, parent_node=None,speed=10,angle_speed=120):
         super(CameraMoveController, self).__init__(parent_node,speed,angle_speed)
+        
+        self._param_types = {"speed":ScriptParamTypes.FLOAT, 
+                             "angle_speed": ScriptParamTypes.FLOAT 
+                            }
     
     def Update(self):
         super(CameraMoveController, self).Update()
