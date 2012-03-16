@@ -24,7 +24,7 @@ class Node(object):
 		cls._next_id += 1
 		return cls._next_id
 	
-	def __init__(self, name=None, pos=None, rot=None, scale=None, parent=None):
+	def __init__(self, name=None, pos=None, rot=None, scale=None, parent=None, scene=None):
 		
 		# Node Properties
 		self._id = Node.get_id()
@@ -39,6 +39,9 @@ class Node(object):
 		self._light = None
 		self._visible = True
 		self._scripts = []
+		
+		# The scene that the node is in
+		self._scene = scene
 		
 		# Transform Related properties
 		self._children = []
@@ -80,8 +83,8 @@ class Node(object):
 		# Bounds?
 		
 		# Setup Default Material
-		self._material = GLMaterial()
-		self._material.shader = "phong"
+#		self._material = GLMaterial()
+#		self._material.shader = "phong"
 		
 		# No default texture for now		
 	
@@ -117,7 +120,11 @@ class Node(object):
 	
 	@mesh.setter
 	def mesh(self, new_mesh):
-		self._mesh = new_mesh	
+		self._mesh = new_mesh
+		# If a mesh has been set 
+		# Set a default material
+		if self._material is None:
+			self._material = GLMaterial()
 	
 	@property
 	def material(self):
@@ -150,6 +157,19 @@ class Node(object):
 	def children(self):
 		return self._children
 	
+	@property
+	def scene(self):
+		return self._scene
+	
+	@property
+	def need_update(self):
+		if self._need_child_update or \
+           self._need_parent_update or \
+           len(self._children_to_update) > 0:
+			return True
+		else:
+			return False
+	
 	# Node Functions
 	
 	# Script Handling
@@ -171,6 +191,7 @@ class Node(object):
 	def AddChild(self, child_node):
 		if isinstance(child_node, Node):
 			child_node._parent = self
+			child_node._scene = self._scene
 			self._children.append(child_node)
 			# Allow the child to perform any post addition actions
 			child_node.OnAdd()
@@ -194,20 +215,46 @@ class Node(object):
 			print "Error: Child is not a Node instance"
 	
 	# In future this could be recursive			
-	def GetChildWithId(self, id):
+	def GetChildWithId(self, id, recursive=False):
 		ret_child = None
 		for child in self._children:
 			if child.node_id == id:
 				ret_child = child
 				break
+		# Breadth first recursive search
+		if recursive and not ret_child:
+			for child in self._children:
+				ret_child = child.GetChildWithId(id, recursive)
+				if not ret_child is None:
+					break
 		return ret_child
 	
-	def GetChildWithName(self, name):
+	def GetChildWithName(self, name, recursive=False):
 		ret_child = None
 		for child in self._children:
 			if child.name == name:
 				ret_child = child
 				break
+		# Breadth first recursive search
+		if recursive and not ret_child:
+			for child in self._children:
+				ret_child = child.GetChildWithName(name, recursive)
+				if not ret_child is None:
+					break
+		return ret_child
+	
+	def GetChildWithType(self, class_type, recursive=False):
+		ret_child = None
+		for child in self._children:
+			if child.__class__.__name__ == class_type:
+				ret_child = child
+				break
+		# Breadth first recursive search
+		if recursive and not ret_child:
+			for child in self._children:
+				ret_child = child.GetChildWithType(class_type, recursive)
+				if not ret_child is None:
+					break
 		return ret_child
 	
 	# This function is called whenever the node is added as a child to another node
