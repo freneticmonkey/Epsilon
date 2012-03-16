@@ -15,21 +15,34 @@ from OpenGL.GL import *
 
 from Logging import Logger
 
+from Resource.ResourceBase import ResourceBase, ResourceType
 
-class Texture(object):
+class Texture(ResourceBase):
     
-    def __init__(self, filename, name):
+    def __init__(self, filename, name=None):
+        ResourceBase.__init__(self, filename=filename)
+        self._type = ResourceType.IMAGE
+        if name is None:
+            name = "Texture_" + str(self._id)
+        
         self._name = name
-        self._filename = filename
         self._opengl_id = None
         self._opengl_buffer = None
         self._size_x = None
         self._size_y = None
-        self._loaded = False
+        
+    def __del__(self):
+        if not self._opengl_id is None:
+            glDeleteTextures(1, self._opengl_id)
+            self._loaded = False
     
     @property
     def name(self):
         return self._name
+    
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
     
     def size(self):
         return [self._size_x, self._size_y]
@@ -40,7 +53,7 @@ class Texture(object):
     def height(self):
         return self._size_y
         
-    def Load(self):
+    def load(self):
         # Open the image file
         image = Image.open(self._filename)
         self._size_x = image.size[0]
@@ -63,13 +76,18 @@ class Texture(object):
             
             # Copy image data into the Texture buffer
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self._size_x, self._size_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, self._opengl_buffer )
+            
+            # Indicate that the texture has been loaded
             self._loaded = True
             Logger.Log("Texture Loaded: %s" % self._filename)
         else:
             Logger.Log("TextureError: Couldn't read: %s" % self._filename)
-            
-    def Delete(self):
-        glDeleteTextures(1, self._opengl_id)
+    
+    def unload(self):
+        if not self._opengl_id is None:
+            glDeleteTextures(1, self._opengl_id)
+            self._opengl_id = None
+            self._loaded = False
 
     def Set(self):
         if self._loaded:

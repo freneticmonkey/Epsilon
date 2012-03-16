@@ -13,26 +13,26 @@ from Logging import Logger
 from Core.BaseManager import BaseSingleton
 
 class TextureManager(BaseSingleton):
-	_texture_id = 0
 	
 	def __init__(self):
 		self._textures = []
-		
-	def _get_texture_id(self):
-		self._texture_id += 1
-		return self._texture_id
 	
-	def create_texture(self, filename):
-		if os.path.exists(filename):
-			name = "Texture_" + str(self._get_texture_id())
-			new_tex = Texture(filename, name )
-			
-			self._textures.append(new_tex)
-		else:
-			Logger.Log("TextureERROR: Texture file %s doesn't exist" % filename)
-			name = "Load Fail."
-		
-		return name
+	def add_texture(self, texture_obj):
+		if isinstance(texture_obj, Texture):
+			self._textures.append(texture_obj)
+	
+#	def create_texture(self, filename):
+#		if os.path.exists(filename):
+#			self._textures.append(Texture(filename))
+#		else:
+#			Logger.Log("TextureERROR: Texture file %s doesn't exist" % filename)
+#			name = "Load Fail."
+#		
+#		return name
+
+	@property
+	def textures(self):
+		return self._textures
 			
 	def delete_texture(self, name):
 		del_tex = None
@@ -40,7 +40,7 @@ class TextureManager(BaseSingleton):
 			if tex.name == name:
 				del_tex = tex
 			break
-		del_tex.Delete()
+		del_tex.unload()
 		self._textures.remove(del_tex)
 		
 	def get_texture(self, name):
@@ -50,4 +50,4 @@ class TextureManager(BaseSingleton):
 	
 	def load_textures(self):
 		for tex in self._textures:
-			tex.Load()
+			tex.load()
