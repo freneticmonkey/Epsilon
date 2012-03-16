@@ -11,6 +11,12 @@ from Render.ShaderManager import ShaderManager
 from Render.Shaders.Phong import PhongShader
 from Render.Shaders.PhongSimple import PhongSimple
 
+# Sceneloading
+from Resource.ResourceManager import ResourceManager
+from Resource.ImageResourceHandler import ImageResourceHandler
+from Resource.SceneResourceHandler import SceneResourceHandler
+from Resource.WavefrontResourceHandler import WavefrontResourceHandler
+
 from CoreEvents import CoreListener
 
 from Render.Camera import CameraGL
@@ -69,7 +75,7 @@ class EpsilonManager(object):
         
         # Create a Scene
         self._scene = SceneManager.get_instance()
-        self._scene.Init()
+        self._scene.init()
         
         #Start Render System
         self._renderCore = RenderManager.get_instance()
@@ -97,6 +103,15 @@ class EpsilonManager(object):
         
         self._ui_manager = UIManager.get_instance()
         
+        # Configure the ResourceManager
+        self._resource_manager = ResourceManager.get_instance()
+        # enable Image Loading
+        self._resource_manager.add_handler(ImageResourceHandler())
+        # enable Scene Loading
+        self._resource_manager.add_handler(SceneResourceHandler())
+        # enable Wavefront Obj Loading
+        self._resource_manager.add_handler(WavefrontResourceHandler())
+        
         #Start EnvironmentSystem
         #self._enviroCore = EnvironmentCore()
         
@@ -107,28 +122,40 @@ class EpsilonManager(object):
         self.Shutdown()
         
     def SetScene(self):
-        
-        root = self._scene.root
-                
+#        
+#        root = self._scene.root
+#                
         # Scripts that run in the scene - This is done first to
         # ensure that these scripts are given priority over the scripts
         # attached to nodes
 
-        scene_scripts = Node()
-        root.AddChild(scene_scripts)
-        scene_scripts.AddScript(SettingsController())
+#        scene_scripts = Node()
+#        root.AddChild(scene_scripts)
+#        scene_scripts.AddScript(SettingsController())
         
-        # Load a Texture
-        ssfilename = "/Users/scottporter/Development/Projects/Python/Epsilon/src/UnitTests/checkerboard64.png"
-        sstex = self._texture_manager.create_texture(ssfilename)
         
         # Load Shaders
 #        vs = "lighting.vert"
 #        fs = "lighting.frag"
 #        GetShaderManager().AddShaderFromFiles("lighting", vs, fs)
         
-        self._shader_manager.AddShaderObject("phong", PhongShader())
-        #self._shader_manager.AddShaderObject("phong_simple", PhongSimple())
+        # Default Shaders
+#        self._shader_manager.AddShaderObject("phong", PhongShader())
+        self._shader_manager.AddShaderObject("phong_simple", PhongSimple())
+        
+        # Testing loading using the ResourceManager
+        
+        self._resource_manager.process_resource("scene.xml")
+        
+#        ssfilename = "/Users/scottporter/Development/Projects/Python/Epsilon/src/UnitTests/checkerboard64.png"
+#        self._resource_manager.process_resource(ssfilename)
+        
+        return
+        
+        # Load a Texture
+        ssfilename = "/Users/scottporter/Development/Projects/Python/Epsilon/src/UnitTests/checkerboard64.png"
+        sstex = self._texture_manager.create_texture(ssfilename)
+        
         
         # Add a Camera
         camera = CameraGL()
@@ -145,11 +172,12 @@ class EpsilonManager(object):
 #        octom.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
 #        octom.local_scale = Vector3(0.1, 0.1, 0.1)
         
-        octo = Node(name="parent")
-        octo.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
-        octo.scale = Vector3(1,1,1)
-        octo.position = Vector3(0,3,0)
-        root.AddChild(octo)
+        if False:
+            octo = Node(name="parent")
+            octo.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
+            octo.scale = Vector3(1,1,1)
+            octo.position = Vector3(0,3,0)
+            root.AddChild(octo)
         
         # Add an object
 #        octo2 = Node(name="child")
@@ -178,18 +206,20 @@ class EpsilonManager(object):
         # Add a blue light
         if True:
             blue_light = GLLight()
-            blue_light.ambient = Preset.green
-            blue_light.diffuse = Preset.blue
-            blue_light.specular = Preset.white
-            blue_light.position = Vector3(-1.0,1.0,0.0)
+            blue_light.ambient = Preset.white
+            blue_light.diffuse = Preset.white
+            blue_light.specular = Preset.red
+            blue_light.position = Vector3(-1.0,1.0,1.0)
+            #blue_light.AddScript(CameraMoveController(speed=20))
             root.AddChild(blue_light)
             
-        hidetail2 = Node()
-        hidetail2.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
-        hidetail2.position = Vector3(-1.0,1.0,0.0)
-        hidetail2.local_scale = Vector3(0.2,0.2,0.2)
-        hidetail2.material = GLMaterial()
-        root.AddChild(hidetail2)
+        if False:    
+            hidetail2 = Node()
+            hidetail2.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
+            hidetail2.position = Vector3(-1.0,1.0,0.0)
+            hidetail2.local_scale = Vector3(0.2,0.2,0.2)
+            hidetail2.material = GLMaterial()
+            root.AddChild(hidetail2)
         
         # Add a light
 #        light = GLLight(name="light")#Node(name="light")
@@ -207,12 +237,16 @@ class EpsilonManager(object):
 ##        root.AddChild(light)
 #        light.local_position = Vector3(0, 0.0, 10)
 #        camera.AddChild(light)
-
-        hidetail = Node()
-        hidetail.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
-        hidetail.position = Vector3(2.0,1,0)
-        hidetail.material = GLMaterial()
-        root.AddChild(hidetail)
+        if True:
+            hidetail = Node()
+            hidetail.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
+            hidetail.position = Vector3(2.0,1,0)
+            hidetail.material = GLMaterial()
+            hidetail.material.diffuse = Preset.green
+#            hidetail.material.shininess = 0.1
+            hidetail.material.shader = "phong_simple"
+            
+            root.AddChild(hidetail)
         
 #        # Temp testing - A Grid of Spheres
 #        for x in range( 10, 20, 2):
@@ -223,47 +257,50 @@ class EpsilonManager(object):
 #                nhidetail.material = GLMaterial()
 #                nhidetail.material.shader = "comp_lighting"
 #                root.AddChild(nhidetail)
+        draw_ground = True
+        if draw_ground:
+            # Ground plane
+            ground = Node()
+            ground.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+            #ground.local_scale = Vector3(10,1,10)
+            ground.local_scale = Vector3(100,1,100)
+            ground.material = GLMaterial()
+            ground.material.shader = "phong_simple"
+#            ground.material.shader = "phong"
+            ground.material.shininess = 0.01
+    #        ground.AddScript(RotateScript(rate=360,axis=Vector3(1,0,0)))
+            root.AddChild(ground)
         
-        # Ground plane
-        ground = Node()
-        ground.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        #ground.local_scale = Vector3(10,1,10)
-        ground.local_scale = Vector3(100,1,100)
-        ground.material = GLMaterial()
-        ground.material.shader = "phong"
-        #ground.material.shader = "phong_simple"
-        ground.material.shininess = 0.01
-#        ground.AddScript(RotateScript(rate=360,axis=Vector3(1,0,0)))
-        root.AddChild(ground)
-        
-        # Left Plane
-        left = Node()
-        left.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        left.local_scale = Vector3(10,1,10)
-        left.rotation = Quaternion().new_rotate_axis(1.5707, Vector3(0,0,1) )
-        left.position = Vector3(5,5,0)
-        root.AddChild(left)
-        
-        right = Node()
-        right.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        right.local_scale = Vector3(10,1,10)
-        right.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(0,0,1) )
-        right.position = Vector3(-5,5,0)
-        root.AddChild(right)
-        
-        rear = Node()
-        rear.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        rear.local_scale = Vector3(10,1,10)
-        rear.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(1,0,0) )
-        rear.position = Vector3(0,5,5)
-        root.AddChild(rear)
-        
-        top = Node()
-        top.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
-        top.local_scale = Vector3(10,1,10)
-        top.rotation = Quaternion().new_rotate_axis(-3.141562, Vector3(1,0,0) )
-        top.position = Vector3(0,10,0)
-        root.AddChild(top)
+        draw_box = False
+        if draw_box:
+            # Left Plane
+            left = Node()
+            left.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+            left.local_scale = Vector3(10,1,10)
+            left.rotation = Quaternion().new_rotate_axis(1.5707, Vector3(0,0,1) )
+            left.position = Vector3(5,5,0)
+            root.AddChild(left)
+            
+            right = Node()
+            right.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+            right.local_scale = Vector3(10,1,10)
+            right.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(0,0,1) )
+            right.position = Vector3(-5,5,0)
+            root.AddChild(right)
+            
+            rear = Node()
+            rear.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+            rear.local_scale = Vector3(10,1,10)
+            rear.rotation = Quaternion().new_rotate_axis(-1.5707, Vector3(1,0,0) )
+            rear.position = Vector3(0,5,5)
+            root.AddChild(rear)
+            
+            top = Node()
+            top.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+            top.local_scale = Vector3(10,1,10)
+            top.rotation = Quaternion().new_rotate_axis(-3.141562, Vector3(1,0,0) )
+            top.position = Vector3(0,10,0)
+            root.AddChild(top)
         
     def Run(self):
         
