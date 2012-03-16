@@ -7,8 +7,9 @@ if __name__ == "__main__":
                 core = EpsilonManager()
                 core.SetScene()
                 core.Run()
-        except:
+        except Exception, e:
                 print "EpsilonCore: ERROR"
+                print e.args
                 traceback.print_exc(file=sys.stdout)
         if core:
             del core
