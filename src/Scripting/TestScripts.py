@@ -31,20 +31,13 @@ class RotateScript(Script):
     
     def __init__(self, parent_node=None, rate=15, axis=Vector3(0,1,0)):
         Script.__init__(self, 'RotateScript', parent_node)
-        self._param_types = {"rate":ScriptParamTypes.FLOAT, 
+        self._param_types = {"rate": ScriptParamTypes.FLOAT, 
                              "axis": ScriptParamTypes.VEC3 
                             }
         self._rate = rate
         self._axis = axis
-        
-    
-    def Init(self):
-        pass
-        
-    def Start(self):
-        pass
             
-    def Update(self):
+    def update(self):
         angle = self._rate * (math.pi/180)
         angle_inc = angle * Time.delta_time
 #        rot = self._node.transform.local_rotation
@@ -85,7 +78,7 @@ class MoveController(Script, ListenerBase):
         elif new_event.name == 'MouseExitUI':
             self._mouse_over_ui = False
     
-    def Update(self):
+    def update(self):
         
         if not self._mouse_over_ui:
             # If the left mouse button is down
@@ -148,8 +141,8 @@ class CameraMoveController(MoveController):
                              "angle_speed": ScriptParamTypes.FLOAT 
                             }
     
-    def Update(self):
-        super(CameraMoveController, self).Update()
+    def update(self):
+        super(CameraMoveController, self).update()
         
         if Input.get_mouse_left() and not self._mouse_over_ui:
             pos = self._node.position
@@ -176,7 +169,7 @@ class DisplayCoordinate(Script):
         self._last_pos = Vector3()
     
     
-    def Update(self):
+    def update(self):
 #        if not self._node.transform.position == self._last_pos:
             self._last_pos = self._node.position 
             print self._node.name + ": " + str(self._last_pos)
@@ -194,7 +187,7 @@ class SettingsController(Script):
         self._renderer = RenderManager.get_instance()._renderer
         self._quit_detected = False
     
-    def Update(self):
+    def update(self):
         
         if Input.get_key_down(K_0):
             self._wireframe = not self._wireframe

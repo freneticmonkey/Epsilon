@@ -29,13 +29,13 @@ class CameraGL(CameraBase):
 		self._look_at_pos = Vector3()
 		self._active = False
 		
-	def OnAdd(self):
+	def on_add(self):
 		if not self._scene is None:
 			self._scene.add_camera(self)
 		# Send event notifying the SceneManager that a camera has been added to the scene
 		#CameraAddedEvent(self).Send()
 	
-	def OnRemove(self):
+	def on_remove(self):
 		if not self._scene is None:
 			self._scene.remove_camera(self)
 		# Send event notifying the SceneManager that a camera has been remove from the scene

@@ -235,9 +235,10 @@ class SceneResourceHandler(ResourceHandlerBase):
                         # Initialise it using the parameters in the XML
                         
                         new_script.init_parameters(parameters)
-                        parent.AddScript(new_script)
+                        parent.add_script(new_script)
                     except Exception, e:
                         self._log.Log("Invalid parameters for script: " + script_name)
+                        self._log.Log("parameters: " + str(parameters))
         
         elif node.tag == "material":
             if not parent is None and isinstance(parent, Node):
@@ -290,7 +291,7 @@ class SceneResourceHandler(ResourceHandlerBase):
         
         # If a parent Node is defined add the current node to it
         if not parent is None and not current_node is None:
-            parent.AddChild(current_node)
+            parent.add_child(current_node)
             
         return current_node
         

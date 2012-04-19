@@ -66,9 +66,9 @@ class Script(object):
     def _check_valid_node(self):
         if self._node:
             # Add the Script to the ScriptManager
-            ScriptManager.get_instance().AddScript(self)
+            ScriptManager.get_instance().add_script(self)
         else:
-            ScriptManager.get_instance().RemoveScript(self)
+            ScriptManager.get_instance().remove_script(self)
             
     def init_parameters(self, params):
         for key in params:
@@ -103,16 +103,16 @@ class Script(object):
         self._node = parent
         self._check_valid_node()
     
-    def Init(self):
+    def init(self):
         pass
     
-    def Start(self):
+    def start(self):
         pass
     
-    def Update(self):
+    def update(self):
         pass
     
-    def Shutdown(self):
+    def shutdown(self):
         pass
     
     

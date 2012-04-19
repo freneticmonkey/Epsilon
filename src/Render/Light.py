@@ -74,12 +74,12 @@ class LightBase(Node):
     def attenuation(self, new_attenuation):
         self._attenuation = new_attenuation
         
-    def OnAdd(self):
+    def on_add(self):
         if not self._scene is None:
             self._scene.add_light(self)
         #LightAddedEvent(self).Send()
         
-    def OnRemove(self):
+    def on_remove(self):
         if not self._scene is None:
             self._scene.remove_light(self)
         #LightRemovedEvent(self).Send()
@@ -101,7 +101,7 @@ class GLLight(LightBase):
 #        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0)#self._attenuation)
         
     
-    def Draw(self):
+    def draw(self):
         
         glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
         glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.GetGLColour())

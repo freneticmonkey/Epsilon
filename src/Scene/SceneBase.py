@@ -48,7 +48,7 @@ class SceneBase(ResourceBase):
         return self._root.need_update
     
     def update(self, children=True, parent_changed=False):
-        self._root._Update(children, parent_changed)
+        self._root._update(children, parent_changed)
     
     @property
     def active(self):
@@ -65,7 +65,7 @@ class SceneBase(ResourceBase):
             
     def _activate(self):
         if self._active_camera is None:
-            self._active_camera = self._root.GetChildWithName("camera", recursive=True)
+            self._active_camera = self._root.get_child_with_name("camera", recursive=True)
     
     def _deactivate(self):
         pass

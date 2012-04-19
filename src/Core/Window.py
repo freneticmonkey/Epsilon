@@ -19,20 +19,20 @@ class Window(object):
 	def height(self):
 		return self._height
 	
-	def Init(self, width, height):
+	def init(self, width, height):
 		self._width = width
 		self._height = height
 		
 		# Kick off initialisation of the Window
 		self.InitialiseDisplay(width, height)
 		
-	def Shutdown(self):
+	def shutdown(self):
 		if pygame:
 			pygame.quit()
 		
 	# This function will be overwritten by children
 	# i.e. Renderer Objects
-	def InitialiseDisplay(self, width, height):
+	def initialise_display(self, width, height):
 		pygame.display.set_mode((width,height))
 		
 	def _flip(self):

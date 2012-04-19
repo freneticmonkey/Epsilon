@@ -15,53 +15,53 @@ class ScriptManager(FrameListenerManager):
         self._scripts = []
         
     def __del__(self):
-        self.Shutdown()
+        self.shutdown()
     
-    def Shutdown(self):
+    def shutdown(self):
         for script in self._scripts:
-            script.Shutdown()
+            script.shutdown()
     
     def on_frame_start(self):
-        self.Update()
+        self.update()
     
-    def AddScript(self, new_script):
+    def add_script(self, new_script):
         self._scripts.append(new_script)
         
     # Remove the Script with the specified name
-    def RemoveScriptByName(self, name):
+    def remove_script_by_name(self, name):
         found = False
         
         for script in self._scripts:
             if script.name == name:
-                script.Shutdown()
+                script.shutdown()
                 found = True
                 break
         if found:
             self._scripts.remove(script)
             
     # Remove the Script Object
-    def RemoveScript(self, del_script):
+    def remove_script(self, del_script):
         if del_script in self._scripts:
-            del_script.Shutdown()
+            del_script.shutdown()
             self._scripts.remove(del_script)
     
     # Run the Initialise function for each of the registered scripts
-    def InitialiseScripts(self):
+    def initialise_scripts(self):
         for script in self._scripts:
-            script.Init()
+            script.init()
     
     # This is run only once before first call to update
-    def StartScripts(self):
+    def start_scripts(self):
         for script in self._scripts:
             if not script._has_started:
-                script.Start()
+                script.start()
                 # This breaks the private member access theme but my python-foo isn't
                 # strong enough to know of a better way to do this at this time
                 script._has_started = True
     
-    def Update(self):
+    def update(self):
         for script in self._scripts:
-            script.Update()
+            script.update()
             
         
     

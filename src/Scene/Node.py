@@ -92,7 +92,7 @@ class Node(object):
 	def __del__(self):
 		# Kill any scripts
 		for script in self._scripts:
-			ScriptManager.get_instance().RemoveScript(script)
+			ScriptManager.get_instance().remove_script(script)
 		
 		# Detach any children
 		for child in self._children:
@@ -173,11 +173,11 @@ class Node(object):
 	# Node Functions
 	
 	# Script Handling
-	def AddScript(self, new_script):
+	def add_script(self, new_script):
 		new_script.node = self
 		self._scripts.append(new_script)
 	
-	def RemoveScript(self, name='', rm_script=None):
+	def remove_script(self, name='', rm_script=None):
 		if len(name) == 0:
 			name = rm_script.name
 		
@@ -188,34 +188,34 @@ class Node(object):
 				break
 	
 	# Child Node handling
-	def AddChild(self, child_node):
+	def add_child(self, child_node):
 		if isinstance(child_node, Node):
 			child_node._parent = self
 			child_node._scene = self._scene
 			self._children.append(child_node)
 			# Allow the child to perform any post addition actions
-			child_node.OnAdd()
+			child_node.on_add()
 			# Notify the parent that we have changed
-			self._NeedUpdate(True)
+			self._need_update(True)
 		else:
 			print "Error: child parameter is not a Node instance"
 			
-	def RemoveChild(self, child_node):
+	def remove_child(self, child_node):
 		if isinstance(child_node, Node):
 			if child_node in self._children:
 				child_node._parent = None
 				self._children.remove(child_node)
 				
 				# Allow the former child to perform any post removal actions
-				child_node.OnRemove()
+				child_node.on_remove()
 				
 				# Notify the parent that we have changed
-				self._NeedUpdate(True)
+				self._need_update(True)
 		else:
 			print "Error: Child is not a Node instance"
 	
 	# In future this could be recursive			
-	def GetChildWithId(self, id, recursive=False):
+	def get_child_with_id(self, id, recursive=False):
 		ret_child = None
 		for child in self._children:
 			if child.node_id == id:
@@ -224,12 +224,12 @@ class Node(object):
 		# Breadth first recursive search
 		if recursive and not ret_child:
 			for child in self._children:
-				ret_child = child.GetChildWithId(id, recursive)
+				ret_child = child.get_child_with_id(id, recursive)
 				if not ret_child is None:
 					break
 		return ret_child
 	
-	def GetChildWithName(self, name, recursive=False):
+	def get_child_with_name(self, name, recursive=False):
 		ret_child = None
 		for child in self._children:
 			if child.name == name:
@@ -238,12 +238,12 @@ class Node(object):
 		# Breadth first recursive search
 		if recursive and not ret_child:
 			for child in self._children:
-				ret_child = child.GetChildWithName(name, recursive)
+				ret_child = child.get_child_with_name(name, recursive)
 				if not ret_child is None:
 					break
 		return ret_child
 	
-	def GetChildWithType(self, class_type, recursive=False):
+	def get_child_with_type(self, class_type, recursive=False):
 		ret_child = None
 		for child in self._children:
 			if child.__class__.__name__ == class_type:
@@ -252,21 +252,21 @@ class Node(object):
 		# Breadth first recursive search
 		if recursive and not ret_child:
 			for child in self._children:
-				ret_child = child.GetChildWithType(class_type, recursive)
+				ret_child = child.get_child_with_type(class_type, recursive)
 				if not ret_child is None:
 					break
 		return ret_child
 	
 	# This function is called whenever the node is added as a child to another node
-	def OnAdd(self):
+	def on_add(self):
 		pass
 	
 	# This function is called whenever the node is removed as a child from another node
-	def OnRemove(self):
+	def on_remove(self):
 		pass
 	
 	# Update the Node and it's children's transforms
-	def _Update(self, update_children, parent_has_changed):
+	def _update(self, update_children, parent_has_changed):
 		
 		# Always clear information about parent notification
 		self._parent_notified = False
@@ -281,12 +281,12 @@ class Node(object):
 		# See if we should update the transform
 		if self._need_parent_update or parent_has_changed:
 			# Update transforms from parent
-			self._UpdateFromParent()
+			self._update_from_parent()
 		
 		# Update the children of the node
 		if self._need_child_update or parent_has_changed:
 			for child_node in self._children:
-				child_node._Update(True,True)
+				child_node._update(True,True)
 			
 			self._children_to_update = []
 		else:
@@ -294,7 +294,7 @@ class Node(object):
 			for id in self._children_to_update:
 				for child_node in self._children:
 					if id == child_node.node_id:
-						child_node._Update(True,False)
+						child_node._update(True,False)
 						break
 			self._children_to_update = []
 		
@@ -302,7 +302,7 @@ class Node(object):
 			
 			
 	# Called from parent node.  Updates transform properties and any child transform properties
-	def _UpdateFromParent(self):
+	def _update_from_parent(self):
 		
 		if self._parent:
 			# update rotation
@@ -335,20 +335,20 @@ class Node(object):
 		self._need_parent_update = False
 			
 	# tell parent that this node needs an update
-	def _NeedUpdate(self, force_parent_update=False):
+	def _need_update(self, force_parent_update=False):
 		self._need_parent_update = True
 		self._need_child_update  = True
 		
 		# if this not is not the root and the parent hasn't already been notified
 		if self._parent and ( not self._parent_notified or self._force_parent_update):
-			self._parent.RequestUpdate(self.node_id, force_parent_update)
+			self._parent.request_update(self.node_id, force_parent_update)
 			self._parent_notified = True
 		
 		# All children will be updated
 		self._children_to_update = []
 		
 	# Request for the parent to update it's children
-	def RequestUpdate(self, child_node_id, force_parent_update=False):
+	def request_update(self, child_node_id, force_parent_update=False):
 		# If we are already going to update everything then this doesn't matter
 		if self._need_child_update:
 			return
@@ -356,16 +356,16 @@ class Node(object):
 		self._children_to_update.append(child_node_id)
 		# Request selective update of this node, if it hasn't already been done
 		if self._parent and (not self._parent_notified or self._force_parent_update):
-			self._parent.RequestUpdate(self.node_id, force_parent_update)
+			self._parent.request_update(self.node_id, force_parent_update)
 			self._parent_notified = True
 			
 	# Cancel an update for a child node
-	def CancelUpdate(self, child_node_id):
+	def cancel_update(self, child_node_id):
 		self._children_to_update.remove(child_node_id)
 		
 		# Propagate this up the hierarchy if we are done
 		if len(self._children_to_update) == 0 and self._parent and not self._need_child_update:
-			self._parent.CancelUpdate(self.node_id)
+			self._parent.cancel_update(self.node_id)
 			self._parent_notified = True
 	
 	# Transform properties
@@ -385,7 +385,7 @@ class Node(object):
 	def position(self, new_pos):
 		# Calculate local position
 		self._local_position = new_pos# - self._parent_matrix.get_translation()
-		self._NeedUpdate()
+		self._need_update()
 		
 	# get world position
 	@property
@@ -402,7 +402,7 @@ class Node(object):
 	@rotation.setter
 	def rotation(self, new_rot):
 		self._local_rotation = new_rot
-		self._NeedUpdate()
+		self._need_update()
 	
 	# get world rotation		
 	@property
@@ -418,7 +418,7 @@ class Node(object):
 	@local_scale.setter
 	def local_scale(self, new_scale):
 		self._local_scale = new_scale
-		self._NeedUpdate()
+		self._need_update()
 	
 	# Get world scale
 	@property
@@ -451,7 +451,7 @@ class Node(object):
 		elif relative_to == Space.PARENT:
 			self._local_position += new_pos
 		
-		self._NeedUpdate()
+		self._need_update()
 		
 	# set world rotation
 	def rotate(self, new_rot, relative_to=Space.SELF):
@@ -466,12 +466,12 @@ class Node(object):
 		elif relative_to == Space.WORLD:
 			self._local_rotation = self._local_rotation * self._world_rotation.conjugated() * qnorm * self._world_rotation
 		
-		self._NeedUpdate()
+		self._need_update()
 	
 	# Set Scale
 	def scale(self, new_scale):
 		self._local_scale = self._local_scale * new_scale
-		self._NeedUpdate()
+		self._need_update()
 		
 # Primitive Objects
 class Plane(Node):

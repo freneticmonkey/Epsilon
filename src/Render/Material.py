@@ -105,7 +105,7 @@ class GLMaterial(BaseMaterial):
             # Otherwise treat it as an instanced shader
             self._shader = new_shader
             
-    def Draw(self, mesh):
+    def draw(self, mesh):
 #        glMaterialfv(GL_FRONT, GL_AMBIENT, self._ambient.GetGLColour())
 #        glMaterialfv(GL_FRONT, GL_DIFFUSE, self._diffuse.GetGLColour())
 #        glMaterialfv(GL_FRONT, GL_SPECULAR, self._specular.GetGLColour())

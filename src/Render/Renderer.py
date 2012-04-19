@@ -1,3 +1,6 @@
+
+import os
+
 import pygame
 
 from Core.Window import Window
@@ -7,6 +10,8 @@ from OpenGL.GLU import *
 
 from Logging import Logger
 from Geometry.euclid import Vector3
+
+from Render.Light import GLLight
 
 from Render.Projection import Projection 
 from Scene.SceneManager import SceneManager
@@ -18,9 +23,11 @@ from Render.ShaderManager import ShaderManager
 
 from UI.UIManager import UIManager
 
-import os
-
 from Core import Time
+
+matrix_type = GLfloat * 16
+matrix_typed = GLdouble * 16
+
 # This file will contain the renderer class and sub-classes for each renderer mode.
 #
 
@@ -50,7 +57,7 @@ class Renderer(Window):
 	def projection(self, new_proj):
 		self._projection = new_proj
 		
-	def Draw(self):
+	def draw(self):
 		pass
 	
 class GLRenderer(Renderer):
@@ -76,7 +83,7 @@ class GLRenderer(Renderer):
 		
 		self._fatal_error_displayed = False 
 		
-	def InitialiseDisplay(self, width, height, title):
+	def initialise_display(self, width, height, title):
 		pygame.init()
 		pygame.display.set_mode((width,height), pygame.OPENGL|pygame.DOUBLEBUF)
 		pygame.display.set_caption(title)
@@ -92,9 +99,9 @@ class GLRenderer(Renderer):
 		self._print_font = Font.font_data("/Library/Fonts/Arial.ttf", 16)
 		
 		# Initialise OpenGL Display and set the indicator for initialisation completion
-		self._has_initialised = self.Setup3D()
+		self._has_initialised = self.setup_3d()
 	
-	def Setup3D(self):
+	def setup_3d(self):
 		
 		setup_ok = False
 		
@@ -144,29 +151,29 @@ class GLRenderer(Renderer):
 		
 		return setup_ok			
 		
-	def Teardown3D(self):
+	def teardown_3d(self):
 		glDisable(GL_CULL_FACE)
 		
-	def LoadMeshes(self, Nodes=[]):
+	def load_meshes(self, Nodes=[]):
 		# Load the meshes from the Scene
 		pass
 		
-	def DrawMeshes(self):
+	def draw_meshes(self):
 		# Set 3D Drawing settings
-		if self.Setup3D():
+		if self.setup_3d():
 			
 			#execute the camera's look at
 			self._camera.LookAt()
 			
 			if self._grid:
-				self.DrawGrid()
+				self.draw_grid()
 			
 	#		glLoadIdentity()
 			
 			# Draw the scene meshes here
-			NodeDrawGL.DrawNode(self._scene_root)
+			self.draw_node(self._scene_root)
 			
-			self.Teardown3D()
+			self.teardown_3d()
 			#glEnd()
 			
 	def draw_node(self, node):
@@ -219,7 +226,7 @@ class GLRenderer(Renderer):
 			glPopMatrix()
 			
 		
-	def DrawGUI(self):
+	def draw_gui(self):
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 		
@@ -239,7 +246,7 @@ class GLRenderer(Renderer):
 		
 		self._ui_manager.draw()
 		
-	def DrawGrid(self):
+	def draw_grid(self):
 		# Simple Grid for the time being
 		columns = 50
 		rows = 50
@@ -269,11 +276,11 @@ class GLRenderer(Renderer):
 		glEnd()
 		
 		
-	def Draw(self):
+	def draw(self):
 		
 		# Make another attempt at initialising the 3D now that all of the 
 		# other Managers have initialised, and should have loaded their content
-		if not self.Setup3D():
+		if not self.setup_3d():
 			if not self._fatal_error_displayed:
 				message = "RENDER ERROR: Render hasn't been initialised"
 				Logger.Log(message)
@@ -287,10 +294,10 @@ class GLRenderer(Renderer):
 		#self._camera.LookAt(Vector3())
 		
 		# Draw the Scene Meshes
-		self.DrawMeshes()
+		self.draw_meshes()
 #		glFlush()
 		
-		self.DrawGUI()
+		self.draw_gui()
 				
 		#self._flip()
 		

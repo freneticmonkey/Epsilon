@@ -349,7 +349,7 @@ class GLMesh(object):
         
         
     
-    def Draw(self):
+    def draw(self):
         use_vbo = True
         use_master = True
         draw_normals = False
