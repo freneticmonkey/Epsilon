@@ -168,6 +168,56 @@ class GLRenderer(Renderer):
 			
 			self.Teardown3D()
 			#glEnd()
+			
+	def draw_node(self, node):
+		
+		if node.visible:
+		
+			glPushMatrix()
+			
+			# Translate    
+			glTranslate(*node.position)
+			
+			# Rotate
+			glMultMatrixf(matrix_type(*node.rotation.get_matrix()))
+			
+			# Scale
+			glScalef(*node.local_scale)
+			
+			
+			# Draw Light
+			#        if node.light:
+			#            node.light.Draw()
+			
+			# Set Material
+			# Every node _must_ have a material from now on.
+			# The renderer is moving to entirely Shader based rendering and
+			# as such all meshes cannot be rendered without a material 
+			# definition
+			
+			if node.mesh and node.material:
+				node.material.draw(node.mesh.glmesh)
+			
+			if isinstance(node, GLLight):
+				node.draw()
+			#        if node.material:
+			#            node.material.SetupMaterial()
+			#        
+			#        # Draw Mesh
+			#        if node.mesh:
+			#            if node.mesh.glmesh:
+			#                node.mesh.glmesh.Draw()
+			#                
+			#        if node.material:
+			#            node.material.UnsetMaterial()
+			
+			# Draw Children    
+			for child in node.children:
+				self.draw_node(child)
+			
+			# Pop the Transform stack
+			glPopMatrix()
+			
 		
 	def DrawGUI(self):
 		
