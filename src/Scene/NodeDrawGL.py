@@ -1,6 +1,8 @@
 '''
 Created on Sep 18, 2011
 
+This class is now depreciated as this code had been moved to Renderer
+
 @author: scottporter
 '''
 

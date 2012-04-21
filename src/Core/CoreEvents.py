@@ -1,39 +1,39 @@
 
-from Events.EventBase import *
-from Events.ListenerBase import *
+from Events.EventBase import EventBase
+from Events.ListenerBase import ListenerBase
 
 #Event Constants
 # As the number of events increases using hashes instead of 
 # strings might be faster? - In which case make this a dict
 class CoreEvents:
-	events = ['CoreEvent',
+    events = ['CoreEvent',
 			  'Quit'
 			 ]
 
 class CoreListener(ListenerBase):
 
-    def __init__(self, quitFlag):
-        self._quitFlag = quitFlag
+    def __init__(self, quit_flag):
+        self._quit_flag = quit_flag
         
         ListenerBase.__init__(self, CoreEvents.events)
         
-    def _processEvent(self, event):
+    def _process_event(self, event):
         if event.name == 'Quit':
-            self._quitFlag = event.data
+            self._quit_flag = event.data
                     
     @property
     def quitting(self):
-    	return self._quitFlag
+        return self._quit_flag
         
 class CoreEvent(EventBase):
-    def __init__(self, eventData):
-        EventBase.__init__(self, eventData)
+    def __init__(self, event_data):
+        EventBase.__init__(self, event_data)
 
 class CoreFlagData():
-    def __init__(self, flagName, flag):
-        self._EventType = flagName
-        self._EventData = flag        
+    def __init__(self, flag_name, flag):
+        self._event_type = flag_name
+        self._event_data = flag        
         
 class CoreFlagEvent(CoreEvent):
-    def __init__(self, flagName, flag):
-        CoreEvent.__init__(self, CoreFlagData(flagName, flag) )
+    def __init__(self, flag_name, flag):
+        CoreEvent.__init__(self, CoreFlagData(flag_name, flag) )

@@ -137,7 +137,7 @@ class SceneBaseListener(ListenerBase):
         ListenerBase.__init__(self, SceneBaseEvents.events)
         self._scene = scene
         
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         # Check if the event is for this scene
         if hasattr(new_event.data, "scene"):
             # If the event is for this scene

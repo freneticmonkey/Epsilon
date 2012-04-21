@@ -72,7 +72,7 @@ class MoveController(Script, ListenerBase):
         
         Logger.Log("Initialised MoveController")
     
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         if new_event.name == 'MouseEnterUI':
             self._mouse_over_ui = True
         elif new_event.name == 'MouseExitUI':
@@ -199,7 +199,7 @@ class SettingsController(Script):
             
         if Input.get_key_down(K_ESCAPE) or Input.get_quit_detected():
             # Fire a Quit Event
-            QuitEvent().Send()
+            QuitEvent().send()
             
         
     

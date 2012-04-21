@@ -2,14 +2,14 @@ from Logging import Logger
 from Events.EventManager import EventManager
 
 class ListenerBase(object):
-    def __init__(self, eventTypes):
+    def __init__(self, event_types):
         #The events that the listener will listen to
-        self._EventTypes = eventTypes
+        self._event_types = event_types
         
         #Event List 
-        self._Events = []
+        self._events = []
         
-        self._Register()
+        self._register()
         
     @property
     def listener_name(self):
@@ -17,35 +17,35 @@ class ListenerBase(object):
     	
     @property
     def event_types(self):
-    	return self._EventTypes
+    	return self._event_types
  
-    def _Register(self):
-        EventManager.get_instance().AddListener(self)
+    def _register(self):
+        EventManager.get_instance().add_listener(self)
         
     #These should only be called by the EventCore Object
     #
     
     #Adds event(s) to the Listener.
-    def _notify(self, event):
+    def notify(self, event):
         if isinstance(event, object):
-            self._Events.append(event)
+            self._events.append(event)
         elif isinstance(event, list):
-            self._Events.extend(event)
+            self._events.extend(event)
         else:
             Logger.Log("WARNING: Trying to add invalid event(s): " + event.__class__)
         
-        self._checkEvents()
+        self._check_events()
     #
     ###############################
     
-    def _checkEvents(self):
-        for newEvent in self._Events:
-            if newEvent.name in self.event_types:
-                self._processEvent(newEvent)
+    def _check_events(self):
+        for new_event in self._events:
+            if new_event.name in self.event_types:
+                self._process_event(new_event)
         # Clear events after checking
-        self._Events = []
+        self._events = []
         
     # This is called when the event list has been updated,
     # this will be overridden in inheriting classes
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         pass

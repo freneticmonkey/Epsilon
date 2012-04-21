@@ -61,7 +61,7 @@ class SceneManager(BaseSingleton):
     def current_scene(self):
         return self._current_scene
     
-    def Update(self):
+    def update(self):
         if not self._current_scene is None and self._current_scene.need_update:
             self._current_scene.update()
     
@@ -71,7 +71,7 @@ class SceneManagerListener(ListenerBase):
         ListenerBase.__init__(self, SceneManagerEvents.events)
         self._sm = SceneManager.get_instance()
         
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         if new_event.name == 'CameraAdded':
             self._sm.AddCamera(new_event.data )
         elif new_event.name == 'CameraRemoved':

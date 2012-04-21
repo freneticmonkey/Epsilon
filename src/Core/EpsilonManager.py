@@ -114,7 +114,8 @@ class EpsilonManager(object):
         self._shader_manager.AddShaderObject("phong_simple", PhongSimple())
         
         # Testing loading using the ResourceManager
-        self._resource_manager.process_resource("scene.xml")
+        #self._resource_manager.process_resource("scene.xml")
+        self._resource_manager.process_resource("empty_scene.xml")
         
     def run(self):
         
@@ -133,16 +134,16 @@ class EpsilonManager(object):
             self._time.update_delta()
             
             # Send Frame Started Event
-            self._frame_start.Send()
+            self._frame_start.send()
             
             # Process Events
-            self._event_manager._processEvents()
+            self._event_manager.process_events()
             
             # Render the Scene
             self._render_manager.draw()
             
             # Update SceneManager
-            self._scene.Update()
+            self._scene.update()
             
             self._keep_alive = not self._core_listener.quitting
             

@@ -1,46 +1,45 @@
-from Events.EventCore import *
-from Events.EventBase import *
-from Events.ListenerBase import *
+from Events.EventManager import EventManager
+from Events.EventBase import EventBase
+from Events.ListenerBase import ListenerBase
 
 class TestListener(ListenerBase):
     def __init__(self):
         self._EventType = 'TestEvent'
-        ListenerBase.__init__(self, self._EventType)
+        ListenerBase.__init__(self, self._event_type)
         
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         print 'Received Event. Inside Test Listener'
-        print 'new event is: ' + new_event._EventType
+        print 'new event is: ' + new_event._event_type
         
 class TestEvent(EventBase):
     def __init__(self):
         self._EventType = 'TestEvent'
-        EventBase.__init__(self, self._EventType, None)
-        print 'Created Event: ' + self._EventType
+        EventBase.__init__(self, self._event_type, None)
+        print 'Created Event: ' + self._event_type
         
 class ATestListener(ListenerBase):
     def __init__(self):
         self._EventType = 'AnotherTestEvent'
-        ListenerBase.__init__(self, self._EventType)
+        ListenerBase.__init__(self, self._event_type)
         
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         print 'Received Event. Inside Another Test Listener'
-        print 'new event is: ' + new_event._EventType
+        print 'new event is: ' + new_event._event_type
         
 class ATestEvent(EventBase):
     def __init__(self):
         self._EventType = 'AnotherTestEvent'
-        EventBase.__init__(self, self._EventType, None)
-        print 'Created Event: ' + self._EventType  
+        EventBase.__init__(self, self._event_type, None)
+        print 'Created Event: ' + self._event_type  
         
-class EventsTest:
-    def __init__(self):
+if __name__ == "__main__":
         
         #Create an EventCore Object
-        self._eventCore = EventCore()
+        _event_core = EventManager()
         
         #Create Listeners
-        self._testListener = TestListener()
-        self._aTestListener = ATestListener()
+        _test_listener = TestListener()
+        _a_test_listener = ATestListener()
                 
         # Attaching Listeners
         # Add an TestListener Object
@@ -52,12 +51,12 @@ class EventsTest:
         # Creating Events
         # Add a TestEvent Object
         te = TestEvent()
-        te.Send()
+        te.send()
 #        self._eventsCore._newEvent(TestEvent())
         
         # Add a different Event Object
         ate = ATestEvent()
-        ate.Send()
+        ate.send()
 #        self._eventsCore._newEvent(ATestEvent())        
         
         # Processing Events within listeners
@@ -65,10 +64,5 @@ class EventsTest:
 #        self._testListener._processEvent()
         
         # ProcessListener for the other events
-#        self._anTestListener._processEvent()
-        
-
-EventsTest()
-    
-    
+#        self._anTestListener._processEvent()    
         

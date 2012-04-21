@@ -345,4 +345,4 @@ if __name__ == "__main__":
   if ft:
     print "Found the TrueType font 'arial.ttf'"
   else:
-    print "faild to find the TrueTYpe font 'arial'\n"
+    print "failed to find the TrueTYpe font 'arial'\n"

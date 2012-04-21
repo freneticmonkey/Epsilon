@@ -23,7 +23,7 @@ class FrameListenerManager(BaseSingleton, ListenerBase):
         pass
     
     # Handle Events
-    def _processEvent(self, new_event):
+    def _process_event(self, new_event):
         if new_event.name == "frame_started":
             self.on_frame_start()
         elif new_event.name == "frame_ended":
