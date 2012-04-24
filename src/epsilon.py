@@ -1,18 +1,24 @@
 from Core.EpsilonManager import EpsilonManager
 import sys, traceback
 
+import cProfile
+
+def main():
+    core = None
+    try:
+            core = EpsilonManager()
+            core.set_scene()
+            core.run()
+    except Exception, e:
+            print "EpsilonCore: ERROR"
+            print e.args
+            traceback.print_exc(file=sys.stdout)
+    if core:
+        del core
+
 if __name__ == "__main__":
-        core = None
-        try:
-                core = EpsilonManager()
-                core.SetScene()
-                core.Run()
-        except Exception, e:
-                print "EpsilonCore: ERROR"
-                print e.args
-                traceback.print_exc(file=sys.stdout)
-        if core:
-            del core
+    #cProfile.run("main()")
+    main()
             
 
 '''
