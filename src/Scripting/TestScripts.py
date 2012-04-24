@@ -53,7 +53,7 @@ class MoveController(Script, ListenerBase):
     event_types = ['MouseEnterUI','MouseExitUI']
     def __init__(self, parent_node=None,speed=10,angle_speed=120):
         Script.__init__(self, name='MoveController', parent_node=parent_node)
-        ListenerBase.__init__(self, eventTypes=self.event_types)
+        ListenerBase.__init__(self, event_types=self.event_types)
         
         self._param_types = {"speed":ScriptParamTypes.FLOAT, 
                              "angle_speed": ScriptParamTypes.FLOAT 

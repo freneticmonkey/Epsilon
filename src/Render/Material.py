@@ -100,25 +100,28 @@ class GLMaterial(BaseMaterial):
         # If the parameter is a string name of the shader
         if isinstance(new_shader, str):
             # Get the appropriate shader from the ShaderManager
-            self._shader = ShaderManager.get_instance().GetShader(new_shader)
+            self._shader = ShaderManager.get_instance().get_shader(new_shader)
         else:
             # Otherwise treat it as an instanced shader
             self._shader = new_shader
             
     def draw(self, mesh):
-#        glMaterialfv(GL_FRONT, GL_AMBIENT, self._ambient.GetGLColour())
-#        glMaterialfv(GL_FRONT, GL_DIFFUSE, self._diffuse.GetGLColour())
-#        glMaterialfv(GL_FRONT, GL_SPECULAR, self._specular.GetGLColour())
-#        glMaterialfv(GL_FRONT, GL_EMISSION, self._emission.GetGLColour())
+#        glMaterialfv(GL_FRONT, GL_AMBIENT, self._ambient.get_gl_colour())
+#        glMaterialfv(GL_FRONT, GL_DIFFUSE, self._diffuse.get_gl_colour())
+#        glMaterialfv(GL_FRONT, GL_SPECULAR, self._specular.get_gl_colour())
+#        glMaterialfv(GL_FRONT, GL_EMISSION, self._emission.get_gl_colour())
 #        glMaterialf(GL_FRONT, GL_SHININESS, self._shininess * 128)
                 
         if self._tex_obj is not None:
-            self._tex_obj.Set()
+            self._tex_obj.set()
         
         # If a Shader has been defined for this material
         if self._shader:
             with self._shader as shader:
-                shader.Render(self, mesh)
+                shader.render(self, mesh)
+                
+        if self._tex_obj is not None:
+            self._tex_obj.unset()
         
         
         

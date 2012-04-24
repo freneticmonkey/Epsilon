@@ -58,7 +58,7 @@ class PhongShader(ShaderProgram):
     
     ### And so on.
         
-    def _ConfigureProperties(self):
+    def _configure_properties(self):
         # Get the Memory locations of the Shader Uniforms
         for uniform_name in self._uniform_names:
             location = glGetUniformLocation(self._id, uniform_name)
@@ -84,7 +84,7 @@ class PhongShader(ShaderProgram):
             Logger.Log("Shader error: attribute not found: vertex_normal" )
         
     # This is called by the Shader Manager at the start of a Frame    
-    def OnFrameStart(self):
+    def on_frame_start(self):
         # Configure the scene lights
         
         lights = SceneManager.get_instance().current_scene.lights
@@ -129,7 +129,7 @@ class PhongShader(ShaderProgram):
         light_data_np = numpy.array(light_data, 'f')
         
         # Send the light data through to the Shader Video Memory
-        self.Use()
+        self.use()
         glUniform4fv(self._uniform_locations['lights'], (self.MAX_LIGHTS * self.LIGHT_SIZE), light_data_np)
         
         # Set the Global ambient value
@@ -137,9 +137,9 @@ class PhongShader(ShaderProgram):
         if self._global_ambient not in [None, -1]:
             with self._global_ambient as ga:
                 glUniform4f(u_loc,ga.r,ga.g,ga.b,ga.a)
-        self.Disable()
+        self.disable()
             
-    def Render(self, material, mesh):
+    def render(self, material, mesh):
         u_loc = self._uniform_locations['material.ambient']
         if u_loc not in [None, -1]:
             with material.ambient as ma:

@@ -9,9 +9,9 @@ class Shadow(object):
     def __init__(self):
         pass
     
-    def BeforeRender(self):
+    def before_render(self):
         pass
     
-    def AfterRender(self):
+    def after_render(self):
         pass
         

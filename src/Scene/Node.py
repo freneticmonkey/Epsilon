@@ -477,22 +477,22 @@ class Node(object):
 class Plane(Node):
 	def __init__(self, name=None):
 		Node.__init__(self, name=name)
-		self.mesh = MeshFactory.GetMesh(MeshTypes.PLANE_HI)
+		self.mesh = MeshFactory.get_mesh(MeshTypes.PLANE_HI)
 		
 class Cube(Node):
 	def __init__(self, name=None):
 		Node.__init__(self, name=name)
-		self.mesh = MeshFactory.GetMesh(MeshTypes.CUBE)
+		self.mesh = MeshFactory.get_mesh(MeshTypes.CUBE)
 		
 class Sphere(Node):
 	def __init__(self, name=None):
 		Node.__init__(self, name=name)
-		self.mesh = MeshFactory.GetMesh(MeshTypes.SPHERE)
+		self.mesh = MeshFactory.get_mesh(MeshTypes.SPHERE)
 		
 class Octo(Node):
 	def __init__(self, name=None):
 		Node.__init__(self, name=name)
-		self.mesh = MeshFactory.GetMesh(MeshTypes.OCTOHEDRON)
+		self.mesh = MeshFactory.get_mesh(MeshTypes.OCTOHEDRON)
 		
 class Light(Node):
 	def __init__(self, name=None):

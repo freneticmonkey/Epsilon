@@ -140,7 +140,7 @@ class GLMesh(object):
             
             self._v_len = len(self._vertices)
             
-            np_verts = numpy.array(self._vertices, 'f')#dtype=numpy.float32)
+            #np_verts = numpy.array(self._vertices, 'f')#dtype=numpy.float32)
 #            # This needs to be improved to handle multiple types
 ##            np_indices = numpy.array(self._indices, dtype=numpy.ushort)
 #            np_colours = numpy.array(self._colours, 'f')#dtype=numpy.byte)
@@ -154,7 +154,7 @@ class GLMesh(object):
             self._gen_texture_coords(tex_coords)
             
             # Configure Vertex Buffer object
-            self._vertex_buffer.Setup(self._vertices, self._indices, self._normals,self._colours,self._tex_coords)
+            self._vertex_buffer.setup(self._vertices, self._indices, self._normals,self._colours,self._tex_coords)
                        
         else:
             self._num_glvertices = None
@@ -234,7 +234,7 @@ class GLMesh(object):
         face_offset = 0
         for face in faces:
             indices = xrange(face_offset, face_offset + len(face))
-            glindices.extend(chain(*MeshUtilities.TesselateFace(indices)))
+            glindices.extend(chain(*MeshUtilities.tesselate_face(indices)))
             face_offset += len(face)
         self._indices = glindices
         self._glindex_type = self._get_glindex_type()
@@ -261,7 +261,7 @@ class GLMesh(object):
         
         if not use_face_normals:
             
-            normals = list( MeshUtilities.FaceNormal(vertices, face) for face in faces )
+            normals = list( MeshUtilities.face_normal(vertices, face) for face in faces )
             
             # Normal Generation
             
@@ -298,7 +298,7 @@ class GLMesh(object):
                 
         else:
             normals = (
-                    MeshUtilities.FaceNormal(vertices, face)
+                    MeshUtilities.face_normal(vertices, face)
                     for face in faces
                   )
             
@@ -441,7 +441,7 @@ class GLMesh(object):
 class MeshUtilities:
     
     @staticmethod
-    def FaceNormal(vertices, face):
+    def face_normal(vertices, face):
         # Return the unit normal vector of the face
         # The direction of the normal will be reversed if
         # the faces winding is reversed.
@@ -459,7 +459,7 @@ class MeshUtilities:
     e.g. [0, 1, 2, 3, 4] -> [[0, 1, 2], [0, 2, 3], [0, 3, 4]]
     '''
     @staticmethod
-    def TesselateFace(face):
+    def tesselate_face(face):
         return ( [face[0], face[index], face[index + 1]]
                  for index in xrange(1, len(face) - 1)
                )
@@ -487,13 +487,13 @@ class VertexBuffer(object):
         self._stride = 0
         
     def __enter__(self):
-        self.Bind()
+        self.bind()
         return self
         
     def __exit__(self, type, value, traceback):
-        self.Unbind()
+        self.unbind()
         
-    def Setup(self, vertices,
+    def setup(self, vertices,
                     indices,
                     normals = None,
                     colours = None,
@@ -524,21 +524,6 @@ class VertexBuffer(object):
             # number of texture coordinates
             else:
                 num_texture_coords = len(texture_coords[0][0])
-            
-#        # Determine if all of the arrays contain enough data for all of the vertices
-#        num_props = 0
-#        total_data_len = 0
-#        
-#        if has_normals:
-#            num_props += 1
-#            total_data_len += len(normals)
-#        if has_colors:
-#            num_props += 1
-#            total_data_len += len(colours)
-#        if has_tex_coords:
-#            num_props += 1
-#            total_data_len += len(texture_coords)
-#        total_data_len /= num_props
         
         # If the input data has enough data for each of the vertices
         if len(normals) == len(vertices):
@@ -553,7 +538,6 @@ class VertexBuffer(object):
                         vert_data.append([n.x,n.y,n.z])
                 if has_colours:
                     r, g, b, a = colours[i].GetFloatColour()
-#                    with colours[i] as c:
                     vert_data.append([r, g, b, a])
                 if has_tex_coords:
                     if num_texture_coords > 1:
@@ -594,31 +578,9 @@ class VertexBuffer(object):
         return self._indices_vbo
     
     # Handles Binding and setting appropriate OpenGL Settings
-    def Bind(self):
-#        glEnableClientState(GL_VERTEX_ARRAY)
-#        if self._has_normals:
-#            glEnableClientState(GL_NORMAL_ARRAY)
-#        if self._has_colours:
-#            glEnableClientState(GL_COLOR_ARRAY)
-#        if self._has_tex_coords:
-#            glEnableClientState(GL_TEXTURE_COORD_ARRAY)           
-        
+    def bind(self):
         self._vbo.bind()
-        self._indices_vbo.bind()
-        
-        # Fixed Function Calcs
-#        glVertexPointer(3, GL_FLOAT, self._stride, self._vbo)
-#        if self._has_normals:
-#            glNormalPointer(GL_FLOAT, self._stride, self._vbo+self._normal_offset)
-#        if self._has_colours:
-#            glColorPointer(3, GL_FLOAT, self._stride, self._vbo+self._colour_offset)
-#        if self._has_tex_coords:
-#            if self._num_tex_coords == 1:
-#                glTexCoordPointer(2, GL_FLOAT, self._stride, self._vbo+self._tex_coord_offset)
-#            elif self._num_tex_coords > 1:
-#                pass # Multi-texturing currently unsupported.
-        
-#        glDrawArrays(GL_TRIANGLES, 0, self._v_len)       
+        self._indices_vbo.bind()       
         
     def GetVertexAttribute(self):
         return 3, GL_FLOAT, False, self._stride, self._vbo
@@ -633,46 +595,8 @@ class VertexBuffer(object):
     def GetTexCoordAttribute(self):
         return 2, GL_FLOAT, False, self._stride, self._vbo+self._tex_coord_offset        
         
-    def Unbind(self):
+    def unbind(self):
         self._vbo.unbind()
-        self._indices_vbo.unbind()        
-    
-#class VertexBuffer(object):
-#    def __init__(self, data, usage):
-#        self.buffer = GL.GLuint(0)
-#        name = glGenBuffers(1)#, self.buffer)
-#        self.buffer = self.buffer.value
-#        glBindBuffer(GL_ARRAY_BUFFER_ARB, self.buffer)
-#        glBufferData(GL_ARRAY_BUFFER_ARB, ADT.arrayByteCount(data), ADT.voidDataPointer(data), usage)
-#
-#    def __del__(self):
-#        glDeleteBuffers(1, GL.GLuint(self.buffer))
-#    
-#    def bind(self):
-#        glBindBuffer(GL_ARRAY_BUFFER_ARB, self.buffer)
-#    
-#    def bind_colors(self, size, type, stride=0):
-#        self.bind()
-#        glColorPointer(size, type, stride, None)
-#    
-#    def bind_edgeflags(self, stride=0):
-#        self.bind()
-#        glEdgeFlagPointer(stride, None)
-#    
-#    def bind_indexes(self, type, stride=0):
-#        self.bind()
-#        glIndexPointer(type, stride, None)
-#    
-#    def bind_normals(self, type, stride=0):
-#        self.bind()
-#        glNormalPointer(type, stride, None)
-#    
-#    def bind_texcoords(self, size, type, stride=0):
-#        self.bind()
-#        glTexCoordPointer(size, type, stride, None)
-#    
-#    def bind_vertexes(self, size, type, stride=0):
-#        self.bind()
-#        glVertexPointer(size, type, stride, None)
+        self._indices_vbo.unbind()
     
     

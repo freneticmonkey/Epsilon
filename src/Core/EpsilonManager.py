@@ -111,11 +111,11 @@ class EpsilonManager(object):
         
     def set_scene(self):
         # Default Shaders
-        self._shader_manager.AddShaderObject("phong_simple", PhongSimple())
+        self._shader_manager.add_shader_object("phong_simple", PhongSimple())
         
         # Testing loading using the ResourceManager
-        #self._resource_manager.process_resource("scene.xml")
-        self._resource_manager.process_resource("empty_scene.xml")
+        self._resource_manager.process_resource("scene.xml")
+        #self._resource_manager.process_resource("empty_scene.xml")
         
     def run(self):
         

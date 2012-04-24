@@ -253,7 +253,7 @@ class MeshFactory(object):
         pass
     
     @staticmethod
-    def GetMesh(type):
+    def get_mesh(type):
         if type == MeshTypes.PLANE:
             verts, faces, tex_cs = Polyhedra.plane()
             return Mesh(verts, faces, Preset.yellow, tex_coords=tex_cs)

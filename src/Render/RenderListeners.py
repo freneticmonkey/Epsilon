@@ -3,31 +3,31 @@ from Logging import Logger
 
 class RenderListener(ListenerBase):
     def __init__(self, renderOps):
-        self._renderOps = renderOps
-        self._EventType = 'RenderEvent'
-        ListenerBase.__init__(self, self._EventType)
+        self._render_ops = renderOps
+        self._event_type = 'RenderEvent'
+        ListenerBase.__init__(self, self._event_type)
         
     def _process_event(self):
         Logger.Log('RenderListener. Received Render Event(s).')
         
-        length = len(self._Events)
+        length = len(self._events)
         
         #Debug print Events. 
         if length > 0:
-            Logger.Log('New Render Listener event is: ' + self._Events[length-1]._EventType)
+            Logger.Log('New Render Listener event is: ' + self._events[length-1]._event_type)
             
         # Process Render events here - triggering relevant RenderCore Functions
-        for newEvent in self._Events:
+        for new_event in self._events:
             #Process Event contents 
-            if newEvent._eventType == 'RenderEvent':
+            if new_event._event_type == 'RenderEvent':
             
                 # All RenderEvents' data contains another eventType breakdown within the eventData
-                eventData = newEvent._eventData
+                event_data = new_event._event_data
             
-                if eventData._eventType == 'AddEntity':
-                    entName = eventData._entityName
-                    entMesh = eventData._entityMesh                    
-                    self._renderOps.addEntity(entName, entMesh)
+                if event_data._event_type == 'AddEntity':
+                    entName = event_data._entityName
+                    entMesh = event_data._entityMesh                    
+                    self._render_ops.addEntity(entName, entMesh)
                     
                 #Process Other RenderEvents here
                 

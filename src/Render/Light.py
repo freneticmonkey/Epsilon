@@ -103,9 +103,9 @@ class GLLight(LightBase):
     
     def draw(self):
         
-        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.GetGLColour())
-        glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.GetGLColour())
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.get_gl_colour())
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.get_gl_colour())
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.get_gl_colour())
         
         # OpenGL uses the MODELVIEW matrix which should already have the lights
         # position from the transform of the Light's parent.

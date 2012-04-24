@@ -4,7 +4,7 @@ Created on Sep 18, 2011
 @author: scottporter
 '''
 from collections import namedtuple
-from random import randint, uniform
+from random import randint, uniform, random
 
 from Render.GLUtilities import *
 from OpenGL.GL import GLfloat
@@ -32,18 +32,18 @@ class Colour( namedtuple('Colour','r g b a')):
     
     # Get a Colour object with a random colour
     @staticmethod
-    def Random():
+    def random():
         #return Colour( randint(0,255), randint(0,255), randint(0,255), 255 )
         return Colour( random(), random(), random(), 1.0)
     
-    def Inverted(self):
+    def inverted(self):
         return Colour( 1.0 - self.r,
                        1.0 - self.g,
                        1.0 - self.b,
                        1.0
                      )
     
-    def Tinted(self, other=None, proportion=0.5):
+    def tinted(self, other=None, proportion=0.5):
         if other is None:
             other = Preset.white
         
@@ -53,16 +53,16 @@ class Colour( namedtuple('Colour','r g b a')):
                        int(self.a * (1 - proportion) + other.a * proportion)                      
                      )
     # Returns the colour as an array in the range of 0 - 1.0
-    def GetFloatColour(self):   
+    def get_float_colour(self):   
         return (self.r / 255.0), (self.g / 255.0), (self.b / 255.0), (self.a / 255.0)
     
     
     # Get OpenGL Array representation of the Colour
-    def GetGLColour(self):
+    def get_gl_colour(self):
         return CreateGLArray(GLfloat, self, 4)
     
     # Get a normalised array representation of the colour
-    def GetShaderColour(self):
+    def get_shader_colour(self):
         return ((self.r/256.0), (self.g/256.0), (self.b/256.0), self.a)
     
 class Preset:

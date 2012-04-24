@@ -22,7 +22,7 @@ _default_shader_path = os.path.join("Render","Shaders")
 #        _instance = ShaderManager()
 #    return _instance
 
-def GetShaderPath(shader_filename):
+def get_shader_path(shader_filename):
     return os.path.join(_default_shader_path, shader_filename)
 
 class ShaderManagerLog(ClassLogger):
@@ -37,19 +37,18 @@ class ShaderManager(FrameListenerManager):
         self._shaders = {}
         self._smlog = ShaderManagerLog()
         
-    def AddShaderObject(self, name, new_shader):
+    def add_shader_object(self, name, new_shader):
         if not name in self._shaders:
-            compile_result = new_shader.Compile()
+            compile_result = new_shader.compile()
             if len(compile_result) > 0:
                 print "Compiled " + name + " Shader.\nResult:\n" + compile_result
             self._shaders[name] = new_shader
         else:
             self._smlog.Log("Shader already exists.")
         
-    def AddShaderFromFiles(self, name, vert, frag):
-        
-        new_shader = ShaderProgram( VertexShader(GetShaderPath(vert)), FragmentShader(GetShaderPath(frag)) )
-        shader_message = new_shader.Compile()  
+    def add_shader_from_files(self, name, vert, frag):
+        new_shader = ShaderProgram( VertexShader(get_shader_path(vert)), FragmentShader(get_shader_path(frag)) )
+        shader_message = new_shader.compile()  
         if len(shader_message) > 0:
             self._smlog.Log("Shader compile result: " + shader_message)
         
@@ -70,7 +69,7 @@ class ShaderManager(FrameListenerManager):
 #        if len(shader_message) > 0:
 #            Logger.Log("Shader compile result: " + shader_message)
 
-    def GetShader(self, name):
+    def get_shader(self, name):
         if name in self._shaders:
             return self._shaders[name]
         else:
@@ -79,6 +78,6 @@ class ShaderManager(FrameListenerManager):
         
     def on_frame_start(self):
         for shader in self._shaders.itervalues():
-            shader.OnFrameStart()
+            shader.on_frame_start()
         
     

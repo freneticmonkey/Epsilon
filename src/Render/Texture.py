@@ -89,7 +89,7 @@ class Texture(ResourceBase):
             self._opengl_id = None
             self._loaded = False
 
-    def Set(self):
+    def set(self):
         if self._loaded:
             # Configure OpenGL to use the texture
             glEnable(GL_TEXTURE_2D)
@@ -98,7 +98,7 @@ class Texture(ResourceBase):
             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
             glBindTexture(GL_TEXTURE_2D, self._opengl_id)
         
-    def Unset(self):
+    def unset(self):
         if self._loaded:
             glDisable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, 0)

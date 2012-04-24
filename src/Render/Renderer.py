@@ -231,7 +231,7 @@ class GLRenderer(Renderer):
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 		
 		# Draw the UI - Later
-		self._projection.SetScreen()
+		self._projection.set_screen()
 		self._camera.Reset()
 		glColor3f(1.0,1.0,1.0)
 		self._print_font.glPrint(5, 50, "Camera:")
@@ -288,7 +288,7 @@ class GLRenderer(Renderer):
 				raise RendererUninitialisedException(message)
 				
 		# Set Projection
-		self._projection.SetPerspective(45)
+		self._projection.set_perspective(45)
 		
 		# Point the camera at the origin
 		#self._camera.LookAt(Vector3())

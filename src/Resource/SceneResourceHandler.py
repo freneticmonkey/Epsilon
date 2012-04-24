@@ -174,7 +174,7 @@ class SceneResourceHandler(ResourceHandlerBase):
                 if "preset" in node.attrib:
                     preset = node.attrib["preset"]
                     if preset in MeshTypesString.MESHES:
-                        parent.mesh = MeshFactory.GetMesh(MeshTypesString.MESHES[preset])
+                        parent.mesh = MeshFactory.get_mesh(MeshTypesString.MESHES[preset])
                     else:
                         self._log.Log( "Invalid Mesh Preset: [%s]" % ( preset ) )
                         
@@ -229,6 +229,8 @@ class SceneResourceHandler(ResourceHandlerBase):
                     new_script = script()
                 except Exception, e:
                     self._log.Log("Could not create Script with name: " + script_name)
+                    self._log.Log("Message: " + e.message)
+                    script = None
                 
                 if not script is None:
                     try:
