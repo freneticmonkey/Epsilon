@@ -16,3 +16,11 @@ class LoggerSettings:
     filename = 'EpsilonLog.txt'
     log_to_console = True
     
+class Frameworks:
+    PYGAME = 1
+    PYGLET = 2
+    
+class FrameworkSettings:
+    use_framework = Frameworks.PYGLET
+    #use_framework = Frameworks.PYGAME
+    

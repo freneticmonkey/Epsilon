@@ -15,6 +15,7 @@ class FrameListenerManager(BaseSingleton, ListenerBase):
     
     # Register for FrameListener Events
     def __init__(self):
+        self._instance = self
         ListenerBase.__init__(self, FrameEvents.events)
         
         self.init()

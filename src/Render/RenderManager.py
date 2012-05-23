@@ -12,7 +12,7 @@ class RenderManager(BaseSingleton):
         del self._renderer
         
     def init(self, width, height, title):
-        self._renderer.initialise_display(width, height, title)
+        self._renderer.init(width, height, title)
         
     def set_camera(self, camera):
         self._renderer.camera = camera

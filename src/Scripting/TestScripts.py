@@ -21,7 +21,7 @@ from Scripting.Script import ScriptParamTypes
 from Geometry.euclid import Vector3, Quaternion
 from Render.RenderManager import RenderManager
 
-from pygame import *
+#from pygame import *
 
 import math
 
@@ -62,15 +62,7 @@ class MoveController(Script, ListenerBase):
         self._speed = speed
         self._angle_speed = angle_speed
         
-        self._initial_mouse_down = False
-        self._initial_mouse_up = False
-        self._res = Settings.DisplaySettings.resolution
-        self._h_res = [self._res[0]/2, self._res[1]/2]
-        mouse.set_visible(True)
-        
         self._mouse_over_ui = False
-        
-        Logger.Log("Initialised MoveController")
     
     def _process_event(self, new_event):
         if new_event.name == 'MouseEnterUI':
@@ -86,52 +78,59 @@ class MoveController(Script, ListenerBase):
             
             # If the left mouse is down 
             if mouse_left_down:
-                # Hide the cursor
-                mouse.set_visible(False)
                 
-                # And its not the initial frame
-                if not self._initial_mouse_down:
-                    # Reset the mouse position to the centre of the screen
-                    self._mouse_x, self._mouse_y = mouse.get_pos()
-                    self._mouse_x -= self._h_res[0]
-                    self._mouse_y -= self._h_res[1]
-                    Input.set_mouse_pos(self._mouse_x, self._mouse_y)
-                else:
-                    self._initial_mouse_down = False
-                    Input.set_mouse_pos(0, 0)
-                mouse.set_pos(self._h_res[0],self._h_res[1])
-                self._initial_mouse_up = True
+                Input.set_lock_mouse(True)
+#                # Hide the cursor
+#                #mouse.set_visible(False)
+#                
+#                # And its not the initial frame
+#                if not self._initial_mouse_down:
+#                    # Reset the mouse position to the centre of the screen
+#                    #self._mouse_x, self._mouse_y = mouse.get_pos()
+#                    self._mouse_x, self._mouse_y = Input.get_mouse_move()
+#                    self._mouse_x -= self._h_res[0]
+#                    self._mouse_y -= self._h_res[1]
+#                    Input.set_mouse_pos(self._mouse_x, self._mouse_y)
+#                else:
+#                    self._initial_mouse_down = False
+#                    Input.set_mouse_pos(0, 0)
+#                    
+#                #mouse.set_pos(self._h_res[0],self._h_res[1])
+#                Input.set_mouse_pos(self._h_res[0],self._h_res[1])
+#                
+#                self._initial_mouse_up = True
                 
                 # Handle Keyboard
-                if Input.get_key(K_a):
+                if Input.get_key(Input.KEY_A):
                     self._node.translate(  ( Vector3.RIGHT() * self._speed * Time.delta_time ) )
-                if Input.get_key(K_d):
+                if Input.get_key(Input.KEY_D):
                     self._node.translate(  ( Vector3.RIGHT() * -self._speed * Time.delta_time ) )
-                if Input.get_key(K_w):
+                if Input.get_key(Input.KEY_W):
                     self._node.translate( ( Vector3.FORWARD() * self._speed * Time.delta_time ) )
-                if Input.get_key(K_s):
+                if Input.get_key(Input.KEY_S):
                     self._node.translate( ( Vector3.FORWARD() * -self._speed * Time.delta_time ) )
                     
-                if Input.get_key(K_r):
+                if Input.get_key(Input.KEY_R):
                     self._node.translate( ( Vector3.UP() * self._speed * Time.delta_time ) )
-                if Input.get_key(K_f):
+                if Input.get_key(Input.KEY_F):
                     self._node.translate( ( Vector3.UP() * -self._speed * Time.delta_time ) )
                 
                 angle = self._angle_speed * Time.delta_time
                 angle = angle * (math.pi / 180 )
-        #        rot = self._node.rotation
-                if Input.get_key(K_q):
+                
+                if Input.get_key(Input.KEY_Q):
                     self._node.rotate(Quaternion().rotate_axis(angle, Vector3(0,1,0)) )
                     
-                if Input.get_key(K_e):
+                if Input.get_key(Input.KEY_E):
                     self._node.rotate( Quaternion().rotate_axis(-angle, Vector3(0,1,0)) )
                 
             else:
-                self._initial_mouse_down = True
-                if self._initial_mouse_up:
-                    # Show the cursor
-                    mouse.set_visible(True)
-                    self._initial_mouse_up = False
+                Input.set_lock_mouse(False)
+#                self._initial_mouse_down = True
+#                if self._initial_mouse_up:
+#                    # Show the cursor
+#                    #mouse.set_visible(True)
+#                    self._initial_mouse_up = False
             
 class CameraMoveController(MoveController):
     def __init__(self, parent_node=None,speed=10,angle_speed=120):
@@ -150,17 +149,17 @@ class CameraMoveController(MoveController):
             
             # Mouse Controls
     #        angle = self._angle_speed * (math.pi / 180)
-            angle = 0.002
-            mx, my = Input.get_mouse_move()
-            h_angle = angle * -mx
-            v_angle = angle * my
+            angle_h = 0.002
+            angle_v = 0.002
+            
+            mx, my = Input.get_mouse_move_relative()
+            h_angle = angle_h * -mx
+            v_angle = angle_v * -my
             self._node.rotate(Quaternion().rotate_axis(h_angle, Vector3(0,1,0)) )
             self._node.rotate(Quaternion().rotate_axis(v_angle, Vector3(1,0,0)) )
             
-            
             if hasattr( self._node, 'LookAt'):
                 self._node.look_at = pos + ( forward * self._speed)
-            
             
 class DisplayCoordinate(Script):
     
@@ -186,18 +185,20 @@ class SettingsController(Script):
         self._grid = True 
         self._renderer = RenderManager.get_instance()._renderer
         self._quit_detected = False
+        
+        Logger.Log("Initialised Settings Controller")
     
     def update(self):
         
-        if Input.get_key_down(K_0):
+        if Input.get_key_down(Input.KEY_0):
             self._wireframe = not self._wireframe
             self._renderer.wireframe = self._wireframe
         
-        if Input.get_key_down(K_9):
+        if Input.get_key_down(Input.KEY_9):
             self._grid = not self._grid
             self._renderer.grid = self._grid
             
-        if Input.get_key_down(K_ESCAPE) or Input.get_quit_detected():
+        if Input.get_key_down(Input.KEY_ESCAPE) or Input.get_quit_detected():
             # Fire a Quit Event
             QuitEvent().send()
             

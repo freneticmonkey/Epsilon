@@ -1,15 +1,15 @@
-import pygame
+from Frameworks.FrameworkManager import FrameworkManager
 
 class Window(object):
 	def __init__(self):
 		self._width = 800
 		self._height = 600
+		self._title = "Epsilon Engine"
 		
-		# Start PyGame
-		pygame.init()
+		self._framework = FrameworkManager.get_instance().framework
 	
 	def __del__(self):
-		self.Shutdown()
+		self.shutdown()
 	
 	@property
 	def width(self):
@@ -19,24 +19,22 @@ class Window(object):
 	def height(self):
 		return self._height
 	
-	def init(self, width, height):
-		self._width = width
-		self._height = height
+	def init(self, width=None, height=None, title=None):
+		if not width is None:
+			self._width = width
+			
+		if not height is None:
+			self._height = height
+			
+		if not title is None:
+			self._title = title
 		
 		# Kick off initialisation of the Window
-		self.InitialiseDisplay(width, height)
+		self._framework.initialise_display(self._width, self._height, self._title)
 		
 	def shutdown(self):
-		if pygame:
-			pygame.quit()
-		
-	# This function will be overwritten by children
-	# i.e. Renderer Objects
-	def initialise_display(self, width, height):
-		pygame.display.set_mode((width,height))
-		
-	def _flip(self):
-		pygame.display.flip()
-		
-		
+		pass
+	
+	def draw(self):
+		pass
 		

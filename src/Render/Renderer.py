@@ -1,8 +1,6 @@
 
 import os
 
-import pygame
-
 from Core.Window import Window
 
 from OpenGL.GL import *
@@ -56,9 +54,6 @@ class Renderer(Window):
 	@projection.setter
 	def projection(self, new_proj):
 		self._projection = new_proj
-		
-	def draw(self):
-		pass
 	
 class GLRenderer(Renderer):
 	
@@ -83,12 +78,10 @@ class GLRenderer(Renderer):
 		
 		self._fatal_error_displayed = False 
 		
-	def initialise_display(self, width, height, title):
-		pygame.init()
-		pygame.display.set_mode((width,height), pygame.OPENGL|pygame.DOUBLEBUF)
-		pygame.display.set_caption(title)
-			
-		self._ui_manager = UIManager.get_instance()
+	def init(self, width, height, title):
+		Renderer.init(self, width, height, title)
+		
+		#self._ui_manager = UIManager.get_instance()
 		
 		# Create projection object
 		self._projection = Projection(width, height)
@@ -96,7 +89,7 @@ class GLRenderer(Renderer):
 		# Create the ShaderManager
 		self._shader_manager = ShaderManager.get_instance()
 		
-		self._print_font = Font.font_data("/Library/Fonts/Arial.ttf", 16)
+		#self._print_font = Font.font_data("/Library/Fonts/Arial.ttf", 16)
 		
 		# Initialise OpenGL Display and set the indicator for initialisation completion
 		self._has_initialised = self.setup_3d()
@@ -233,18 +226,19 @@ class GLRenderer(Renderer):
 		# Draw the UI - Later
 		self._projection.set_screen()
 		self._camera.Reset()
-		glColor3f(1.0,1.0,1.0)
-		self._print_font.glPrint(5, 50, "Camera:")
-		self._print_font.glPrint(5, 35, "Pos: %s" % str(self._camera.position))
-		self._print_font.glPrint(5, 20, "Ori: %s" % str(self._camera.rotation))
-#		fps = ((1/Time.deltaTime))
-		fps = 1 / (Time.delta_time * 0.9) + (self._last_time * 0.1)
-		self._last_time = Time.delta_time
 		
-		#self._print_font.glPrint(5, 5, "FPS: %.2f" % fps) 
-		self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.Time.get_instance().get_fps())
+#		glColor3f(1.0,1.0,1.0)
+#		self._print_font.glPrint(5, 50, "Camera:")
+#		self._print_font.glPrint(5, 35, "Pos: %s" % str(self._camera.position))
+#		self._print_font.glPrint(5, 20, "Ori: %s" % str(self._camera.rotation))
+##		fps = ((1/Time.deltaTime))
+#		fps = 1 / (Time.delta_time * 0.9) + (self._last_time * 0.1)
+#		self._last_time = Time.delta_time
+#		
+#		#self._print_font.glPrint(5, 5, "FPS: %.2f" % fps) 
+#		self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.Time.get_instance().get_fps())
 		
-		self._ui_manager.draw()
+#		self._ui_manager.draw()
 		
 	def draw_grid(self):
 		# Simple Grid for the time being

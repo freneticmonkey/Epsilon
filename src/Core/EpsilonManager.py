@@ -1,4 +1,5 @@
 from Logging import Logger
+
 from Events.EventManager import EventManager
 from Events.EventBase import EventBase
 from Input import Input
@@ -10,6 +11,8 @@ from Render.TextureManager import TextureManager
 from Render.ShaderManager import ShaderManager
 from Render.Shaders.Phong import PhongShader
 from Render.Shaders.PhongSimple import PhongSimple
+
+from Frameworks.FrameworkManager import FrameworkManager
 
 # Sceneloading
 from Resource.ResourceManager import ResourceManager
@@ -64,6 +67,9 @@ class EpsilonManager(object):
         # classes below are initialised 
         self._event_manager = EventManager.get_instance()
         
+        #Register Core Event Listener for detecting quit
+        self._core_listener = CoreListener(False)
+        
         # Initialise Time
         self._time = Time.get_instance()
         
@@ -73,18 +79,22 @@ class EpsilonManager(object):
         
         #Start Render System
         self._render_manager = RenderManager.get_instance()
-        self._render_manager.init(DisplaySettings.resolution[0],DisplaySettings.resolution[1],DisplaySettings.window_title)
+        self._render_manager.init(DisplaySettings.resolution[0],
+                                  DisplaySettings.resolution[1],
+                                  DisplaySettings.window_title)
+        
+        # Setup the framework callbacks
+        self._framework = FrameworkManager.get_instance().framework
+        self._framework.setup = self.setup
+        self._framework.run_loop = self.update
+        self._framework.on_draw = self._render_manager.draw
                 
         # Initialise Input
-        self._input = Input.get_instance()
+        #self._input = Input.get_instance()
         
         # Setup Frame Start/End Events
         self._frame_start = FrameStarted()
         self._frame_end = FrameEnded()
-        
-        #Register Core Event Listener for detecting quit
-        self._keep_alive = True
-        self._core_listener = CoreListener(False)
         
         #Get the Texture Manager
         self._texture_manager = TextureManager.get_instance()
@@ -95,7 +105,8 @@ class EpsilonManager(object):
         # Start Scripting System
         self._script_manager = ScriptManager.get_instance()
         
-        self._ui_manager = UIManager.get_instance()
+        # Start the UI Manager
+        #self._ui_manager = UIManager.get_instance()
         
         # Configure the ResourceManager
         self._resource_manager = ResourceManager.get_instance()
@@ -118,7 +129,9 @@ class EpsilonManager(object):
         #self._resource_manager.process_resource("empty_scene.xml")
         
     def run(self):
-        
+        self._framework.start()
+    
+    def setup(self):
         # Load Textures
         self._texture_manager.load_textures()
         
@@ -128,26 +141,25 @@ class EpsilonManager(object):
         # Start Scripts
         self._script_manager.start_scripts()
         
-        # Until a Quit Event is detected process engine systems
-        while self._keep_alive == True:
+        Logger.Log("Finished Setup")
             
-            self._time.update_delta()
-            
-            # Send Frame Started Event
-            self._frame_start.send()
-            
-            # Process Events
-            self._event_manager.process_events()
-            
-            # Render the Scene
-            self._render_manager.draw()
-            
-            # Update SceneManager
-            self._scene.update()
-            
-            self._keep_alive = not self._core_listener.quitting
-            
-        Logger.Log("Finished")
+    def update(self, dt=0):
+    
+        self._time.update_delta()
+        
+        # Send Frame Started Event
+        self._frame_start.send()
+        
+        # Process Events
+        self._event_manager.process_events()
+        
+        # Render the Scene
+        #self._render_manager.draw()
+        
+        # Update SceneManager
+        self._scene.update()
+        
+        self._frame_end.send()
         
     def shutdown(self):
         del self._render_manager
