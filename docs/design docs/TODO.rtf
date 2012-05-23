@@ -7,11 +7,68 @@
 
 \f0\b\fs24 \cf0 Epsilon Dev Notes\
 \
+22/05/2012
+\b0 \
+\
+Haven't had a great deal of time to work on Epsilon. With the move, work, other work, etc :(\
+\
+I've changed pretty much all the code to use python naming conventions.  Removed all CamelCase names\
+\
+Implemented a layer onto which pyglet and pygame sit.  This has been pretty boring, but educational all the same I believe.\
+The engine is now a little more structured than before which is probably for the best.\
+\
+Next up:\
+Check in latest changes and sync up to github\
+Re-integrate UIManager using Simplui instead.
+\b \
+\
+14/4/2012\
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
 
-\b0 \cf0 Immediate Goals\
-- Check in latest changes\
-- Swap existing Phong Renderer for a simpler model that actually uses a varying distance variable for proper attenuation\
+\b0 \cf0 UI Changes\
+- Change the Renderer from PyGame to Pyglet.  Pyglet is more frequently developed and appears to have much cleaner code in general.  This would also be a good time to make the Camel Case API changes.\
+- Use Simplui for the GUI.\
+\
+Render Changes\
+- Frustrum Culling.\
+\
+Audio\
+- Implement.\
+\
+General Changes\
+- Implement Livecoding\
+  Class Refactoring\
+- Continue to refine the class structures to logically group functionality\
+- This could also be put below, but move all rendering code within the Renderer. - Kinda, sorta done.\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
+
+\b \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
+
+\b0 \cf0 Later\
+- After the UI is in. Implement scene editing! :D\
+- Physics.\
+  - ODE\
+  - \
+- In engine python editing using Python highlighting via: Pygments\
+- Engine optimisations and speedups using shedskin.\
+- Particles\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
+
+\b \cf0 \
+\
+\
+21/3/2012\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
+
+\b0 \cf0 ShaderTree\
+- 
+\b \
+\
+
+\b0 Immediate Goals\
+- Check in latest changes - Done!\
+- Swap existing Phong Renderer for a simpler model that actually uses a varying distance variable for proper attenuation - Done\
 \
 Near-term goals\
 - Clean up code.  Refactor classes somewhat. \
@@ -43,8 +100,8 @@ Complicated Problems that aren't particularly fun to solve\
 Long Term\
 - Networking, Verse Integration\
 - Basic Scene Editing functionality\
-	- Define Scene format. XML? Write a loader.\
-	- Model Importer, FBX, Collada or Obj.\
+	- Define Scene format. XML? Write a loader. - Done\
+	- Model Importer, FBX, Collada or Obj.  - Obj Done.\
 	- Create a scene editor. Write an exporter!\
 - 3D UI. Change the UI and Renderer implementation to have 'Overlays' a'la Ogre3D and enable the UI to be drawn on planes which \
   can be positioned in 3D space.\
