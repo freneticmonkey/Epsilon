@@ -19,6 +19,8 @@ from Render import Font
 from Render.Shader import *
 from Render.ShaderManager import ShaderManager
 
+from Render.RenderEvents import RenderListener
+
 from UI.UIManager import UIManager
 
 from Core import Time
@@ -73,6 +75,9 @@ class GLRenderer(Renderer):
 		self._wireframe = False
 		self._grid = False
 		
+		# Render Listener to allow access to settings
+		self._listener = RenderListener(self)
+		
 		# For FPS Calc
 		self._last_time = 0.0
 		
@@ -81,7 +86,7 @@ class GLRenderer(Renderer):
 	def init(self, width, height, title):
 		Renderer.init(self, width, height, title)
 		
-		#self._ui_manager = UIManager.get_instance()
+		self._ui_manager = UIManager.get_instance()
 		
 		# Create projection object
 		self._projection = Projection(width, height)
@@ -146,6 +151,7 @@ class GLRenderer(Renderer):
 		
 	def teardown_3d(self):
 		glDisable(GL_CULL_FACE)
+		glDisable(GL_DEPTH_TEST)
 		
 	def load_meshes(self, Nodes=[]):
 		# Load the meshes from the Scene
@@ -238,7 +244,7 @@ class GLRenderer(Renderer):
 #		#self._print_font.glPrint(5, 5, "FPS: %.2f" % fps) 
 #		self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.Time.get_instance().get_fps())
 		
-#		self._ui_manager.draw()
+		self._ui_manager.draw()
 		
 	def draw_grid(self):
 		# Simple Grid for the time being
@@ -268,6 +274,7 @@ class GLRenderer(Renderer):
 			if i == 0.0:
 				glColor3f(0.0,0.0,0.0)
 		glEnd()
+		glColor3f(1.0,1.0,1.0)
 		
 		
 	def draw(self):
