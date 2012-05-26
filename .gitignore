@@ -13,7 +13,9 @@ src/Environment
 
 media
 
-src/pyui
+bin/Log.txt
+
+epsilon/pyui
 
 src/profile.txt
 
