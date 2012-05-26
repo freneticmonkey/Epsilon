@@ -43,3 +43,7 @@ class CoreFlagData():
 class CoreFlagEvent(CoreEvent):
     def __init__(self, flag_name, flag):
         CoreEvent.__init__(self, CoreFlagData(flag_name, flag) )
+        
+class QuitEvent(EventBase):
+    def __init__(self):
+        EventBase.__init__(self, 'Quit', True)
