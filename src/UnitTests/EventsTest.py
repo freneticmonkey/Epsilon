@@ -1,68 +1,73 @@
+import time
+
 from Events.EventManager import EventManager
 from Events.EventBase import EventBase
 from Events.ListenerBase import ListenerBase
 
 class TestListener(ListenerBase):
-    def __init__(self):
-        self._EventType = 'TestEvent'
-        ListenerBase.__init__(self, self._event_type)
+    event_types = ['TestEvent']
+    def __init__(self): 
+        ListenerBase.__init__(self, self.event_types)
+        self._rec_events = 0
         
     def _process_event(self, new_event):
-        print 'Received Event. Inside Test Listener'
-        print 'new event is: ' + new_event._event_type
+        self._rec_events += 1
+#        print 'Received Event. Inside Test Listener'
+#        print 'new event is: ' + new_event._event_type
         
 class TestEvent(EventBase):
-    def __init__(self):
-        self._EventType = 'TestEvent'
+    _event_type = 'TestEvent'
+    def __init__(self): 
         EventBase.__init__(self, self._event_type, None)
-        print 'Created Event: ' + self._event_type
+#        print 'Created Event: ' + self._event_type
         
 class ATestListener(ListenerBase):
-    def __init__(self):
-        self._EventType = 'AnotherTestEvent'
-        ListenerBase.__init__(self, self._event_type)
+    event_types = ['AnotherTestEvent']
+    def __init__(self): 
+        ListenerBase.__init__(self, self.event_types)
+        self._rec_events = 0
         
     def _process_event(self, new_event):
-        print 'Received Event. Inside Another Test Listener'
-        print 'new event is: ' + new_event._event_type
+        self._rec_events += 1
+#        print 'Received Event. Inside Another Test Listener'
+#        print 'new event is: ' + new_event._event_type
         
 class ATestEvent(EventBase):
+    _event_type = 'AnotherTestEvent'
     def __init__(self):
-        self._EventType = 'AnotherTestEvent'
         EventBase.__init__(self, self._event_type, None)
-        print 'Created Event: ' + self._event_type  
+#        print 'Created Event: ' + self._event_type  
         
 if __name__ == "__main__":
         
+        start_time = time.time()
+        
         #Create an EventCore Object
-        _event_core = EventManager()
+        _event_core = EventManager().get_instance()
         
         #Create Listeners
         _test_listener = TestListener()
         _a_test_listener = ATestListener()
-                
-        # Attaching Listeners
-        # Add an TestListener Object
-#        self._eventsCore._addListener(self._testListener)
         
-        # Add different Listener Object
-#        self._eventsCore._addListener(self._anTestListener)
+        # Creating and sending Events
         
-        # Creating Events
-        # Add a TestEvent Object
-        te = TestEvent()
-        te.send()
-#        self._eventsCore._newEvent(TestEvent())
+        NUM_EVENTS = 100000
+        FREQ_PROCESS = 100
         
-        # Add a different Event Object
-        ate = ATestEvent()
-        ate.send()
-#        self._eventsCore._newEvent(ATestEvent())        
+        for i in range(0, NUM_EVENTS):
+            # Add a TestEvent Object
+            te = TestEvent().send()
+            
+            # Add a different Event Object
+            ate = ATestEvent().send()
+            
+            if i % FREQ_PROCESS == 0:
+                _event_core.process_events()
         
-        # Processing Events within listeners
-        # Process Listener for Test events
-#        self._testListener._processEvent()
+        _event_core.process_events()
         
-        # ProcessListener for the other events
-#        self._anTestListener._processEvent()    
+        end_time = time.time()
+        print "Listener 1 received: %d, Listener 2 received: %d" % (_test_listener._rec_events, _a_test_listener._rec_events)
+        print "Total Time: %f" % (end_time - start_time)
+        
         
