@@ -102,7 +102,7 @@ class GLLight(LightBase):
         
     
     def draw(self):
-        
+        pass
         glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.get_gl_colour())
         glLightfv(GL_LIGHT0, GL_DIFFUSE, self._diffuse.get_gl_colour())
         glLightfv(GL_LIGHT0, GL_SPECULAR, self._specular.get_gl_colour())
