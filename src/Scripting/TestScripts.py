@@ -14,7 +14,7 @@ from Logging import Logger
 
 from Core import Time
 from Core import Settings
-from Events.EventBase import EventBase
+from Core.CoreEvents import QuitEvent
 from Events.ListenerBase import ListenerBase
 from Scripting.Script import Script
 from Scripting.Script import ScriptParamTypes
@@ -172,10 +172,6 @@ class DisplayCoordinate(Script):
 #        if not self._node.transform.position == self._last_pos:
             self._last_pos = self._node.position 
             print self._node.name + ": " + str(self._last_pos)
-
-class QuitEvent(EventBase):
-    def __init__(self):
-        EventBase.__init__(self, 'Quit', True)
     
 class SettingsController(Script):
     
