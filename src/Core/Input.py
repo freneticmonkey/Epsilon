@@ -1,7 +1,3 @@
-from itertools import repeat
-
-import pygame
-
 from Core.BaseManager import FrameListenerManager
 
 class Input(FrameListenerManager):
