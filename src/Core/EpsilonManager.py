@@ -106,7 +106,7 @@ class EpsilonManager(object):
         self._script_manager = ScriptManager.get_instance()
         
         # Start the UI Manager
-        #self._ui_manager = UIManager.get_instance()
+        self._ui_manager = UIManager.get_instance()
         
         # Configure the ResourceManager
         self._resource_manager = ResourceManager.get_instance()
