@@ -7,6 +7,9 @@ import pyglet
 #from pyglet.gl import *
 from pyglet.window import key
 
+# disable error checking for increased performance
+pyglet.options['debug_gl'] = False
+
 from Core.Input import *
 
 from Logging import Logger
@@ -52,6 +55,10 @@ class PygletFramework(BaseFramework):
         
         # Doesn't appear to be working...
         self._fps_display.draw()
+        
+    @property
+    def window(self):
+        return self._window
         
     @property
     def on_draw(self):
@@ -175,7 +182,7 @@ class PygletInput(Input):
         self._mouse_x = x
         self._mouse_y = y
         
-        Logger.Log("Mouse button: %d pressed @ x: %d y: %d" % (button, x, y))
+#        Logger.Log("Mouse button: %d pressed @ x: %d y: %d" % (button, x, y))
         
         # Adjust pyglet mouse button to epsilon mouse button
         button -= 1
@@ -186,7 +193,7 @@ class PygletInput(Input):
         self._mouse_x = x
         self._mouse_y = y
         
-        Logger.Log("Mouse button: %d released @ x: %d y: %d" % (button, x, y))
+#        Logger.Log("Mouse button: %d released @ x: %d y: %d" % (button, x, y))
         
         # Adjust pyglet mouse button to epsilon mouse button
         button -= 1
