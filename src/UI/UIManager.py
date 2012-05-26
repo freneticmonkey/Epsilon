@@ -6,17 +6,21 @@ Created on Feb 4, 2012
 from Core.BaseManager import FrameListenerManager
 from Logging import Logger
 from Core.Settings import DisplaySettings
-import pyui
+#import pyui
+
+from UI.MainUI import MainUI
 
 class UIManager(FrameListenerManager):
     def init(self):
         Logger.Log("Created UIManager")
+        self._ui = MainUI()
         
+        self._ui.setup()
         # Initialise GUI Sub-system
-        pyui.init(DisplaySettings.resolution[0],DisplaySettings.resolution[1], "p3d", DisplaySettings.fullscreen)
+        #pyui.init(DisplaySettings.resolution[0],DisplaySettings.resolution[1], "p3d", DisplaySettings.fullscreen)
             
         # A python console
-        self._console = pyui.dialogs.Console(10,10,400,400)
+        #self._console = pyui.dialogs.Console(10,10,400,400)
         
         # Stats dialog
         height = 100
@@ -28,13 +32,14 @@ class UIManager(FrameListenerManager):
         #self._stats = pyui.widgets.Frame(x,y,width,height, "Render Stats")
         #self._stats = pyui.dialogs.StdDialog("Render Stats:", "Some stats here")#x,y,width,height, "Render Stats")
         
-    @property
-    def stats_dialog(self):
-        return self._stats
-    
+#    @property
+#    def stats_dialog(self):
+#        return self._stats
+#    
     def draw(self):
-        pyui.draw()
-        pyui.update_epsilon()
+        self._ui.draw()
+#        pyui.draw()
+#        pyui.update_epsilon()
         
     def on_frame_start(self):
         pass
