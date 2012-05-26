@@ -56,6 +56,11 @@ class TestBase(object):
         while not self._quitting:
             eventlist = pygame.event.get()
             
+            keys = pygame.key.get_pressed()
+            for i in range(0, len(keys)):
+                if keys[i] > 0:
+                    print "key pos: %d" % i
+            
             # Check for quit
             for event in eventlist:
                 if event.type == pygame.QUIT \
