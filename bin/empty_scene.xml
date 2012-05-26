@@ -1,0 +1,13 @@
+<scene name="basic_scene">
+	<texture name="checkers" filename="UnitTests/checkerboard64.png"/>
+	<camera>
+		<transform position="2 1 -10" rotation="0 0 0 0"/>
+		<scripts>
+		</scripts>
+	</camera>
+    <node>
+        <scripts>
+            <script name="SettingsController"/>
+        </scripts>
+    </node>
+</scene>
