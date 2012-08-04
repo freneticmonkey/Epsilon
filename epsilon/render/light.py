@@ -8,6 +8,8 @@ from epsilon.geometry.euclid import Vector3
 from epsilon.render.colour import Colour
 from epsilon.render.glutilities import *
 from epsilon.scene.node import Node
+from epsilon.scene.nodecomponent import NodeComponent
+#from epsilon.render.transform import Transform
 from epsilon.events.eventbase import EventBase
 
 from OpenGL.GL import *
@@ -21,10 +23,11 @@ class LightRemovedEvent(EventBase):
     def __init__(self, camera):
         EventBase.__init__(self, "LightRemoved", camera)
 
-class LightBase(Node):
+class LightBase(NodeComponent):
     
-    def __init__(self, name=None, ambient=None, diffuse=None, specular=None, attenuation=None):
-        Node.__init__(self, name, pos=None, rot=None, scale=None, parent=None)
+    def __init__(self, ambient=None, diffuse=None, specular=None, attenuation=None):
+        NodeComponent.__init__(self)
+        
         if not ambient:
             ambient = Colour(0.2, 0.2, 0.2, 1.0)
         if not diffuse:
@@ -74,13 +77,13 @@ class LightBase(Node):
         self._attenuation = new_attenuation
         
     def on_add(self):
-        if not self._scene is None:
-            self._scene.add_light(self)
+        if not self.node_parent.transform.scene is None:
+            self.node_parent.transform.scene.add_light(self)
         #LightAddedEvent(self).Send()
         
     def on_remove(self):
-        if not self._scene is None:
-            self._scene.remove_light(self)
+        if not self.node_parent.transform.scene is None:
+            self.node_parent.transform.scene.remove_light(self)
         #LightRemovedEvent(self).Send()
         
     
@@ -88,8 +91,8 @@ class LightBase(Node):
     
 class GLLight(LightBase):
     
-    def __init__(self, name=None, ambient=None, diffuse=None, specular=None, attenuation=None):
-        LightBase.__init__(self,name, ambient, diffuse, specular, attenuation)
+    def __init__(self, ambient=None, diffuse=None, specular=None, attenuation=None):
+        LightBase.__init__(self, ambient, diffuse, specular, attenuation)
     
         
 #        glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.GetGLColour())
@@ -101,6 +104,10 @@ class GLLight(LightBase):
         
     
     def draw(self):
+        self._setup_draw()
+        # Nothing
+        self._teardown_draw()
+        
         pass
         
         glLightfv(GL_LIGHT0, GL_AMBIENT, self._ambient.get_gl_colour())
@@ -148,4 +155,7 @@ class GLLight(LightBase):
         glLightfv(GL_LIGHT0, GL_POSITION, pos)
         pass
         
+class Light(Node):
+    def __init__(self):
+        Node.__init__(self, name="default_light", light=GLLight(), renderer=None)
         
