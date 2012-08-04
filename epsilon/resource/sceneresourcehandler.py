@@ -7,13 +7,15 @@ from os.path import exists
 
 from xml.etree import ElementTree as ET
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 from epsilon.resource.resourcehandler import ResourceHandlerBase
 from epsilon.resource.resourcemanager import ResourceManager
 from epsilon.resource.resourcebase import ResourceType, ResourceBase
 
 from epsilon.geometry.euclid import Vector3, Quaternion
+
+from epsilon.render.transform import Transform
 
 from epsilon.scene.node import Node
 from epsilon.scene.scenebase import SceneBase
@@ -22,9 +24,9 @@ from epsilon.scene.scenemanager import SceneManager
 from epsilon.scripting import testscripts
 
 #from Render.ShaderManager import ShaderManager
-#from Render.TextureManager import TextureManager
-from epsilon.render.camera import CameraGL
-from epsilon.render.light import GLLight
+from epsilon.render.texturemanager import TextureManager
+from epsilon.render.camera import Camera
+from epsilon.render.light import Light
 from epsilon.render.colour import Colour
 from epsilon.render.material import BaseMaterial, GLMaterial
 from epsilon.render.meshfactory import MeshTypesString, MeshFactory
@@ -66,9 +68,9 @@ class SceneResourceHandler(ResourceHandlerBase):
                 new_scene = SceneBase(filename=filename, root=load_scene)
                 
                 self._scene_manager.add_scene(new_scene)
-            
+                    
         except Exception, e:
-            self._log.Log("Could not parse scene in filename: %s\nERROR: %s" % (filename, e.message))
+            self._log.Log("Could not parse scene with filename: %s\nERROR: %s" % (filename, e.message))
             
         return new_scene
                 
@@ -94,7 +96,7 @@ class SceneResourceHandler(ResourceHandlerBase):
             current_node = Node(name=node_name)
         
         elif node.tag == "camera":
-            current_node = CameraGL()
+            current_node = Camera()
             # SIGH - There is no scene at this point because the loading has just begun
             # If the current scene doesn't yet have an active camera
 #            if not parent is None and \
@@ -103,30 +105,37 @@ class SceneResourceHandler(ResourceHandlerBase):
 #                # Set this camera as the active camera
 #                parent.scene.active_camera = current_node
                     
-            if not node_name is None:
-                current_node.name = node_name
                         
         elif node.tag == "light":
-            if node_name is None:
-                node_name = "default_light"
-            current_node = GLLight(name=node_name)
+            current_node = Light()
         
         elif node.tag == "node":
             current_node = Node()
+            
+            if not node_name is None and not current_node is None:
+                if hasattr(current_node, 'name'):
+                    current_node.name = node_name
         
         # Child Nodes
         
         # Transform
         elif node.tag == "transform":
             if not parent is None:
+                
+                transform = None
+                if isinstance(parent, Transform):
+                    transform = parent
+                elif isinstance(parent, Node):
+                    transform = parent.transform
+                
                 if "position" in node.attrib:
                     coord = node.attrib["position"].split(" ")
                     if len(coord) == 3:
                         coord = Vector3(float(coord[0]), float(coord[1]), float(coord[2]) )
                     else:
                         self._log.Log("Invalid position: [%s]" % (" ".join(coord)))
-                        
-                    parent.position = coord
+                    
+                    transform.position = coord
                 
                 if "rotation" in node.attrib:
                     rot = node.attrib["rotation"].split(" ")
@@ -134,8 +143,8 @@ class SceneResourceHandler(ResourceHandlerBase):
                         rot = Quaternion().new_rotate_axis(float(rot[0]), Vector3(float(rot[1]),float(rot[2]),float(rot[3])))
                     else:
                         self._log.Log( "Invalid rotation: [%s]" % (" ".join(rot)) )
-                        
-                    parent.rotation = rot
+                    
+                    transform.rotation = rot
                     
                 if "scale" in node.attrib:
                     scale = node.attrib["scale"].split(" ")
@@ -143,38 +152,49 @@ class SceneResourceHandler(ResourceHandlerBase):
                         scale = Vector3(float(scale[0]), float(scale[1]), float(scale[2]) )
                     else:
                         self._log.Log( "Invalid scale: [%s]" % (" ".join(scale)) )
-                    parent.local_scale = scale
+                    
+                    transform.local_scale = scale
         # Colour
         elif node.tag == "colour":
-            if not parent is None and isinstance(parent, GLLight) or isinstance(parent, BaseMaterial):
+            if not parent is None:
+                colour_object = None
+                
+                if isinstance(parent, Light) and not parent.light is None:
+                    colour_object = parent.light
+                elif isinstance(parent, BaseMaterial):
+                    colour_object = parent
+                    
+#                if not colour_object is None:
                 if "ambient" in node.attrib:
-                    parent.ambient = Colour.from_string(node.attrib["ambient"])
+                    colour_object.ambient = Colour.from_string(node.attrib["ambient"])
                 
                 if "diffuse" in node.attrib:
-                    parent.diffuse = Colour.from_string(node.attrib["diffuse"])
+                    colour_object.diffuse = Colour.from_string(node.attrib["diffuse"])
                 
                 if "specular" in node.attrib:
-                    parent.specular = Colour.from_string(node.attrib["specular"])
+                    colour_object.specular = Colour.from_string(node.attrib["specular"])
                         
         elif node.tag == "attenuation":
-            if not current_node is None and isinstance(current_node, GLLight):
-                if "value" in node.attrib:
-                    atten = node.attrib["value"].split(" ")
-                    if len(atten) == 1:
-                        atten = float(atten)
-                    else:
-                        self._log.Log( "Invalid attenuation: [%s]" % (str(atten)) )
-                    
-                    if isinstance(parent, GLLight):
-                        parent.attenuation = float(atten)
+            if not current_node is None and isinstance(current_node, Node):
+                if not current_node.light is None:
+                    if "value" in node.attrib:
+                        atten = node.attrib["value"].split(" ")
+                        if len(atten) == 1:
+                            atten = float(atten)
+                        else:
+                            self._log.Log( "Invalid attenuation: [%s]" % (str(atten)) )
+                        
+                        current_node.light.attenuation = float(atten)
+#                        if isinstance(parent, GLLight):
+#                            parent.attenuation = float(atten)
         
         # Mesh
         elif node.tag == "mesh":
-            if not isinstance(parent, GLLight) or not isinstance(parent, CameraGL):
+            if not isinstance(parent, Light) or not isinstance(parent, Camera):
                 if "preset" in node.attrib:
                     preset = node.attrib["preset"]
                     if preset in MeshTypesString.MESHES:
-                        parent.mesh = MeshFactory.get_mesh(MeshTypesString.MESHES[preset])
+                        parent.renderer.mesh = MeshFactory.get_mesh(MeshTypesString.MESHES[preset])
                     else:
                         self._log.Log( "Invalid Mesh Preset: [%s]" % ( preset ) )
                         
@@ -250,30 +270,36 @@ class SceneResourceHandler(ResourceHandlerBase):
 #                if not parent.material is None:
 #                    parent = parent.material
                     
-                parent.material = GLMaterial()
+                parent.renderer.material = GLMaterial()
                     
                 # Get any properties of the material
                 properties = node.getchildren()
                 
                 # Process and attach each of the scripts
                 for property in properties:
-                    self.parse_node(property, parent.material)
+                    self.parse_node(property, parent.renderer.material)
         
         # Resources
         elif node.tag == "texture":
+            texture = None
             
             # If the texture is referenced by filename
             if "filename" in node.attrib:
                 # Load the texture
                 texture = ResourceManager.get_instance().process_resource(node.attrib["filename"])
+                
+                if not texture is None:
+                    if "name" in node.attrib:
+                        texture.name = node.attrib["name"]
             
-            if not texture is None:
-                if "name" in node.attrib:
-                    texture.name = node.attrib["name"]
+            # If the texture is just a reference, retrieve it from the TextureManager for assignment
+            if "name" in node.attrib and texture is None:
+                texture = TextureManager.get_instance().get_texture_by_name(node.attrib["name"])
             
             # If the current parent is a Material node, set the material node's texture 
-            if not parent is None and not texture is None and isinstance(parent, BaseMaterial):
-                parent.texture = texture.filename
+            if not parent is None:
+                if isinstance(parent, BaseMaterial) and not texture is None:
+                    parent.texture = texture
         
 #        elif node.tag == "shader":
 #            pass
@@ -293,7 +319,10 @@ class SceneResourceHandler(ResourceHandlerBase):
         
         # If a parent Node is defined add the current node to it
         if not parent is None and not current_node is None:
-            parent.add_child(current_node)
+            if isinstance(current_node, Transform):
+                parent.transform.add_child(current_node)
+            elif isinstance(current_node, Node):
+                parent.transform.add_child(current_node.transform)
             
         return current_node
         
