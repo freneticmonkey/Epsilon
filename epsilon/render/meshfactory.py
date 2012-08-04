@@ -4,8 +4,8 @@ Created on Sep 18, 2011
 @author: scottporter
 '''
 
-from epsilon.render.mesh import *
-from epsilon.render.colour import *
+from epsilon.render.mesh import Mesh
+from epsilon.render.colour import Preset
 from math import sqrt, pi, sin, cos
 import itertools
 
@@ -201,7 +201,7 @@ class Parametric:
                 y = j/rows
                 p = [c,r] 
                 tex_coords.append(p)
-            
+        
         return verts, faces, tex_coords
     
     @staticmethod
@@ -263,7 +263,7 @@ class MeshFactory(object):
         elif type == MeshTypes.SPHERE:
             verts, faces = Parametric.sphere(16,16)
         elif type == MeshTypes.PLANE_HI:
-            verts, faces, tex_cs = Parametric.plane(1,1)
+            verts, faces, tex_cs = Parametric.plane(10,10)
             return Mesh(verts, faces, Preset.yellow, tex_coords=tex_cs)
         
         return Mesh(verts, faces, Preset.yellow)
