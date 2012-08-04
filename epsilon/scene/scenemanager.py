@@ -4,7 +4,6 @@ Created on Sep 17, 2011
 @author: scottporter
 '''
 
-from epsilon.scene.node import Node
 from epsilon.events.listenerbase import *
 from epsilon.core.basemanager import BaseSingleton
 
@@ -61,8 +60,15 @@ class SceneManager(BaseSingleton):
         return self._current_scene
     
     def update(self):
+        # Update the scenegraph transforms.
         if not self._current_scene is None and self._current_scene.need_update:
             self._current_scene.update()
+            
+        # Cull invisible geometry
+        if not self._current_scene is None:
+            self._current_scene.cull()
+        
+        
     
 class SceneManagerListener(ListenerBase):
 

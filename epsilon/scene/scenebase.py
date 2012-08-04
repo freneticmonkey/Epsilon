@@ -5,7 +5,7 @@ Created on Mar 4, 2012
 '''
 
 from epsilon.resource.resourcebase import ResourceBase, ResourceType
-
+from epsilon.render.camera import CameraGL
 from epsilon.scene.node import Node
 from epsilon.events.listenerbase import ListenerBase
 
@@ -45,10 +45,13 @@ class SceneBase(ResourceBase):
             
     @property
     def need_update(self):
-        return self._root.need_update
+        return self._root.transform.need_update
     
     def update(self, children=True, parent_changed=False):
-        self._root._update(children, parent_changed)
+        self._root.transform._update(children, parent_changed)
+        
+    def cull(self):
+        self._root.cull(self.active_camera)
     
     @property
     def active(self):
@@ -65,7 +68,10 @@ class SceneBase(ResourceBase):
             
     def _activate(self):
         if self._active_camera is None:
-            self._active_camera = self._root.get_child_with_name("camera", recursive=True)
+            camera_trans = self._root.transform.get_child_with_name("default_camera", recursive=True)
+            
+            if not camera_trans is None and not camera_trans.node.camera is None:
+                self._active_camera = camera_trans.node.camera 
     
     def _deactivate(self):
         pass
