@@ -12,7 +12,7 @@ pyglet.options['debug_gl'] = False
 
 from epsilon.core.input import *
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.frameworks.baseframework import BaseFramework
 
 def on_key_press(symbols, modifiers):
@@ -54,7 +54,7 @@ class PygletFramework(BaseFramework):
             self._drawfunc()
         
         # Doesn't appear to be working...
-        self._fps_display.draw()
+        #self._fps_display.draw()
         
     @property
     def window(self):

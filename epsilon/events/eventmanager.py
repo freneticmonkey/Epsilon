@@ -1,4 +1,4 @@
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.core.basesingleton import BaseSingleton
 
 # Event Core

@@ -1,4 +1,4 @@
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.events.eventmanager import EventManager
 
 class ListenerBase(object):

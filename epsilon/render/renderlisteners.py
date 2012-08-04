@@ -1,5 +1,5 @@
 from epsilon.events.listenerbase import ListenerBase
-from epsilon.logging import Logger 
+from epsilon.logging.logger import Logger
 
 class RenderListener(ListenerBase):
     def __init__(self, renderOps):

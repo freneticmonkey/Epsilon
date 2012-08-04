@@ -10,7 +10,7 @@ from epsilon.resource.resourcehandler import ResourceHandlerBase
 
 from epsilon.render.mesh import Mesh
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 # small utility function
 def isspace(character):

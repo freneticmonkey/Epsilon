@@ -3,7 +3,7 @@ Created on Sep 20, 2011
 
 @author: scottporter
 '''
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 from epsilon.core.basemanager import FrameListenerManager
 
