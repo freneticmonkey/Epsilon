@@ -1,4 +1,4 @@
-from epsilon.render.renderer import GLRenderer
+from epsilon.render.windowrenderer import GLWindowRenderer
 
 from epsilon.core.basemanager import BaseSingleton
 
@@ -6,7 +6,7 @@ class RenderManager(BaseSingleton):
     
     def __init__(self):
         # create a renderer
-        self._renderer = GLRenderer()
+        self._renderer = GLWindowRenderer()
         
     def __del__(self):
         del self._renderer
