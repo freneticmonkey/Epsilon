@@ -599,6 +599,14 @@ class Vector3:
         """Return one vector projected on the vector other"""
         n = other.normalized()
         return self.dot(n)*n 
+    
+    def distance(self, other):
+        """return the distance to the vector other"""
+        dist_vec = other - self
+        return dist_vec.magnitude()
+    
+    def inner_product(self, other):
+        return self.x * other.x + self.y * other.y + self.z * other.z
 
 # a b c 
 # e f g 
@@ -2352,3 +2360,11 @@ class Plane:
     def _connect_plane(self, other):
         return _connect_plane_plane(other, self)
 
+    # This distance is not accurate.  The return will be positive if the parameter is
+    # on the positive side of the plane and vice-verse for the negative side.
+    def distance(self, other):
+        if isinstance(other, Vector3) or isinstance(other, Point3):
+            return self.n.dot(other) + self.k
+        else:
+            raise AttributeError, 'distance requires either a Vector3 or Point3' 
+            
