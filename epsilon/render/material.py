@@ -6,7 +6,8 @@ Created on Sep 22, 2011
 from OpenGL.GL import *
 
 from epsilon.render.colour import Preset
-from epsilon.render.texturemanager import TextureManager
+#from epsilon.render.texturemanager import TextureManager
+from epsilon.render.texture import Texture
 from epsilon.render.shadermanager import ShaderManager
 from epsilon.render.glutilities import *
  
@@ -77,12 +78,18 @@ class BaseMaterial(object):
         return self._tex_name
     
     @texture.setter
-    def texture(self, tex_name):
-        # Get Texture from TextureManager
-        tex = TextureManager.get_instance().get_texture(tex_name)
-        if tex is not None:
-            self._tex_obj = tex
-            self._tex_name = tex_name
+    def texture(self, new_tex):
+        the_texture = None
+        if isinstance(new_tex, Texture):
+            the_texture = new_tex
+        
+        elif isinstance(new_tex, str):
+            # Get Texture from TextureManager
+            the_texture = TextureManager.get_instance().get_texture(new_tex)
+            
+        if the_texture is not None:
+            self._tex_obj = the_texture
+            self._tex_name = the_texture.name
         
 class GLMaterial(BaseMaterial):
     def __init__(self, ambient=None, diffuse=None, specular=None, emission=None, shininess=None):
