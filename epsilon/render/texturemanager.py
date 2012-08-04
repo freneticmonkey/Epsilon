@@ -6,7 +6,7 @@ Created on Oct 8, 2011
 import os
 
 from epsilon.render.texture import Texture
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.core.basemanager import BaseSingleton
 
 # This class holds all of the Texture objects
@@ -33,6 +33,22 @@ class TextureManager(BaseSingleton):
 	@property
 	def textures(self):
 		return self._textures
+			
+	def get_texture_by_name(self, name):
+		match_tex = None
+		for tex in self._textures:
+			if tex.name == name:
+				match_tex = tex
+				break
+		return match_tex
+	
+	def get_texture_by_filename(self, filename):
+		match_tex = None
+		for tex in self._textures:
+			if tex.filename == filename:
+				match_tex = tex
+				break
+		return match_tex
 			
 	def delete_texture(self, name):
 		del_tex = None
