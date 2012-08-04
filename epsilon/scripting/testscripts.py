@@ -10,10 +10,10 @@ NOTE: Considering giving scripts priority settings to move them within the
 
 '''
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 from epsilon.core.time import Time
-from epsilon.core import Settings
+from epsilon.core import settings
 from epsilon.core.coreevents import QuitEvent
 from epsilon.events.listenerbase import ListenerBase
 from epsilon.scripting.script import Script
@@ -42,7 +42,7 @@ class RotateScript(Script):
         angle_inc = angle * Time.delta_time
 #        rot = self._node.transform.local_rotation
         if self._node:
-            self._node.rotate( Quaternion().new_rotate_axis(angle_inc, self._axis) )
+            self._node.transform.rotate( Quaternion().new_rotate_axis(angle_inc, self._axis) )
         
 #        self._node.translate( Vector3(1*Time.deltaTime,0,0))
         
@@ -51,18 +51,23 @@ class RotateScript(Script):
             
 class MoveController(Script, ListenerBase):
     event_types = ['MouseEnterUI','MouseExitUI']
-    def __init__(self, parent_node=None,speed=10,angle_speed=120):
+    def __init__(self, parent_node=None,speed=10,adj_speed=5,angle_speed=120):
         Script.__init__(self, name='MoveController', parent_node=parent_node)
         ListenerBase.__init__(self, event_types=self.event_types)
         
         self._param_types = {"speed":ScriptParamTypes.FLOAT, 
+                             "adj_speed":ScriptParamTypes.FLOAT, 
                              "angle_speed": ScriptParamTypes.FLOAT 
                             }
         
         self._speed = speed
         self._angle_speed = angle_speed
+        self._adj_speed = adj_speed
+        
+        self._final_speed = speed
         
         self._mouse_over_ui = False
+        self._unlock_mouse = False
     
     def _process_event(self, new_event):
         if new_event.name == 'MouseEnterUI':
@@ -79,7 +84,9 @@ class MoveController(Script, ListenerBase):
             # If the left mouse is down 
             if mouse_left_down:
                 
-                Input.set_lock_mouse(True)
+                if not self._unlock_mouse:
+                    Input.set_lock_mouse(True)
+                self._unlock_mouse = True
 #                # Hide the cursor
 #                #mouse.set_visible(False)
 #                
@@ -101,31 +108,49 @@ class MoveController(Script, ListenerBase):
 #                self._initial_mouse_up = True
                 
                 # Handle Keyboard
+                
+                # Handle adjusting normal speed
+                if Input.get_key(Input.KEY_BACKSLASH):
+                    self._final_speed -= self._adj_speed * Time.delta_time
+                    if self._final_speed < 0:
+                        self._final_speed = self._adj_speed
+                    
+                if Input.get_key(Input.KEY_EQUALS):
+                    self._final_speed += self._adj_speed * Time.delta_time 
+                    
+                applied_speed = self._final_speed
+                    
+                # Handle temporary speed boost
+                if Input.get_key(Input.KEY_LEFT_SHIFT):
+                    applied_speed *= 10.0
+                
                 if Input.get_key(Input.KEY_A):
-                    self._node.translate(  ( Vector3.RIGHT() * self._speed * Time.delta_time ) )
+                    self._node.transform.translate(  ( Vector3.RIGHT() * applied_speed * Time.delta_time ) )
                 if Input.get_key(Input.KEY_D):
-                    self._node.translate(  ( Vector3.RIGHT() * -self._speed * Time.delta_time ) )
+                    self._node.transform.translate(  ( Vector3.RIGHT() * -applied_speed * Time.delta_time ) )
                 if Input.get_key(Input.KEY_W):
-                    self._node.translate( ( Vector3.FORWARD() * self._speed * Time.delta_time ) )
+                    self._node.transform.translate( ( Vector3.FORWARD() * applied_speed * Time.delta_time ) )
                 if Input.get_key(Input.KEY_S):
-                    self._node.translate( ( Vector3.FORWARD() * -self._speed * Time.delta_time ) )
+                    self._node.transform.translate( ( Vector3.FORWARD() * -applied_speed * Time.delta_time ) )
                     
                 if Input.get_key(Input.KEY_R):
-                    self._node.translate( ( Vector3.UP() * self._speed * Time.delta_time ) )
+                    self._node.transform.translate( ( Vector3.UP() * applied_speed * Time.delta_time ) )
                 if Input.get_key(Input.KEY_F):
-                    self._node.translate( ( Vector3.UP() * -self._speed * Time.delta_time ) )
+                    self._node.transform.translate( ( Vector3.UP() * -applied_speed * Time.delta_time ) )
                 
                 angle = self._angle_speed * Time.delta_time
                 angle = angle * (math.pi / 180 )
                 
                 if Input.get_key(Input.KEY_Q):
-                    self._node.rotate(Quaternion().rotate_axis(angle, Vector3(0,1,0)) )
+                    self._node.transform.rotate(Quaternion().rotate_axis(angle, Vector3(0,1,0)) )
                     
                 if Input.get_key(Input.KEY_E):
-                    self._node.rotate( Quaternion().rotate_axis(-angle, Vector3(0,1,0)) )
+                    self._node.transform.rotate( Quaternion().rotate_axis(-angle, Vector3(0,1,0)) )
                 
             else:
-                Input.set_lock_mouse(False)
+                if self._unlock_mouse:
+                    Input.set_lock_mouse(False)
+                    self._unlock_mouse = False
 #                self._initial_mouse_down = True
 #                if self._initial_mouse_up:
 #                    # Show the cursor
@@ -133,33 +158,48 @@ class MoveController(Script, ListenerBase):
 #                    self._initial_mouse_up = False
             
 class CameraMoveController(MoveController):
-    def __init__(self, parent_node=None,speed=10,angle_speed=120):
-        super(CameraMoveController, self).__init__(parent_node,speed,angle_speed)
+    def __init__(self, 
+                 parent_node=None,
+                 speed=10,
+                 angle_speed=120,
+                 mouse_speed_x=0.002, 
+                 mouse_speed_y=0.002,
+                 mouse_y_invert=True):
+        super(CameraMoveController, self).__init__(parent_node,speed=speed,angle_speed=angle_speed)
         
         self._param_types = {"speed":ScriptParamTypes.FLOAT, 
-                             "angle_speed": ScriptParamTypes.FLOAT 
+                             "angle_speed": ScriptParamTypes.FLOAT,
+                             "mouse_speed_x": ScriptParamTypes.FLOAT,
+                             "mouse_speed_y": ScriptParamTypes.FLOAT,
+                             "mouse_y_invert": ScriptParamTypes.BOOL 
                             }
+        
+        self._mouse_speed_x = mouse_speed_x
+        self._mouse_speed_y = mouse_speed_y
+        self._mouse_y_invert = mouse_y_invert
+        
+        if self._mouse_y_invert:
+            self._mouse_speed_y = -self._mouse_speed_y
     
     def update(self):
         super(CameraMoveController, self).update()
         
         if Input.get_mouse_left() and not self._mouse_over_ui:
-            pos = self._node.position
-            forward = self._node.forward
+            
+            pos = self._node.transform.position
+            forward = self._node.transform.forward
             
             # Mouse Controls
-    #        angle = self._angle_speed * (math.pi / 180)
-            angle_h = 0.002
-            angle_v = 0.002
-            
             mx, my = Input.get_mouse_move_relative()
-            h_angle = angle_h * -mx
-            v_angle = angle_v * -my
-            self._node.rotate(Quaternion().rotate_axis(h_angle, Vector3(0,1,0)) )
-            self._node.rotate(Quaternion().rotate_axis(v_angle, Vector3(1,0,0)) )
-            
-            if hasattr( self._node, 'LookAt'):
-                self._node.look_at = pos + ( forward * self._speed)
+            # FIXME: HACK
+            if math.fabs(mx) < 60.0 and math.fabs(my) < 60.0: # <== This makes mouse movement feel like 
+                                                              # it's moving through molasses
+                h_angle = self._mouse_speed_x * -mx
+                v_angle = self._mouse_speed_y * -my
+                self._node.transform.rotate(Quaternion().rotate_axis(h_angle, Vector3(0,1,0)) )
+                self._node.transform.rotate(Quaternion().rotate_axis(v_angle, Vector3(1,0,0)) )
+                
+                self._node.camera.look_at_position = pos + ( forward * self._speed)
             
 class DisplayCoordinate(Script):
     
@@ -170,7 +210,7 @@ class DisplayCoordinate(Script):
     
     def update(self):
 #        if not self._node.transform.position == self._last_pos:
-            self._last_pos = self._node.position 
+            self._last_pos = self._node.transform.position 
             print self._node.name + ": " + str(self._last_pos)
     
 class SettingsController(Script):
