@@ -188,9 +188,9 @@ class Input(FrameListenerManager):
 	
 	def _process_input_state(self, button, state):
 		
-		input_states = {}
+		input_states = None
 		
-		if button <= self.MOUSE_MIDDLE:
+		if button <= self.MOUSE_RIGHT:
 			input_states = self._state_mouse_buttons
 		else:
 			input_states = self._state_keys
