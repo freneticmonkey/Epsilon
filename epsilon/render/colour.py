@@ -75,8 +75,9 @@ class Preset:
     cyan   = Colour(  0,1.0,1.0 ,1.0)
     purple = Colour(1.0,  0,1.0 ,1.0)
     white  = Colour(1.0,1.0,1.0 ,1.0)
-    grey   = Colour(0.5,0.5,0.85,1.0)
+    grey   = Colour(0.5,0.5,0.5 ,1.0)
     black  = Colour(  0,  0,  0 ,1.0)
+    purple = Colour(0.9,0.9,0.98,1.0)
     
 #    red    = Colour(255,  0,  0,255)
 #    green  = Colour(  0,255,  0,255)
