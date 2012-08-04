@@ -6,18 +6,18 @@ Description: For lack of a better name this is the Main UI. It is built using Si
 
 @author: scottporter
 '''
-
-import os
-
 from epsilon.ui.simplui import *
+from epsilon.ui.uibasewindow import UIBaseWindow
+from epsilon.core.time import Time
 
-from epsilon.frameworks.pygletframework import PygletFramework
-from epsilon.core import Settings
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.core.coreevents import QuitEvent
 
 from epsilon.render.renderevents import ToggleWireFrameEvent, ToggleGridEvent
 from epsilon.events.listenerbase import ListenerBase
+
+from epsilon.scene.scenemanager import SceneManager
+from epsilon.geometry.euclid import Vector3, Quaternion
 
 class UIListener(ListenerBase):
     event_types = ['MouseEnterUI','MouseExitUI']
@@ -32,28 +32,14 @@ class UIListener(ListenerBase):
             elif new_event.name == 'MouseExitUI':
                 self._ui.set_mouse_over(False)
 
-class MainUI(object):
-    
-    def __init__(self):
-        pass
-    
-    def setup(self):
-        # Get the Pyglet window
-        pyglet_framework = PygletFramework.get_instance() 
-        self._window = pyglet_framework.window
+class MainUI(UIBaseWindow):
         
-        # Configure the Settings for the GUI
-        theme_path = 'simplui/themes/pywidget'
-        theme_path = os.path.join(os.path.dirname(__file__), theme_path)
-        self._themes = [Theme(theme_path)]
+    def _setup_ui(self):
         
-        res = Settings.DisplaySettings.resolution
-        self._frame = Frame(self._themes[0], w=res[0], h=res[1])
-        self._window.push_handlers(self._frame)
-        
-        self._build_ui()
+        self._camera = None
         
         self._listener = UIListener(self)
+        self._build_ui()
         
     def _build_ui(self):
         
@@ -61,7 +47,9 @@ class MainUI(object):
                         # each box needs a content layout
                         VLayout(children =
                         [
-                            Label('0.0 fps', name='fps_label'),
+                            Label('0000.0 fps', name='fps_label'),
+                            Label('Camera Pos'),
+                            Label('x: 000.00 y: 000.00 z: 000.00', name='camera_pos_label'),
                             HLayout(children=
                             [
                                 Label('MoUI:', hexpand=False),
@@ -76,7 +64,7 @@ class MainUI(object):
                                     # a checkbox, note the action function is provided directly
                                     Checkbox('Show wireframe', h=100, action=self.show_wireframe_action),
                                     Checkbox('Show Grid', h=100, action=self.show_grid_action),
-                                    
+                                    Button('Reset Camera', action=self.reset_camera),
                                     Button('Quit', action=self.quit_action),
                                 ])
                             )
@@ -110,8 +98,17 @@ class MainUI(object):
         #self._frame.add(self._console)
         
         self._mouse_over_label = self._frame.get_element_by_name('mouse_over')
+        self._fps_label = self._frame.get_element_by_name('fps_label')
+        self._camera_pos_label = self._frame.get_element_by_name('camera_pos_label')
     
     # UI Control Events
+    def reset_camera(self, button):
+        if self._camera is None:
+            self._camera = SceneManager.get_instance().current_scene.active_camera
+        self._camera.position = Vector3(2, 1, -10)
+        if hasattr( self._camera, 'LookAt'):
+            self._camera.look_at_position = Vector3(0,0,0)
+    
     def button_action(self, button):
         Logger.Log("A button was clicked!")
         
@@ -135,6 +132,14 @@ class MainUI(object):
         
     def draw(self):
         #self._window.clear()
+        self._fps_label.text = "FPS: %3.2f " % Time.fps
+        
+        if self._camera is None:
+            self._camera = SceneManager.get_instance().current_scene.active_camera
+        
+        if not self._camera is None:
+            pos = self._camera.node_parent.transform.position
+            self._camera_pos_label.text = "x: %3.2f y: %3.2f z: %3.2f" % (pos.x, pos.y, pos.z) 
         self._frame.draw()
     
         
