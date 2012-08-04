@@ -4,13 +4,10 @@ Created on Nov 19, 2011
 @author: scottporter
 '''
 
-import os
-import numpy
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 from epsilon.render.shader import ShaderProgram, VertexShader, FragmentShader
 from epsilon.render.colour import Colour
