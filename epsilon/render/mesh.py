@@ -11,16 +11,25 @@ Thanks to Jonathan Hartley.
 
 from itertools import chain, repeat, izip
 import math
+using_pypy = False
+import sys
+if '__pypy__' in sys.builtin_module_names:
+    using_pypy = False
+
+if using_pypy:
+    import array
+else:
+    import numpy
 
 from OpenGL.GL import *
 # Vertex Buffer Setup
 from OpenGL.raw import GL
 from OpenGL.arrays import ArrayDatatype as ADT
 from OpenGL.arrays import vbo
-import numpy
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 from epsilon.geometry.euclid import Vector3
+from epsilon.render.bounds import Bounds
 from epsilon.render.colour import Colour, Preset
 from epsilon.render.glutilities import *
 
@@ -86,8 +95,29 @@ class Mesh(ResourceBase):
             tex_coords = []
 #            tex_coords = list(repeat(Vector3(), len(self._vertices)))
         
-        self._tex_coords = tex_coords 
+        self._tex_coords = tex_coords
         
+        # calculate the min and max vertices for bounds
+        min = Vector3()
+        max = Vector3()
+        
+        for vec in self._vertices:
+            if min.x > vec.x:
+                min.x = vec.x
+            if min.y > vec.y:
+                min.y = vec.y
+            if min.z > vec.z:
+                min.z = vec.z
+                
+            if max.x < vec.x:
+                max.x = vec.x
+            if max.y < vec.y:
+                max.y = vec.y
+            if max.z < vec.z:
+                max.z = vec.z
+        
+        self._bounds = Bounds(min, max)
+            
         # Create a Open GL Mesh Object
         self._glmesh = GLMesh(self)
         
@@ -110,6 +140,10 @@ class Mesh(ResourceBase):
     @property
     def tex_coords(self):
         return self._tex_coords
+    
+    @property
+    def bounds(self):
+        return self._bounds
     
     
 # This class converts the data held by the Mesh class into a format that
@@ -485,6 +519,10 @@ class VertexBuffer(object):
         
         self._stride = 0
         
+    def __del__(self):
+        if not self._vbo is None:
+            self._vbo.delete()
+        
     def __enter__(self):
         self.bind()
         return self
@@ -509,10 +547,11 @@ class VertexBuffer(object):
         
         has_normals = (not normals is None and isinstance(normals, list))
         has_colours = (not colours is None and isinstance(colours, list))
+        
         has_tex_coords = (not texture_coords is None and isinstance(texture_coords, list))
         
         has_colours = False
-        has_tex_coords = False
+#        has_tex_coords = False
         
         if has_tex_coords:
             # If the first element of the first list in the list is a float
@@ -523,7 +562,7 @@ class VertexBuffer(object):
             # number of texture coordinates
             else:
                 num_texture_coords = len(texture_coords[0][0])
-        
+            
         # If the input data has enough data for each of the vertices
         if len(normals) == len(vertices):
             buffer = []
@@ -544,14 +583,24 @@ class VertexBuffer(object):
                             tc = texture_coords[i][t]
                             vert_data.append([tc[0],tc[1]])
                     else:
-                        vert_data.append(texture_coords[0])
+                        vert_data.append(texture_coords[i])
                 buffer.append(list(chain(*vert_data)))
-            self._vbo = vbo.VBO(numpy.array(buffer, 'f'))
+            if using_pypy:
+                try:
+                    buf_array = array.array('f', list(chain(*buffer)))
+                except Exception, e:
+                    print buffer
+                    raise e
+                
+                self._vbo = vbo.VBO(buf_array)
+            else:
+                self._vbo = vbo.VBO(numpy.array(buffer, 'f'))
             
             self._has_colours = has_colours
             self._has_normals = has_normals
             self._has_tex_coords = has_tex_coords
             self._num_tex_coords = num_texture_coords
+            
             
             self._stride = 3 * self.FLOAT_WIDTH
             if self._has_normals:
@@ -564,7 +613,13 @@ class VertexBuffer(object):
                 self._tex_coord_offset = self._stride
                 self._stride += (2 * self.FLOAT_WIDTH) * num_texture_coords
                 
-            self._indices_vbo = vbo.VBO(numpy.array(indices,dtype=numpy.ushort),target="GL_ELEMENT_ARRAY_BUFFER")
+            if using_pypy:
+                ind_array = array('H')
+                ind_array.fromlist(indices)
+                self._indices_vbo = vbo.VBO(ind_array,target="GL_ELEMENT_ARRAY_BUFFER")
+            else:
+                self._indices_vbo = vbo.VBO(numpy.array(indices,dtype=numpy.ushort),target="GL_ELEMENT_ARRAY_BUFFER")
+            
         else:
             Logger.Log("Vertex Buffer ERROR: vertex and normal data list lengths don't match.")
     
