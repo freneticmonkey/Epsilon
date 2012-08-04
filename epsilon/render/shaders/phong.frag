@@ -1,4 +1,6 @@
-varying vec3 normal, eyeVec, lightDir;
+varying vec3 normal, lightDir;//, eyeVec;
+
+varying vec2 Vertex_texture_coordinate_var;
 
 struct Material 
 {
@@ -8,11 +10,13 @@ struct Material
     float shininess;
 };
 
-uniform Material material;
-uniform vec4 Global_ambient;
+uniform     Material material;
+uniform     vec4 Global_ambient;
+uniform     sampler2D diffuse_texture;
 
 void main ()
-{   
+{
+    vec4 tex_diffuse = texture2D(diffuse_texture, Vertex_texture_coordinate_var);
     vec4 final_color = Global_ambient;//gl_FrontLightModelProduct.sceneColor;
     vec3 N = normalize(normal);
     vec3 L = normalize(lightDir);
@@ -34,5 +38,8 @@ void main ()
 //    {
 //        final_color = gl_LightSource[0].ambient * material.ambient * -lambertTerm;
 //    }
+    
+    final_color = mix(tex_diffuse, final_color, 0.5);
+
     gl_FragColor = final_color;
 }

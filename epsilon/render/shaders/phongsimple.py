@@ -8,7 +8,7 @@ import os
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from epsilon.logging import Logger
+from epsilon.logging.logger import Logger
 
 from epsilon.render.shader import ShaderProgram, VertexShader, FragmentShader
 from epsilon.render.colour import Colour
@@ -27,12 +27,14 @@ class PhongSimple(ShaderProgram):
                                 'material.ambient',
                                 'material.diffuse',
                                 'material.specular',
-                                'material.shininess'
+                                'material.shininess',
+                                'diffuse_texture'
                               ]
         self._uniform_locations = {}
         
         self._vertex_position_attr_location = None
         self._vertex_normal_attr_location = None
+        self._vertex_texture_coord_attr_location = None
         
     def _configure_properties(self):
         # Get the Memory locations of the Shader Uniforms
@@ -56,6 +58,12 @@ class PhongSimple(ShaderProgram):
                 self._vertex_normal_attr_location = location
         else:
             Logger.Log("Shader error: attribute not found: Vertex_normal" )
+        
+        location = glGetAttribLocation(self._id, "Vertex_texture_coordinate")
+        if not location in [None,-1]:
+                self._vertex_texture_coord_attr_location = location
+        else:
+            Logger.Log("Shader error: attribute not found: Vertex_texture_coordinate" )    
     
     def on_frame_start(self):
         # Send the light data through to the Shader Video Memory
@@ -88,17 +96,27 @@ class PhongSimple(ShaderProgram):
         if u_loc not in [None, -1]:
             glUniform1f(u_loc,material.shininess)
         
-        if not self._vertex_position_attr_location is None and not self._vertex_normal_attr_location is None:
+        if not self._vertex_position_attr_location is None and \
+           not self._vertex_normal_attr_location is None and \
+           not self._vertex_texture_coord_attr_location is None:
             glEnableVertexAttribArray(self._vertex_position_attr_location)
             glEnableVertexAttribArray(self._vertex_normal_attr_location)
+            glEnableVertexAttribArray(self._vertex_texture_coord_attr_location)
         
         with mesh.vertex_buffer as vb:
-            if not self._vertex_position_attr_location is None and not self._vertex_normal_attr_location is None:
+            if not self._vertex_position_attr_location is None and \
+               not self._vertex_normal_attr_location is None and \
+               not self._vertex_texture_coord_attr_location is None:
                 glVertexAttribPointer(self._vertex_position_attr_location, *vb.GetVertexAttribute())
                 glVertexAttribPointer(self._vertex_normal_attr_location, *vb.GetNormalAttribute())
+                glVertexAttribPointer(self._vertex_texture_coord_attr_location, *vb.GetTexCoordAttribute())
             
             glDrawElements(GL_TRIANGLES, vb.count, GL_UNSIGNED_SHORT, vb.indices)
             
-            if not self._vertex_position_attr_location is None and not self._vertex_normal_attr_location is None:
+            if not self._vertex_position_attr_location is None and \
+               not self._vertex_normal_attr_location is None and \
+               not self._vertex_texture_coord_attr_location is None:
                 glDisableVertexAttribArray(self._vertex_position_attr_location)
                 glDisableVertexAttribArray(self._vertex_normal_attr_location)
+                glDisableVertexAttribArray(self._vertex_texture_coord_attr_location)
+                
