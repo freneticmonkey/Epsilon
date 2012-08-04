@@ -1,6 +1,7 @@
 # Used Singleton implementation from - http://wiki.forum.nokia.com/index.php/How_to_make_a_singleton_in_Python
 from time import strftime
 #import os
+from epsilon.core.basesingleton import BaseSingleton
 
 _log = None
 
@@ -34,8 +35,17 @@ class ClassLogger(object):
 
 ## Logger Core
 #  A Singleton class
-class Logger( object ):
+class Logger( BaseSingleton ):
+    
+    # Class methods
+    @classmethod
+    def Configure(cls, method, dest, out_console):
+        cls.get_instance()._configure(method, dest, out_console)
         
+    @classmethod
+    def Log(cls, text):
+        cls.get_instance()._log(text)
+    
     def __init__(self, output_console=False):
         self._configured = False
         self._type = ''
@@ -93,7 +103,7 @@ class Logger( object ):
     
     ## Writes the Log output with a timestamp
     # @param text: The text string to be written out
-    def Log(self, text):
+    def _log(self, text):
         
         can_write = False
         
