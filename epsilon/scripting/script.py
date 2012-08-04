@@ -15,6 +15,7 @@ class ScriptParamTypes:
     STR     = "str"
     VEC2    = "vec2"
     VEC3    = "vec3"
+    BOOL    = "bool"
 
 # Script node notes
 # =================
@@ -87,6 +88,9 @@ class Script(object):
                 elif thetype == ScriptParamTypes.VEC3:
                     xyz = params[parameter_name].split(" ")
                     setattr(self, internal_name, Vector3(float(xyz[0]), float(xyz[1]), float(xyz[2])))
+                elif thetype == ScriptParamTypes.BOOL:
+                    bool_value = params[parameter_name] == "True" or params[parameter_name] == "true"
+                    setattr(self, internal_name, bool_value)
         
     @property
     def name(self):
