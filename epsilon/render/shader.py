@@ -4,13 +4,13 @@ Created on Sep 25, 2011
 @author: scottporter
 '''
 import os
-import numpy
+
 from ctypes import byref, c_char, c_char_p, c_int, cast, create_string_buffer, pointer, POINTER
 from OpenGL.GL import *
 from OpenGL.GL.shaders import *
 
 from epsilon.render.colour import Colour
-from epsilon.logging import Logger
+
 
 class ShaderError(Exception):
     pass
