@@ -9,9 +9,11 @@ class WireSphere(Node):
     def __init__(self, position=Vector3(0,0,0), radius=1.0):
         Node.__init__(self)
         self.transform.position = position
+        print "Wire Sphere position: %s" % self.transform.position
         self._radius = radius
         
-        self.transform.position.y -= (self._radius / 2.0)
+        #self.transform.position.y -= self._radius
+        
         
     def draw(self):
         
@@ -21,7 +23,7 @@ class WireSphere(Node):
         
         # On x-axis
         for i in range(0, 50):
-            vt = self.transform.position
+            vt = self.transform.position.copy()
             vt.x += math.cos((2*math.pi/50)*i) * self._radius
             vt.y += math.sin((2*math.pi/50)*i) * self._radius
             vt.z += 0
@@ -32,7 +34,7 @@ class WireSphere(Node):
         
         # On z-axis
         for i in range(0, 50):
-            vt = self.transform.position
+            vt = self.transform.position.copy()
             vt.x += 0
             vt.z += math.cos((2*math.pi/50)*i) * self._radius
             vt.y += math.sin((2*math.pi/50)*i) * self._radius
@@ -94,23 +96,18 @@ class Line(Node):
         
         self.renderer._setup_draw()
         
-        vs = self.transform.position
-        ve = vs + self._direction * self._length
-        
-        x = float(vs.x)
-        y = float(vs.y)
-        z = float(vs.z)
+        ve = self._direction * self._length
         
         glBegin(GL_LINES)
         glColor3f(self._start_colour.r, self._start_colour.g, self._start_colour.b)
-        glVertex3f(x, y, z)
+        glVertex3f(0, 0, 0)
         glColor3f(self._end_colour.r, self._end_colour.g, self._end_colour.b)
         glVertex3f(ve.x,ve.y,ve.z)
         glEnd()
         
         glColor3f(1.0, 1.0, 1.0)        
         self.renderer._teardown_draw()
-        
+                
 class WireCube(Node):
     
     # width, height, depth, max, and min are all relative to the object.
@@ -140,8 +137,8 @@ class WireCube(Node):
             hh = height / 2.0
             hd = depth / 2.0
             
-            self._min = Vector3(-hw, -hh, -hd) + pos
-            self._max = Vector3(hw, hh, hd) + pos
+            self._min = Vector3(-hw, -hh, -hd) + position
+            self._max = Vector3(hw, hh, hd) + position
         
         self.gen_coords()
         
@@ -226,3 +223,96 @@ class WireCube(Node):
         
         self.renderer._teardown_draw()
         
+class WirePlane(Node):
+    
+    def __init__(self, pos, normal=Vector3.UP(), size=1.0):
+        
+        Node.__init__(self, name="WirePlane")
+        
+        self.transform.position = pos
+        self._normal = normal.normalized()
+        self._size = size
+        
+        self._gen_offset_coords()
+        
+    @property
+    def normal(self):
+        return self._normal
+    
+    @normal.setter
+    def normal(self, new_normal):
+        self._normal = new_normal
+        self._gen_offset_coords()
+        
+    @property
+    def size(self):
+        return self._size
+    
+    @size.setter
+    def size(self, new_size):
+        self._size = new_size
+        self._gen_offset_coords()
+        
+    def _gen_offset_coords(self):
+        
+        perp_z = Vector3.RIGHT()
+
+        # gen perpendicular vector
+        if not self._normal == Vector3.RIGHT():
+            perp_z = self._normal.cross(Vector3.RIGHT())
+        elif not self._normal == Vector3.UP():
+            perp_z = self._normal.cross(Vector3.UP())
+        
+        perp_x = self._normal.cross(perp_z)
+        
+        perp_x *= self._size
+        perp_z *= self._size
+        
+        tl = -perp_x + perp_z
+        tr = perp_x + perp_z
+        bl = -perp_x + -perp_z
+        br = perp_x + -perp_z
+        
+        self._offset_coords = [tl, tr, br, bl]
+        
+    def _gen_coords(self):
+        self._coords = []
+        
+        for coord in self._offset_coords:
+            self._coords.append(coord+self.transform.position)
+        self._coords.append(self.transform.position)
+        self._coords.append(self.transform.position + (self._normal * self._size) )
+        
+    def draw(self):
+        
+        self._gen_coords()
+        
+        self.renderer._setup_draw()
+        
+        #glColor3f(self.material.diffuse.r, self.material.diffuse.g, self.material.diffuse.b)
+        glColor3f(1.0, 1.0, 1.0)
+        
+        # Plane outer
+        glBegin(GL_LINE_LOOP)
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glEnd()
+        
+        glBegin(GL_LINES)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        
+        # Normal
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+        glVertex3f(self._coords[5].x, self._coords[5].y, self._coords[5].z)
+        glEnd()
+        
+        self.renderer._teardown_draw()
+        
+    
