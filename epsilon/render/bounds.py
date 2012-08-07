@@ -2,9 +2,6 @@
 from OpenGL.GL import *
 
 from epsilon.geometry.euclid import Vector3
-#from epsilon.render.gizmos.gizmos import WireCube
-#from epsilon.scene.scenemanager import SceneManager
-
 from epsilon.render.colour import Colour, Preset
 
 class InvalidCoordinate(Exception): pass
@@ -36,9 +33,6 @@ class Bounds(object):
         self._update()
         
         self._colour = Preset.white
-        
-        #self._wire_cube = WireCube(self._bottom_bound, self._top_bound)
-        #SceneManager.get_instance().current_scene.root.add_child(self._wire_cube)
         
     def _update(self):
         # Update world bounds
@@ -124,7 +118,7 @@ class Bounds(object):
                 min_x = other.min.x
                 
             min_y = self.min.y
-            if other.min.x < min_y:
+            if other.min.y < min_y:
                 min_y = other.min.y
             
             min_z = self.min.z
