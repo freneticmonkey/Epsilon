@@ -12,7 +12,8 @@ from epsilon.geometry.euclid import Vector3
 
 #from epsilon.render.projection import Projection 
 from epsilon.scene.scenemanager import SceneManager
-#from epsilon.scene import NodeDrawGL
+
+from epsilon.render.gizmos.gizmomanager import GizmoManager
 
 #from epsilon.render import Font
 from epsilon.render.shader import *
@@ -95,6 +96,9 @@ class GLWindowRenderer(WindowRenderer):
 		# Create the ShaderManager
 		self._shader_manager = ShaderManager.get_instance()
 		
+		# Get the GizmoManager
+		self._gizmo_manager = GizmoManager.get_instance()
+		
 		#self._print_font = Font.font_data("/Library/Fonts/Arial.ttf", 16)
 		
 		# Initialise OpenGL Display and set the indicator for initialisation completion
@@ -111,17 +115,11 @@ class GLWindowRenderer(WindowRenderer):
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 		glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
 		
-#		glEnable(GL_LIGHTING)
-#		glEnable(GL_LIGHT0)
-		
-#		glEnable(GL_LIGHT1)
 		glShadeModel(GL_SMOOTH)
 		
 		glCullFace(GL_BACK)
 		glEnable(GL_CULL_FACE)
 				
-		# Clear to Light Blue
-		#glClearColor(180/255, 218/255, 1.0, 1.0)
 		glClearColor(*self._back_colour.get_gl_colour())
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		
@@ -171,8 +169,6 @@ class GLWindowRenderer(WindowRenderer):
 			if self._grid:
 				self.draw_grid()
 			
-	#		glLoadIdentity()
-			
 			# Draw the scene meshes here
 			self.draw_node(self._scene_root)
 			
@@ -180,6 +176,9 @@ class GLWindowRenderer(WindowRenderer):
 			#glEnd()
 			
 	def draw_node(self, node):
+		
+		glDisable(GL_DEPTH_TEST)
+		
 		node.draw()
 			
 		
@@ -204,6 +203,9 @@ class GLWindowRenderer(WindowRenderer):
 		
 		self._ui_manager.draw()
 		
+	def draw_gizmos(self):
+		self._gizmo_manager.draw()
+	
 	def draw_grid(self):
 		# Simple Grid for the time being
 		columns = 50
@@ -252,6 +254,8 @@ class GLWindowRenderer(WindowRenderer):
 		# Draw the Scene Meshes
 		self.draw_meshes()
 #		glFlush()
+		
+		self.draw_gizmos()
 		
 		self.draw_gui()
 				
