@@ -1,0 +1,79 @@
+<scene name="basic_scene">
+	<texture name="checkers" filename="../media/checkerboard64.png"/>
+	<shader name="phong_simple" class="PhongSimple" src="render/ahaders/phongsimple.py"/>
+	<camera>
+		<transform position="0 0 -10" rotation="0 0 0 0"/>
+		<scripts>
+			<script name="CameraMoveController" speed="20"/>
+		</scripts>
+		
+	</camera>
+	<node>
+		<transform position="-2 2 0" rotation="0 0 0 0"/>
+		<mesh preset="CUBE"/>
+	</node>
+	
+	<node>
+		<transform position="0 0 -10"/>
+		<children>
+			<light>
+				<transform position="0 1 10"/>		
+				<colour diffuse="1.0 1.0 1.0 1.0"/>
+				<attenuation value="1.0"/>
+				
+			</light>
+		</children>
+	</node>
+	
+	<node name="rotate_base">
+		<transform position="3 1 0" rotation="0 0 0 0"/>
+		<scripts>
+			<script name="RotateScript" rate="90"/>
+		</scripts>
+		<children>
+			<node name="rotator">
+				<transform position="1 1 0" rotation="0 0 0 0"/>
+				<!--<mesh preset="CUBE"/>-->
+				<mesh file="../media/BustedSphere.obj"/>
+				<material>
+					<colour diffuse="1.0 0.0 0.0 1.0"/>
+				</material>
+				<scripts>
+					<script name="RotateScript" rate="180" axis="-1 -1 0"/>
+				</scripts>
+			</node>
+			
+			<node name="rotator">
+				<transform position="3 2 0" rotation="0 0 0 0"/>
+				<!--<mesh preset="CUBE"/>-->
+				<mesh file="../media/bustedSphere.obj"/>
+				<material>
+					<colour diffuse="1.0 0.0 0.0 1.0"/>
+				</material>
+				<scripts>
+					<!--<script name="RotateScript" rate="90" axis="1 0 0"/>-->
+				</scripts>
+			</node>
+		</children>
+	</node>
+	<!--
+	<node name="plane">
+		<transform position="0 -1 0" rotation="0 0 0 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+	</node>
+	<node name="octo">
+		<transform position="-2 0 2"/>
+		<children>
+			<node>
+				<mesh preset="OCTOHEDRON"/>
+			</node>
+		</children>
+	</node>
+	-->
+	<!-- Global Scripts.  These need to be in a separate Scene file -->
+	<node name="scene_scripts">
+		<scripts>
+			<script name="SettingsController"/>
+		</scripts>
+	</node>
+</scene>
