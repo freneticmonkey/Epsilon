@@ -172,12 +172,14 @@ class GLWindowRenderer(WindowRenderer):
 			# Draw the scene meshes here
 			self.draw_node(self._scene_root)
 			
+			self._gizmo_manager.draw()
+
 			self.teardown_3d()
 			#glEnd()
 			
 	def draw_node(self, node):
 		
-		glDisable(GL_DEPTH_TEST)
+		#glDisable(GL_DEPTH_TEST)
 		
 		node.draw()
 			
@@ -204,6 +206,7 @@ class GLWindowRenderer(WindowRenderer):
 		self._ui_manager.draw()
 		
 	def draw_gizmos(self):
+		pass
 		self._gizmo_manager.draw()
 	
 	def draw_grid(self):
