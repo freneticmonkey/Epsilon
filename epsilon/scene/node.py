@@ -10,7 +10,7 @@ from OpenGL.GLU import *
 from epsilon.scripting.scriptmanager import ScriptManager
 
 #from epsilon.render.meshfactory import *
-from epsilon.render.frustum import Frustum
+#from epsilon.render.frustum import Frustum
 from epsilon.render.renderer import Renderer
 from epsilon.render.transform import Transform
 
@@ -147,13 +147,15 @@ class Node(object):
 				break
 			
 	def cull(self, camera):
-		self.renderer.culled = camera.bounds_inside(self.transform.bounds) == Frustum.OUTSIDE
-			
+		self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1#Frustum.OUTSIDE
+		
 		if not self.renderer.culled:
 			for child in self.transform.children:
 				child.node.cull(camera)
-#		else:
-#			print "Culled: " + self.name
+		# else:
+		# 	print "Culled: " + self.name
+		# 	print "bounds: %s" % self.transform.bounds
+#			self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1
 		
 	def draw(self):
 		if not self.renderer.culled:
@@ -172,33 +174,6 @@ class Node(object):
 		
 	def on_remove(self):
 		self._components_on_remove()
-    		
-## Primitive Objects
-#class Plane(Node):
-#	def __init__(self, name=None):
-#		Node.__init__(self, name=name)
-#		self.renderer.mesh = MeshFactory.get_mesh(MeshTypes.PLANE_HI)
-#		
-#class Cube(Node):
-#	def __init__(self, name=None):
-#		Node.__init__(self, name=name)
-#		self.renderer.mesh = MeshFactory.get_mesh(MeshTypes.CUBE)
-#		
-#class Sphere(Node):
-#	def __init__(self, name=None):
-#		Node.__init__(self, name=name)
-#		self.renderer.mesh = MeshFactory.get_mesh(MeshTypes.SPHERE)
-#		
-#class Octo(Node):
-#	def __init__(self, name=None):
-#		Node.__init__(self, name=name)
-#		self.renderer.mesh = MeshFactory.get_mesh(MeshTypes.OCTOHEDRON)
-#		
-#class Light(Node):
-#	def __init__(self, name=None):
-#		Node.__init__(self, name=name)
-#		self.light = GLLight()
-
 
 
 
