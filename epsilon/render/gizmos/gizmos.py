@@ -1,6 +1,8 @@
 import math
 from OpenGL.GL import *
 
+from epsilon.core.input import Input
+
 from epsilon.geometry.euclid import Vector3
 from epsilon.scene.node import Node
 from epsilon.render.colour import Preset
@@ -105,7 +107,8 @@ class Line(Node):
         glVertex3f(ve.x,ve.y,ve.z)
         glEnd()
         
-        glColor3f(1.0, 1.0, 1.0)        
+        glColor3f(1.0, 1.0, 1.0)
+
         self.renderer._teardown_draw()
                 
 class WireCube(Node):
@@ -141,6 +144,8 @@ class WireCube(Node):
             self._max = Vector3(hw, hh, hd) + position
         
         self.gen_coords()
+
+        self._colour = Preset.white
         
     @property
     def min(self):
@@ -159,13 +164,21 @@ class WireCube(Node):
     def max(self, new_max):
         self._max = new_max
         self.gen_coords()
+
+    @property
+    def colour(self):
+        return self._colour
+
+    @colour.setter
+    def colour(self, new_colour):
+        self._colour = new_colour
         
     def gen_coords(self):
         self._coords = []
         
-        # Transform coords into world space
-        max = self._max + self.transform.position
-        min = self._min + self.transform.position
+        # Transform coords local
+        max = self._max# + self.transform.local_position
+        min = self._min# + self.transform.local_position
         
         #top
         self._coords.append(max)
@@ -185,8 +198,69 @@ class WireCube(Node):
         
         self.renderer._setup_draw()
         
-        #glColor3f(self.material.diffuse.r, self.material.diffuse.g, self.material.diffuse.b)
-        glColor3f(1.0, 1.0, 1.0)
+        glColor4f(self._colour.r, self._colour.g, self._colour.b, 0.5)
+
+        # Fill the sides
+        glBegin(GL_TRIANGLES)
+
+        # Top
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        
+        # Bottom
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+        glVertex3f(self._coords[5].x, self._coords[5].y, self._coords[5].z)
+        glVertex3f(self._coords[6].x, self._coords[6].y, self._coords[6].z)
+
+        glVertex3f(self._coords[7].x, self._coords[7].y, self._coords[7].z)
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+        glVertex3f(self._coords[6].x, self._coords[6].y, self._coords[6].z)
+
+        # Sides
+        glVertex3f(self._coords[6].x, self._coords[6].y, self._coords[6].z)
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        glVertex3f(self._coords[5].x, self._coords[5].y, self._coords[5].z)
+        glVertex3f(self._coords[6].x, self._coords[6].y, self._coords[6].z)
+
+        # back
+        glVertex3f(self._coords[7].x, self._coords[7].y, self._coords[7].z)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[6].x, self._coords[6].y, self._coords[6].z)
+        glVertex3f(self._coords[7].x, self._coords[7].y, self._coords[7].z)
+
+        # right
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[7].x, self._coords[7].y, self._coords[7].z)
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+
+
+        # front
+        glVertex3f(self._coords[5].x, self._coords[5].y, self._coords[5].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        glVertex3f(self._coords[4].x, self._coords[4].y, self._coords[4].z)
+        glVertex3f(self._coords[5].x, self._coords[5].y, self._coords[5].z)
+
+        glEnd()
+
+        glColor4f(self._colour.r, self._colour.g, self._colour.b, 1.0)
         
         # Top
         glBegin(GL_LINE_LOOP)
@@ -232,7 +306,7 @@ class WirePlane(Node):
         self.transform.position = pos
         self._normal = normal.normalized()
         self._size = size
-        
+        self._colour = Preset.white
         self._gen_offset_coords()
         
     @property
@@ -243,7 +317,15 @@ class WirePlane(Node):
     def normal(self, new_normal):
         self._normal = new_normal
         self._gen_offset_coords()
-        
+    
+    @property
+    def colour(self):
+        return self._colour
+
+    @colour.setter
+    def colour(self, new_colour):
+        self._colour = new_colour
+
     @property
     def size(self):
         return self._size
@@ -279,9 +361,9 @@ class WirePlane(Node):
         self._coords = []
         
         for coord in self._offset_coords:
-            self._coords.append(coord+self.transform.position)
-        self._coords.append(self.transform.position)
-        self._coords.append(self.transform.position + (self._normal * self._size) )
+            self._coords.append(coord)
+        self._coords.append(Vector3())
+        self._coords.append((self._normal * self._size) )
         
     def draw(self):
         
@@ -290,8 +372,22 @@ class WirePlane(Node):
         self.renderer._setup_draw()
         
         #glColor3f(self.material.diffuse.r, self.material.diffuse.g, self.material.diffuse.b)
-        glColor3f(1.0, 1.0, 1.0)
+        glColor4f(self._colour.r, self._colour.g, self._colour.b, 0.5)
         
+        # Plane triangles
+        glBegin(GL_TRIANGLES)
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[1].x, self._coords[1].y, self._coords[1].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+
+        glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
+        glVertex3f(self._coords[2].x, self._coords[2].y, self._coords[2].z)
+        glVertex3f(self._coords[3].x, self._coords[3].y, self._coords[3].z)
+        
+        glEnd()
+
+        glColor4f(self._colour.r, self._colour.g, self._colour.b, 1.0)
+
         # Plane outer
         glBegin(GL_LINE_LOOP)
         glVertex3f(self._coords[0].x, self._coords[0].y, self._coords[0].z)
