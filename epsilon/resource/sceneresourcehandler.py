@@ -55,22 +55,22 @@ class SceneResourceHandler(ResourceHandlerBase):
         
         new_scene = None
         
-        try:
-            xml_dom = ET.parse(filename)
+#        try:
+        xml_dom = ET.parse(filename)
+        
+        xml_root = xml_dom.getroot()
+        
+        load_scene = self.parse_node(xml_root)
+        
+        # If successful in parsing the scene file
+        if not load_scene is None:
             
-            xml_root = xml_dom.getroot()
+            new_scene = SceneBase(filename=filename, root=load_scene)
             
-            load_scene = self.parse_node(xml_root)
-            
-            # If successful in parsing the scene file
-            if not load_scene is None:
+            self._scene_manager.add_scene(new_scene)
                 
-                new_scene = SceneBase(filename=filename, root=load_scene)
-                
-                self._scene_manager.add_scene(new_scene)
-                    
-        except Exception, e:
-            self._log.Log("Could not parse scene with filename: %s\nERROR: %s" % (filename, e.message))
+#        except Exception, e:
+#            self._log.Log("Could not parse scene with filename: %s\nERROR: %s" % (filename, e.message))
             
         return new_scene
                 
