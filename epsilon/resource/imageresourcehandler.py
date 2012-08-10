@@ -18,12 +18,13 @@ class ImageResourceHandler(ResourceHandlerBase):
         
     def process_resource(self, filename):
         
-        new_texture = None
+#        new_texture = None
         # Does the Texture already exist in the Texture Manager
-        for texture in TextureManager.get_instance().textures:
-            if texture.filenanme == filename:
-                new_texture = texture
-                break
+        new_texture = TextureManager.get_instance().get_texture_by_filename(filename)
+#        for texture in TextureManager.get_instance().textures:
+#            if texture.filename == filename:
+#                new_texture = texture
+#                break
         
         # If the texture isn't in the texture manager
         if new_texture is None:
@@ -34,10 +35,10 @@ class ImageResourceHandler(ResourceHandlerBase):
             TextureManager.get_instance().add_texture(new_texture)
             
             # Create a Resource object that also contains the Texture object within the data property
-            new_resource = Texture(filename=filename)
+#            new_resource = Texture(filename=filename)
         
         # Return the new Resource
-        return new_resource
+        return new_texture
         
     def remove_resource(self, resource):
         # Remove it from the TextureManager
