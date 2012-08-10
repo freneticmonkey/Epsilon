@@ -4,6 +4,8 @@ from datetime import datetime
 from epsilon.ui.simplui import *
 from epsilon.ui.uibasewindow import UIBaseWindow
 
+from epsilon.render.gizmos.gizmomanager import GizmoManager
+
 from epsilon.scene.node import Node#, Bounds
 from epsilon.scene.scenemanager import SceneManager
 from epsilon.geometry.euclid import Vector3
@@ -101,15 +103,19 @@ class PlanetSphere(Node):
         self._radius = radius
         self._horizon = 0.0
         
-        self._camera_gizmo = WireSphere(radius=0.1)
-        self.transform.add_child(self._camera_gizmo.transform)
+        self._max_depth = 8
+        
+        #self._camera_gizmo = WireSphere(radius=0.1)
+        #self.transform.add_child(self._camera_gizmo.transform)
+        
+        self._camera_gizmo = GizmoManager.draw_sphere(Vector3(), radius=0.2)
         
         self._gen_faces()
         
         # The maximum height of the sphere surface (above the radius)
         self._max_height = (radius * 0.1)
         self._split_factor = 2.0  #16
-        self._split_power = 1.25
+        self._split_power = 1.1#1.25
         
         self._horizon = 0
         
@@ -118,18 +124,21 @@ class PlanetSphere(Node):
         # Number splits this frame
         self._num_splits = 0
         # Max number of splits per frame
-        self._max_splits = 2
+        self._max_splits = 8
         
-        pos = self.transform.position
-        pos.y += 0.1
-        self._line = Line(pos, Vector3(0, 0, 0), 5.0)
-        self.transform.add_child(self._line.transform)
+#        pos = self.transform.position
+#        pos.y += 0.1
+#        self.transform.position.y = 1.0
+#        self._line = Line(Vector3(0,1,0), Vector3(0, 0, 0), 5.0)
+#        self.transform.add_child(self._line.transform)
+
+        self._line = GizmoManager.draw_line(Vector3(-1,0,0), Vector3(0,0,0), 5.0)
         
-        self._cube_pos = Line(self.transform.position, Vector3(0, 0, 0), 5.0)
-        self.transform.add_child(self._cube_pos.transform)
+#        self._cube_pos = Line(self.transform.position, Vector3(0, 0, 0), 5.0)
+#        self.transform.add_child(self._cube_pos.transform)
         
         self._camera = None
-        
+        self._last_camera_pos = None
         self._last_time = datetime.now()
         
     @property
@@ -213,25 +222,23 @@ class PlanetSphere(Node):
 #            if self._ui.track_camera:
         
             self._camera = SceneManager.get_instance().current_scene.active_camera
-        
+            
             # Store the camera pos for access by the quad children
             self._camera_pos = self._camera.node_parent.transform.position - self.transform.position
             self._camera_pos_sc = CubeSphereMap.get_cube_coord(self._camera_pos.x, self._camera_pos.y, self._camera_pos.z) 
             
-            print "Planet position: %s" % self.transform.position
-            
-#            print "Camera actual position: %s" % self._camera_pos
-#            print "Camera Cube position: %s" % self._camera_pos_sc
-            print "Line pos: %s" % self._line.transform.position
             self._line.line_to(self._camera_pos)
-            
-            cp = self._camera_pos_sc
-            self._cube_pos.line_to(CubeSphereMap.get_sphere_position(cp.x, cp.y, cp.face, self._radius))
             
             # Reset the number of splits
             self._num_splits = 0
             #print "Resetting splits"
             
+            # If the camera has moved a sufficient distance to warrant an update
+#            if self._last_camera_pos is None:
+#                self._last_camera_pos = self._camera_pos
+#            dist = self._last_camera_pos - self._camera_pos 
+#            if dist.magnitude() > 1.0:
+                
             # Calc the horizon
             altitude = self._camera_pos.magnitude()
             horizon_altitude = max([altitude-self.radius, self.max_height])
@@ -242,22 +249,26 @@ class PlanetSphere(Node):
                 if isinstance(child.node, SphereQuad):
                     child.node.update_surface()
                     
+            self._last_camera_pos = self._camera_pos
+                    
             self._last_time = datetime.now()
             
             # Update the UI with the camera pos
 #            self._ui.rel_camera_pos = self._camera_pos
 #            self._ui.camera_pos = self._camera_pos_sc
 
-#            if not self._camera_pos_sc is None:
-#                pos = CubeSphereMap.get_sphere_vector(self._camera_pos_sc.x, self._camera_pos_sc.y, self._camera_pos_sc.face)
-#                pos.normalize()
-#                pos *= (self._radius / 1.9)
-#                self._camera_gizmo.transform.position = pos
-                
-#                print "Conv Position: %s" % pos
-
+            if not self._camera_pos_sc is None:
+                pos = CubeSphereMap.get_sphere_vector(self._camera_pos_sc.x, self._camera_pos_sc.y, self._camera_pos_sc.face)
+                pos.normalize()
+                pos *= (self._radius / 1.9)
+                self._camera_gizmo.transform.position = pos
+            
 #        el = datetime.now() - start
 #        print "Update Elapsed: %4.2f ms " % (el.microseconds / 1000)
+            
+    def cull(self, camera):
+        # Override culling so that it doesn't interfere with the planet
+        pass
             
     def draw(self):
         
