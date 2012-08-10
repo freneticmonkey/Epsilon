@@ -28,3 +28,11 @@ src/UnitTests/InteractiveConsoleTest.py
 src/UnitTests/InheritanceTest.py
 
 src/UnitTests/SingletonTest.py
+
+tests/randtest.py
+
+tests/starfield.py
+
+epsilon.sublime-project
+
+epsilon.sublime-workspace
