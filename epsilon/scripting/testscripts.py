@@ -20,6 +20,7 @@ from epsilon.scripting.script import Script
 from epsilon.scripting.script import ScriptParamTypes
 from epsilon.geometry.euclid import Vector3, Quaternion
 from epsilon.render.rendermanager import RenderManager
+from epsilon.render.transform import Space
 
 #from pygame import *
 
@@ -191,13 +192,17 @@ class CameraMoveController(MoveController):
             
             # Mouse Controls
             mx, my = Input.get_mouse_move_relative()
-            # FIXME: HACK
+            # FIXME: HACK to prevent immediate jump on initial mouse movement
             if math.fabs(mx) < 60.0 and math.fabs(my) < 60.0: # <== This makes mouse movement feel like 
                                                               # it's moving through molasses
                 h_angle = self._mouse_speed_x * -mx
                 v_angle = self._mouse_speed_y * -my
-                self._node.transform.rotate(Quaternion().rotate_axis(h_angle, Vector3(0,1,0)) )
-                self._node.transform.rotate(Quaternion().rotate_axis(v_angle, Vector3(1,0,0)) )
+                
+                self._node.transform.rotate(Quaternion().rotate_axis(h_angle, self._node.transform.up), Space.PARENT )
+                self._node.transform.rotate(Quaternion().rotate_axis(v_angle, self._node.transform.right), Space.PARENT )
+
+                #self._node.transform.rotate(Quaternion().rotate_axis(h_angle, Vector3(0,1,0)), Space.PARENT )
+                #self._node.transform.rotate(Quaternion().rotate_axis(v_angle, Vector3(1,0,0)), Space.PARENT )
                 
                 self._node.camera.look_at_position = pos + ( forward * self._speed)
             
