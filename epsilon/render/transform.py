@@ -116,15 +116,16 @@ class Transform(object):
     # set position relative to parent
     @position.setter
     def position(self, new_pos):
-        # Calculate local position
         
+        self._world_position = new_pos
+        
+        # Calculate local position
         # convert world position to relative position
         if self._parent:
             new_pos -= self._parent.position
-        else:
-        	self._world_position = new_pos
+            
+        self._local_position = new_pos
         
-        self._local_position = new_pos# - self._parent_matrix.get_translation()
         self._need_update()
         
     # get local position
@@ -222,6 +223,10 @@ class Transform(object):
             child_node_trans._parent = self
             child_node_trans._scene = self._scene
             self._children.append(child_node_trans)
+            
+            # Update child's local position
+            child_node_trans._local_position = child_node_trans.position - self.position 
+            
             # Allow the child to perform any post addition actions
             child_node_trans.on_add()
             # Notify the parent that we have changed
