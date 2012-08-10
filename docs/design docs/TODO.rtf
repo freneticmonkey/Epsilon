@@ -1,11 +1,84 @@
-{\rtf1\ansi\ansicpg1252\cocoartf1138
-{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\rtf1\ansi\ansicpg1252\cocoartf1187
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;}
 \paperw11900\paperh16840\margl1440\margr1440\vieww16600\viewh15020\viewkind0
 \deftab720
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardeftab720\pardirnatural
 
 \f0\b\fs24 \cf0 Epsilon Dev Notes\
+\
+\
+\
+\
+3/08/2012\
+Need to fix the mouse movement so that the mouse is reset to the centre of the screen on first click before any rotation is applied to the camera.  This way the camera won't go flying off on a weird rotation when the click isn't near the centre of the screen.\
+\
+Pypy - Pyglet\
+If Pyglet will only work under Pypy then I need to remove the bumpy dependency when setting up Vertex Buffer Objects.  Possibly switch to Numarray instead.  But I don't know if that works under Pypy.  I am NOT going to stuff around digging into the guts of Pyglet to determine why the window isn't displaying with the default Python under OSX 10.8.\
+\
+\
+\
+31/07/2012\
+TODO: Bounds - Doesn't currently handle transformations.  For example, won't handle rotated bounding boxes. Thinking about it I've basically implemented axis aligned bounding boxes.  But without scale support.\
+\
+\
+30/7/2012 -\
+Ok! \
+Re-implemented textures into the engine.  Default phong shader now supports having a texture set.\
+Got the planetary detail refinement working correctly.\
+Performance is not great, so need to finish the implementation of camera frustums.  Which means I need to implement a cull pass which will trim out all invisible geometry!\
+\
+6/7/2012 - \
+Broke up the Node class as it was becoming quite unmanageable.  The transform and child functionality is now stored within the transform class.  The rendering is now stored within the Renderer class.  The Renderer can be overridden if custom rendering functionality is needed.  This is demonstrated in the Planet code within the SphereQuad class which uses the SphereQuadRenderer\
+\
+2/7/2012\
+BUG: Transform tag has no effect when a child of a Light tag\
+\
+2/7/2012
+\b0 \
+Spent a lot of time implementing a quad tree planet renderer using the Sandbox project as a template/guide.  Working ok, but for the camera being incorrectly transformed into planet space resulting in in correct splitting.
+\b \
+\
+1/05/2012\
+
+\b0 Thinking again about things that need to be done:\
+\
+- UI\
+ - Switched to Simpleui, but the UI is very simple.. haha no console implementation.\
+ - Editing\
+\
+- Scene\
+ - Exporter\
+ - Better import for scripts.  Rather than Hardcoding TestScripts in the ResourceLoader, be able to instantiate\
+   scripts from a source file specified by the XML scene description.\
+\
+- Scripting\
+ - In engine script editor with live editing.\
+ - Requires basic text editor functions.\
+\
+- Renderer\
+ - Frustrum culling.\
+ - Render stages\
+  - i.e. Background, Scene, Shadows, PostProcessing, Overlays (inc ui)\
+\
+- Audio\
+ - Something\'85\
+\
+- Physics.
+\b \
+ 
+\b0 - PyBullet? PyODE? which? how hard?\
+\
+- Networking\
+ - See if the Verse code is going to get anywhere soon.
+\b \
+\
+26/05/2012\
+
+\b0 Ended up spending most of today reshuffling the epsilon code around so that it is better organised.  All of the main areas are now organised underneath an epsilon folder and all internal imports now import from epsilon.<package>.<module>.\
+\
+Implemented some code for an initial procedural terrain, but it's way too slow in calculating normals.  From what I've read around the net calculating normals on the CPU is a bad idea, even when using C++, it's better to calculate them in a shader.  Doing it in a shader involves writing the generated height map to a texture and sampling the texture to generate the normals for each vertex.
+\b \
 \
 25/05/2012\
 
@@ -45,7 +118,7 @@ Audio\
 General Changes\
 - Implement Livecoding\
   Class Refactoring\
-- Continue to refine the class structures to logically group functionality\
+- Continue to refine the class structures to logically group functionality - ~Done 1/6/2012\
 - This could also be put below, but move all rendering code within the Renderer. - Kinda, sorta done.\
 
 \b \
