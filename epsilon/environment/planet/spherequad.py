@@ -92,6 +92,12 @@ class SphereQuad(Node):
         
         self._sorted_quads = None
         
+        # The Quads
+        self._tl = None
+        self._tr = None
+        self._bl = None
+        self._br = None
+        
         
         #self._mesh = MeshFactory.get_mesh(MeshTypes.PLANE_HI)
         
@@ -149,6 +155,20 @@ class SphereQuad(Node):
         
         self.renderer.mesh = self._surface.mesh
         
+    def _get_quad(self, quadrant):
+        found_quad = None
+        if quadrant == QuadName.TL:
+            found_quad = self._tl
+        elif quadrant == QuadName.TR:
+            found_quad = self._tr
+        elif quadrant == QuadName.BL:
+            found_quad = self._bl
+        elif quadrant == QuadName.BR:
+            found_quad = self._br
+        else:
+            print "Invalid Quadrant? %d" % quadrant
+            
+        return found_quad
         
     def _calc_corners(self):
         # Calculate the Cubic coordinates of this quad
@@ -257,10 +277,6 @@ class SphereQuad(Node):
                 self._sorted_quads.append(3)
                 self._sorted_quads.append(1)
                 
-#                self._sorted_quads.append(2)
-#                self._sorted_quads.append(0)
-#                self._sorted_quads.append(3)
-#                self._sorted_quads.append(1)
         else:
             # In top right
             if coord.y < self._centre_coords[1]:
@@ -296,63 +312,44 @@ class SphereQuad(Node):
             
             # Check to see if the camera is within this quadrant
             if not self.hit_test(self._sphere_parent.camera_pos_sc, quad_inc):
-                if len(self.transform.children) > quad_inc:
-                    # Check the quadrant against the horizon distance
-                    if self._sphere_parent.horizon > 0.0 and distances[quad_inc] - radius > self._sphere_parent.horizon:
-                        self.transform.children[quad_inc].node._merge()
-                        print "Horizon"
-                        continue
                     
-                    # Check the quadrant against the view frustrum
-                    if not self._sphere_parent.camera.sphere_inside(self.transform.children[quad_inc].position, radius):
-                        self.transform.children[quad_inc].node._merge()
-                        #print "Culling"
-                        continue
+                # Check the quadrant against the horizon distance
+                if self._sphere_parent.horizon > 0.0 and \
+                   (distances[quad_inc] - radius) > self._sphere_parent.horizon:
+                    
+                    self._get_quad(quad_inc)._merge()
+                    #print "Horizon"
+                    continue
+#                
+#                # Check the quadrant against the view frustrum
+#                if not self._sphere_parent.camera.sphere_inside(self._get_quad(quad_inc).transform.position, radius):
+#                    self._get_quad(quad_inc)._merge()
+#                    #print "Culling"
+#                    continue
+#                continue
             
             if distances[quad_inc] > priority:
-                if len(self.transform.children) > quad_inc:
-                    self.transform.children[quad_inc].node._merge()
-                    #print "Distance"
-                    continue
-            
-            self._split(quad_inc)
-            
+                if not self._get_quad(quad_inc) is None:
+                    print "merging due to distance: " + QuadName.quad_string(quad_inc)
+                    self._get_quad(quad_inc)._merge()
+                    
+#                if self._level == self._planet_root._max_depth:
+#                    print "merging split level: %d" % self._level
+#                    print priority
+#                    print distances
+                    
+                #print "Distance"
+                continue
+
+            if self._level <= self._planet_root._max_depth:
+#                print priority
+#                print distances
+#                print "Split level: %d" % self._level
+                self._split(quad_inc)
+                
+                
             if self._is_split:
-                if len(self.transform.children) > quad_inc:
-                    if self.transform.children[quad_inc]:
-                        self.transform.children[quad_inc].node.update_surface()
-            
-        
-#    def update_surface_old(self):
-#        
-#        pos = self._sphere_parent.camera_pos
-#        
-#        # If this level can be split otherwise, ignore
-#        if self._level < self.MAX_DEPTH:
-#            
-#            # Build the corner coordinates if necessary
-#            if self._corners is None:
-#                self._calc_corners()
-#            
-#            distance = pos - self.position
-#            
-#            if distance.magnitude() < self._split_dist:
-#                if not self._is_split:
-#                    # split
-#                    self._split()
-#                    
-#                # else already split - hide this level and check if children
-#                else:
-#                    for child in self._children:
-#                        child.update_surface()
-#                     
-#                #self._material.diffuse = Preset.green
-#            else:
-#                if self._is_split:
-#                    self._is_split = False
-#                
-#                #self._material.diffuse = Preset.blue
-#                # else not split - don't do anything
+                self._get_quad(quad_inc).update_surface()
     
     def _can_merge(self):
         
@@ -366,76 +363,52 @@ class SphereQuad(Node):
         return True
        
     def _merge(self):
-        #if self._is_split:
         
         #    child_quad = self.children[quadrant]
         children_merged = True
         
         if self._is_split:
-#            print "merging"
-#            if not self.children[QuadName.TL]._merge():
-#                children_merged = False
-#            if not self.children[QuadName.TR]._merge():
-#                children_merged = False
-#            if not self.children[QuadName.BR]._merge():
-#                children_merged = False
-#            if not self.children[QuadName.BL]._merge():
-#                children_merged = False
-#                
-#            if not children_merged or not self._can_merge():
-#                return False
             self.transform.remove_children()
-#            for i in range(len(self.children)-1, 0, -1):
-#            # child in self.children:
-#                child = self.children[i]
-#                self.remove_child(child)
-            #self.children[quadrant].visible = False
+            self._tl = None
+            self._tr = None
+            self._bl = None
+            self._br = None
+            
             self._is_split = False
         return True
-        
-        #return False
             
     # Quadrant is currently unused.
     def _split(self, quadrant=-1):
         
         if not self._is_split:
             if not self._planet_root.can_split():
-#                print "Ignoring split until next frame"
                 return
             
-#            print "splitting"
-            h_size = 1.0#self._size / 2.0
-            #p_size = self._size / 4.0
+            h_size = 1.0
             next_level = self._level + 1
             
-#            print "Splitting level: %d" % self._level
-#            print "Quadrant: %s" % QuadName.quad_string(quadrant)
             # build top left
-            #coord = Vector3(-p_size, 0, p_size)
-            new_quad = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TL )
-            self.transform.add_child( new_quad.transform )
-            new_quad._init_quad()
+            self._tl = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TL )
+            self.transform.add_child( self._tl.transform )
+            self._tl._init_quad()
             
             # top right
-            #coord = Vector3(p_size, 0, p_size)
-            new_quad = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TR )
-            self.transform.add_child( new_quad.transform )
-            new_quad._init_quad()
+            self._tr = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TR )
+            self.transform.add_child( self._tr.transform )
+            self._tr._init_quad()
             
             # bottom left
-            #coord = Vector3(-p_size, 0, -p_size )
-            new_quad = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BL )
-            self.transform.add_child( new_quad.transform )
-            new_quad._init_quad()
+            self._bl = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BL )
+            self.transform.add_child( self._bl.transform )
+            self._bl._init_quad()
             
             # bottom right
-            #coord = Vector3(p_size, 0, -p_size )
-            new_quad = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BR )
-            self.transform.add_child( new_quad.transform )
-            new_quad._init_quad()
+            self._br = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BR )
+            self.transform.add_child( self._br.transform )
+            self._br._init_quad()
             
             self._is_split = True
-    
+            
     def hit_test(self, coord, quad=-1):
         if coord.face == self.face:
             if not quad == -1:
@@ -465,14 +438,11 @@ class SphereQuad(Node):
     
     def draw(self):
         # If split then draw children
-        if self._is_split and not self.transform.children == []:
-            
-            if not len(self.transform.children) == 4:
-                print "missing children"
+        if self._is_split:
             
             # Draw sorted children
             for quad_inc in self._sorted_quads:
-                self.transform.children[quad_inc].node.draw()
+                self._get_quad(quad_inc).draw()
             
         # If not split then draw self and don't draw children
         else:
