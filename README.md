@@ -9,6 +9,15 @@ Current Features
 - XML Scene loading using custom format
 - Wavefront model loading
 
+Requirements
+----------------
+- Python (32 bit only due to Pyglet being 32 bit only)
+- Pyglet
+- PyOpenGL
+- numpy
+- Python Imaging Library (PIL)
+- PyGame.... This should be optional
+
 Future Development
 ------------------
 I've got a rough guide for the features that I want to add to the engine which is currently very fluid so I'll update this as I go.

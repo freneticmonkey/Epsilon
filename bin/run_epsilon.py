@@ -7,7 +7,10 @@ import cProfile
 
 # Add the epsilon path to the python path
 epsilon_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+print epsilon_path
 sys.path.append(epsilon_path)
+print sys.path
+
 from epsilon.core.epsilonmanager import EpsilonManager
     
 def main():
