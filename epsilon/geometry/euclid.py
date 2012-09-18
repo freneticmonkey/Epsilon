@@ -2287,7 +2287,7 @@ class Sphere:
 
 class Plane:
     # n.p = k, where n is normal, p is point on plane, k is constant scalar
-    __slots__ = ['n', 'k']
+    __slots__ = ['n', 'k', 'name']
 
     def __init__(self, *args):
         if len(args) == 3:
@@ -2301,6 +2301,9 @@ class Plane:
             if isinstance(args[0], Point3) and isinstance(args[1], Vector3):
                 self.n = args[1].normalized()
                 self.k = self.n.dot(args[0])
+            elif isinstance(args[0], Vector3) and isinstance(args[1], Vector3):
+                self.n = args[1].normalized()
+                self.k = self.n.dot(args[0])
             elif isinstance(args[0], Vector3) and type(args[1]) == float:
                 self.n = args[0].normalized()
                 self.k = args[1]
@@ -2312,6 +2315,7 @@ class Plane:
         
         if not self.n:
             raise AttributeError, 'Points on plane are colinear'
+        self.name = ""
 
     def __copy__(self):
         return self.__class__(self.n, self.k)
