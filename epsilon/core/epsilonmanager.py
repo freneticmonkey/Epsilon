@@ -117,8 +117,8 @@ class EpsilonManager(object):
         self._script_manager = ScriptManager.get_instance()
         
         # Start the UI Manager and setup the MainUI
-#        self._ui_manager = UIManager.get_instance()
-#        self._main_ui = MainUI()
+        self._ui_manager = UIManager.get_instance()
+        self._main_ui = MainUI()
         
         # Start the GizmoManager system
         self._gizmo_manager = GizmoManager.get_instance()
@@ -161,8 +161,8 @@ class EpsilonManager(object):
         #self._cube = WireCube(min=Vector3(-0.71,-1,-0.71),max=Vector3(0.71,1,0.71))
         #self._scene.current_scene.root.transform.add_child(self._cube.transform)
         
-#        self._planet = PlanetSphere()
-#        self._scene.current_scene.root.transform.add_child(self._planet.transform)
+        self._planet = PlanetSphere()
+        self._scene.current_scene.root.transform.add_child(self._planet.transform)
         
 #        self._plane = Node()
 #        self._plane.renderer.mesh = MeshFactory.get_mesh(MeshTypes.OCTOHEDRON)
@@ -200,7 +200,7 @@ class EpsilonManager(object):
         # Update SceneManager
         self._scene.update()
         
-#        self._planet.update_sphere()
+        self._planet.update_sphere()
         
         self._frame_end.send()
         
