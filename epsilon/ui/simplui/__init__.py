@@ -108,6 +108,8 @@ from frame import Frame
 
 from dialogue import Dialogue
 
+from console import Console
+
 from container import Container
 from layout import HLayout, VLayout
 from flow_layout import FlowLayout
