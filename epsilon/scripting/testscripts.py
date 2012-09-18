@@ -28,6 +28,102 @@ import math
 
 from epsilon.core.input import Input
 
+from epsilon.ui.simplui import *
+from epsilon.ui.uibasewindow import UIBaseWindow
+
+from epsilon.scene.scenemanager import SceneManager
+
+class MoveWindow(UIBaseWindow):
+    def __init__(self, 
+                 base_speed=10.0, 
+                 max_speed=50.0,
+                 angle_speed=120, 
+                 max_angle_speed=720):
+
+        self._base_speed = base_speed
+        self._max_speed = max_speed
+
+        self._base_angle_speed = angle_speed
+        self._max_angle_speed = max_angle_speed
+
+        self._current_speed = self._base_speed
+        self._current_angle_speed = self._base_angle_speed
+
+        self._camera = None
+
+        UIBaseWindow.__init__(self)
+
+    def _setup_ui(self):
+        self._dialog = Dialogue('Camera Controls',
+                                x=800,
+                                y=250,
+                                content=
+                                VLayout(hpadding=5, 
+                                        children=
+                                        [
+                                            Label('Camera Pos'),
+                                            Label('x: 000.00 y: 000.00 z: 000.00', 
+                                                  name='camera_pos_lbl'),
+                                            Label('Speed: Current: %3.2f' % self._current_speed, 
+                                                  name='camera_spd_lbl'),
+                                            Slider(value=self._base_speed, 
+                                                   min=0.01, 
+                                                   max=self._max_speed, 
+                                                   action=self.on_speed_scroll
+                                                   ),
+                                            Label('Angle Speed: Current: %3.2f' % self._current_angle_speed, 
+                                                  name='camera_ang_spd_lbl'),
+                                            Slider(value=self._base_angle_speed, 
+                                                   min=1, 
+                                                   max=self._max_angle_speed, 
+                                                   action=self.on_angle_scroll),
+                                            Button('Reset Camera', 
+                                                   action=self.reset_camera),
+                                        ])
+                                )
+        self._frame.add(self._dialog)
+        self._camera_pos_label = self._frame.get_element_by_name('camera_pos_lbl')
+        self._camera_spd_label = self._frame.get_element_by_name('camera_spd_lbl')
+        self._camera_ang_spd_label = self._frame.get_element_by_name('camera_ang_spd_lbl')
+
+    @property
+    def speed(self):
+        return self._current_speed
+
+    @property
+    def angle_speed(self):
+        return self._current_angle_speed
+
+    # UI Control Events
+    def on_speed_scroll(self, slider):
+        self._current_speed = slider.value
+        self._camera_spd_label.text = 'Speed: Current: %3.2f' % self._current_speed
+
+    def on_angle_scroll(self, slider):
+        self._current_angle_speed = slider.value
+        self._camera_ang_spd_label.text = 'Angle Speed: Current: %3.2f' % self._current_angle_speed
+
+    def reset_camera(self, button):
+        if self._camera is None:
+            self._camera = SceneManager.get_instance().current_scene.active_camera
+
+        if not self._camera is None:
+            self._camera.node_parent.transform.position = Vector3(0, 1, -10)
+            if hasattr( self._camera, 'look_at_position'):
+                self._camera.node_parent.transform.rotation = Quaternion()
+                self._camera.look_at_position = Vector3(0,0,0)
+
+
+    def draw(self):
+        if self._camera is None:
+            self._camera = SceneManager.get_instance().current_scene.active_camera
+        
+        if not self._camera is None:
+            pos = self._camera.node_parent.transform.position
+            self._camera_pos_label.text = "x: %3.2f y: %3.2f z: %3.2f" % (pos.x, pos.y, pos.z) 
+        self._frame.draw()
+    
+
 class RotateScript(Script):
     
     def __init__(self, parent_node=None, rate=15, axis=Vector3(0,1,0)):
@@ -69,6 +165,23 @@ class MoveController(Script, ListenerBase):
         
         self._mouse_over_ui = False
         self._unlock_mouse = False
+
+    # exposing for ui modification
+    @property
+    def speed(self):
+        return self._final_speed
+
+    @speed.setter
+    def speed(self, new_speed):
+        self._final_speed = new_speed
+
+    @property
+    def angle_speed(self):
+        return self._angle_speed
+
+    @angle_speed.setter
+    def angle_speed(self, new_angle_speed):
+        self._angle_speed = new_angle_speed
     
     def _process_event(self, new_event):
         if new_event.name == 'MouseEnterUI':
@@ -181,16 +294,21 @@ class CameraMoveController(MoveController):
         
         if self._mouse_y_invert:
             self._mouse_speed_y = -self._mouse_speed_y
+
+        self._ui = MoveWindow(base_speed=speed, angle_speed=angle_speed)
     
     def update(self):
+        # Get UI values
+        self.speed = self._ui.speed
+        self.angle_speed = self._ui.angle_speed
+
         super(CameraMoveController, self).update()
-        
+
         if Input.get_mouse_left() and not self._mouse_over_ui:
             
             pos = self._node.transform.position
             forward = self._node.transform.forward
             
-            # Mouse Controls
             mx, my = Input.get_mouse_move_relative()
             # FIXME: HACK to prevent immediate jump on initial mouse movement
             if math.fabs(mx) < 60.0 and math.fabs(my) < 60.0: # <== This makes mouse movement feel like 
