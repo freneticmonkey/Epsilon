@@ -11,6 +11,8 @@ It should only be created by the TextureManager class
 
 #import Image
 
+from pyglet import image
+
 from OpenGL.GL import *
 
 from epsilon.logging.logger import Logger
@@ -27,9 +29,11 @@ class Texture(ResourceBase):
         
         self._name = name
         self._opengl_id = None
-        self._opengl_buffer = None
+        #self._opengl_buffer = None
         self._size_x = None
         self._size_y = None
+        
+        self._pyglet_texture = None
         
     def __del__(self):
         if not self._opengl_id is None:
@@ -54,8 +58,14 @@ class Texture(ResourceBase):
         return self._size_y
         
     def load(self):
-        pass
-    
+        pic = image.load(self._filename)
+        self._pyglet_texture = pic.get_texture()
+        self._size_x = pic.width
+        self._size_y = pic.height
+        
+        self._opengl_id = self._pyglet_texture.id
+        self._loaded = True
+        
 #        # Open the image file
 #        image = Image.open(self._filename)
 #        self._size_x = image.size[0]
@@ -104,6 +114,10 @@ class Texture(ResourceBase):
         if self._loaded:
             glDisable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, 0)
+
+    def bound_query(self):
+        bt = glGetIntegerv(GL_TEXTURE_BINDING_2D)
+        print "Bound texture: %d" % bt
         
         
         

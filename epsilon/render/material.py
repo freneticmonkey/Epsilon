@@ -6,7 +6,7 @@ Created on Sep 22, 2011
 from OpenGL.GL import *
 
 from epsilon.render.colour import Preset
-#from epsilon.render.texturemanager import TextureManager
+from epsilon.render.texturemanager import TextureManager
 from epsilon.render.texture import Texture
 from epsilon.render.shadermanager import ShaderManager
 from epsilon.render.glutilities import *
