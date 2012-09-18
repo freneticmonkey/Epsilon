@@ -13,14 +13,16 @@ from epsilon.core.time import Time
 from epsilon.logging.logger import Logger
 from epsilon.core.coreevents import QuitEvent
 
-from epsilon.render.renderevents import ToggleWireFrameEvent, ToggleGridEvent
+#from epsilon.render.renderevents import ToggleWireFrameEvent, ToggleGridEvent
+from epsilon.render.rendersettings import RenderSettings
 from epsilon.events.listenerbase import ListenerBase
 
-from epsilon.scene.scenemanager import SceneManager
 from epsilon.geometry.euclid import Vector3, Quaternion
 
+from epsilon.logging.logger import LogListener
+
 class UIListener(ListenerBase):
-    event_types = ['MouseEnterUI','MouseExitUI']
+    event_types = ['MouseEnterUI','MouseExitUI','FrustumStatus']
     def __init__(self, ui):
         ListenerBase.__init__(self, event_types=self.event_types)
         self._ui = ui
@@ -31,6 +33,8 @@ class UIListener(ListenerBase):
                 self._ui.set_mouse_over(True)
             elif new_event.name == 'MouseExitUI':
                 self._ui.set_mouse_over(False)
+            elif new_event.name == 'FrustumStatus':
+                self._ui.update_frustum_status(new_event.data)
 
 class MainUI(UIBaseWindow):
         
@@ -48,8 +52,6 @@ class MainUI(UIBaseWindow):
                         VLayout(children =
                         [
                             Label('0000.0 fps', name='fps_label'),
-                            Label('Camera Pos'),
-                            Label('x: 000.00 y: 000.00 z: 000.00', name='camera_pos_label'),
                             HLayout(children=
                             [
                                 Label('MoUI:', hexpand=False),
@@ -63,8 +65,9 @@ class MainUI(UIBaseWindow):
                                 [
                                     # a checkbox, note the action function is provided directly
                                     Checkbox('Show wireframe', h=100, action=self.show_wireframe_action),
-                                    Checkbox('Show Grid', h=100, action=self.show_grid_action),
-                                    Button('Reset Camera', action=self.reset_camera),
+                                    Checkbox('Show Grid', h=100, action=self.show_grid_action,value=True),
+                                    Checkbox('Show Bounds', h=100, action=self.show_bounds_action,value=False),
+                                    Checkbox('Update Frustum', h=100, action=self.update_frustum_action,value=True),
                                     Button('Quit', action=self.quit_action),
                                 ])
                             )
@@ -82,42 +85,46 @@ class MainUI(UIBaseWindow):
                                         ])
                                 )
         
-        self._console = Dialogue('Python console', 
+        # self._console = Dialogue('Python console', 
+        self._console = Console('Python Console',
                                  x=20, 
-                                 y=110,
-                                 content=VLayout(autosizex=True,
-                                                 hpadding=0,
-                                                 children=
-                                                 [
-                                                    Label('text\nsome\nthing',w=390, h=300),
-                                                    TextInput(text=">>>", w=390)
-                                                 ]))
+                                 y=50,
+                                 # content=VLayout(autosizex=True,
+                                 #                 hpadding=0,
+                                 #                 children=
+                                 #                 [
+                                 #                    Label('text\nsome\nthing',w=390, h=300),
+                                 #                    TextInput(text=">>>", w=390)
+                                 #                 ])
+                                )
+        
         
         self._frame.add(self._dialog)
-        # Disabled until a console is written
-        #self._frame.add(self._console)
+
+        # Setup the UI console logger
+        self._ui_log_listener = LogListener()
+        self._ui_log_listener.set_log_func(self._console.new_line)
+        self._frame.add(self._console)
         
         self._mouse_over_label = self._frame.get_element_by_name('mouse_over')
         self._fps_label = self._frame.get_element_by_name('fps_label')
-        self._camera_pos_label = self._frame.get_element_by_name('camera_pos_label')
-    
-    # UI Control Events
-    def reset_camera(self, button):
-        if self._camera is None:
-            self._camera = SceneManager.get_instance().current_scene.active_camera
-        self._camera.position = Vector3(2, 1, -10)
-        if hasattr( self._camera, 'LookAt'):
-            self._camera.look_at_position = Vector3(0,0,0)
+        #self._camera_pos_label = self._frame.get_element_by_name('camera_pos_label')
     
     def button_action(self, button):
         Logger.Log("A button was clicked!")
         
     def show_wireframe_action(self, checkbox):
-        ToggleWireFrameEvent(checkbox.value).send()
+        RenderSettings.set_setting("wireframe",checkbox.value)
         
     def show_grid_action(self, checkbox):
-        ToggleGridEvent(checkbox.value).send()
+        RenderSettings.set_setting("grid",checkbox.value)
         
+    def show_bounds_action(self, checkbox):
+        RenderSettings.set_setting("draw_bounds",checkbox.value)
+
+    def update_frustum_action(self, checkbox):
+        RenderSettings.set_setting("update_frustum",checkbox.value)
+
     def quit_action(self, button):
         QuitEvent().send()
         
@@ -129,17 +136,13 @@ class MainUI(UIBaseWindow):
         
         if not self._mouse_over_label is None:
             self._mouse_over_label.text = text
-        
+
+    def update_frustum_status(self, data):
+        for i in range(0, len(data)):
+            self._fcbs[i].value = data[i]
+
     def draw(self):
         #self._window.clear()
         self._fps_label.text = "FPS: %3.2f " % Time.fps
-        
-        if self._camera is None:
-            self._camera = SceneManager.get_instance().current_scene.active_camera
-        
-        if not self._camera is None:
-            pos = self._camera.node_parent.transform.position
-            self._camera_pos_label.text = "x: %3.2f y: %3.2f z: %3.2f" % (pos.x, pos.y, pos.z) 
         self._frame.draw()
-    
         
