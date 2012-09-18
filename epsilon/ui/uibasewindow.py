@@ -19,7 +19,7 @@ class UIBaseWindow(object):
         theme_path = os.path.join(os.path.dirname(__file__), theme_path)
         self._themes = [Theme(theme_path)]
         
-        res = Settings.DisplaySettings.resolution
+        res = settings.DisplaySettings.resolution
         
         self._frame = Frame(self._themes[0], w=res[0], h=res[1])
         self._window.push_handlers(self._frame)
@@ -30,6 +30,7 @@ class UIBaseWindow(object):
     # Setup the window
     def setup(self):
         self._setup_ui()
+        
     
     # This functions will be overwritten by custom setup in child classes
     def _setup_ui(self):
