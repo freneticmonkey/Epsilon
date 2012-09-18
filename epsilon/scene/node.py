@@ -9,6 +9,8 @@ from OpenGL.GLU import *
 
 from epsilon.scripting.scriptmanager import ScriptManager
 
+from epsilon.logging.logger import Logger
+
 #from epsilon.render.meshfactory import *
 #from epsilon.render.frustum import Frustum
 from epsilon.render.renderer import Renderer
@@ -147,16 +149,16 @@ class Node(object):
 				break
 			
 	def cull(self, camera):
-		self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1#Frustum.OUTSIDE
-		
-		if not self.renderer.culled:
-			for child in self.transform.children:
-				child.node.cull(camera)
-		# else:
-		# 	print "Culled: " + self.name
-		# 	print "bounds: %s" % self.transform.bounds
-#			self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1
-		
+
+		if not self.transform.bounds.is_empty:
+			self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1#Frustum.OUTSIDE
+			
+			if not self.renderer.culled:
+				for child in self.transform.children:
+					child.node.cull(camera)
+			else:
+				self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1
+	
 	def draw(self):
 		if not self.renderer.culled:
 			
