@@ -2,7 +2,7 @@
 	<texture name="checkers" filename="../media/checkerboard64.png"/>
 	
 	<camera>
-		<transform position="0 0 -5" rotation="0 0 0 0"/>
+		<transform position="0 0 -200" rotation="0 0 0 0"/>
 		<children>
 			<!--
 			<light>
@@ -25,6 +25,15 @@
 			</light>
 		</children>
 	</node>
+	
+	<node name="octo_centre">
+		<transform position="0 0 0"/>
+		<mesh preset="OCTOHEDRON"/>
+		<material>
+			<texture name="checkers"/>
+		</material>
+	</node>
+	
 	
 	<node name="octo_parent">
 		<transform position="0 0 0"/>
