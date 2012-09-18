@@ -22,7 +22,8 @@ class SphereSurface(object):
                        bound_max_z=1.0, 
                        increments=10,
                        radius=1.0, 
-                       face=CubeSphereMap.TOP):
+                       face=CubeSphereMap.TOP,
+                       planet_root=None):
         
         # Ensure that the bounds can be used to generate a valid mesh
         if bound_min_x >= bound_max_x:
@@ -45,6 +46,8 @@ class SphereSurface(object):
         self._radius = radius
         
         self._face = face
+
+        self._planet_root = planet_root
         
         self._mesh = None
         self._gen_mesh()
@@ -64,6 +67,18 @@ class SphereSurface(object):
                 r = (j * ( (self._bound_max_z - self._bound_min_z) / float(self._increments) ) ) + self._bound_min_z
                 
                 p = CubeSphereMap.get_sphere_vector(c, r, self._face) * self._radius
+
+                # Adjust the surface level using noise
+                n = p.copy()
+                n.normalize()
+
+                # noise
+                h = self._planet_root.max_height * self._planet_root.noise.ridged_multi_fractal3(p.x, p.y, p.z, 0.0, 1.0)
+                
+                # Increase the surface vector by the noise value
+                n *= h
+                p += n
+
                 verts.append((p.x, p.y, p.z))
                 
         faces = []
@@ -80,14 +95,20 @@ class SphereSurface(object):
             v = v + self._increments
         
         tex_coords = []
+        
+        bound_width = self._bound_max_x - self._bound_min_x
+        bound_height = self._bound_max_z - self._bound_min_z
+
         for i in xrange(self._increments + 1):
             c = i * (1.0 / self._increments)
+            #c = (i * (bound_width / float(self._increments) ) ) + self._bound_min_x
             for j in xrange(self._increments + 1):
                 r = j * ( 1.0 / self._increments )
+                #r = (j * ( bound_height / float(self._increments) ) )+ self._bound_min_z
                 y = j/self._increments
                 p = [c,r] 
                 tex_coords.append(p)
-            
+
         # Build a mesh
         self._mesh = Mesh(verts, faces, Preset.green, tex_coords=tex_coords)    
     

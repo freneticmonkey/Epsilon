@@ -5,6 +5,8 @@ from OpenGL.GLU import *
 matrix_type = GLfloat * 16
 matrix_typed = GLdouble * 16
 
+from epsilon.logging.logger import Logger
+
 from epsilon.scene.node import Node
 from epsilon.render.material import GLMaterial
 
@@ -65,6 +67,8 @@ class SphereQuad(Node):
         # Override the default renderer
         Node.__init__(self, renderer=SphereQuadRenderer())
         
+        self._name = ""
+
         self._sphere_parent = sphere_parent
         
         # Planet Root - for global controls
@@ -119,7 +123,10 @@ class SphereQuad(Node):
 #        top = Vector3(h_size, h_size, h_size)
 #        bottom = Vector3(-h_size, -h_size, -h_size)
 #        self._bounds = Bounds(top, bottom)
-        
+    @property
+    def name(self):
+        return self._name
+
     @property
     def face(self):
         return self._face
@@ -130,6 +137,14 @@ class SphereQuad(Node):
     
     def _init_quad(self):
         self._calc_corners()
+        
+        # generate a unique name for debug purposes
+        if self._root:
+            self._name = "root_quad"
+        else:
+            self._name = self.transform.parent.node.name + "->" + QuadName.quad_string(self._quad)
+        
+        #Logger.Log("Created Quad: name: %s" % ( self.name ) )
         
         # build the mesh for the quad
 #        bound_min_x= (self._corners[0] * 2.0) - 1.0 
@@ -151,9 +166,14 @@ class SphereQuad(Node):
                                       bound_max_z=bound_max_z,
                                       increments=self._density,
                                       radius=self._radius,
-                                      face=self._face)
+                                      face=self._face,
+                                      planet_root=self._planet_root)
         
         self.renderer.mesh = self._surface.mesh
+
+        # Set checkers texture
+        self.renderer.material.texture = "checkers"
+
         
     def _get_quad(self, quadrant):
         found_quad = None
@@ -303,6 +323,7 @@ class SphereQuad(Node):
         # Calculate split priority
         # Adjust the quadrant size because the quadrants become distorted near the corners of the cube
         # resulting in incorrect splitting/merging of quads.
+        
         quad_size = (self._corners[2] - self._corners[0]) * radius
         priority = 0.0
         if quad_size > (self._sphere_parent.max_height * 0.001):
@@ -316,21 +337,24 @@ class SphereQuad(Node):
                 # Check the quadrant against the horizon distance
                 if self._sphere_parent.horizon > 0.0 and \
                    (distances[quad_inc] - radius) > self._sphere_parent.horizon:
-                    
-                    self._get_quad(quad_inc)._merge()
-                    #print "Horizon"
+                    if not self._get_quad(quad_inc) is None:
+                        self._get_quad(quad_inc)._merge()
+                        #print "Horizon"
                     continue
-#                
-#                # Check the quadrant against the view frustrum
-#                if not self._sphere_parent.camera.sphere_inside(self._get_quad(quad_inc).transform.position, radius):
-#                    self._get_quad(quad_inc)._merge()
-#                    #print "Culling"
-#                    continue
-#                continue
+               
+                # Check the quadrant against the view frustrum
+                if not self._get_quad(quad_inc) is None and not self._get_quad(quad_inc)._is_split:
+                    child_quad_size = quad_size / 2.0
+                    inside = self._sphere_parent.camera.sphere_inside(child_pos[quad_inc], child_quad_size) 
+                    if inside == 1:
+                        quad = self._get_quad(quad_inc)
+                        #Logger.Log("Culling Quad: sz: %f name: %s pos: %s" % ( child_quad_size, quad.name, str(child_pos[quad_inc]) ) )
+                        quad._merge()
+                        continue
             
             if distances[quad_inc] > priority:
                 if not self._get_quad(quad_inc) is None:
-                    print "merging due to distance: " + QuadName.quad_string(quad_inc)
+                    #print "merging due to distance: " + QuadName.quad_string(quad_inc)
                     self._get_quad(quad_inc)._merge()
                     
 #                if self._level == self._planet_root._max_depth:
@@ -341,15 +365,23 @@ class SphereQuad(Node):
                 #print "Distance"
                 continue
 
-            if self._level <= self._planet_root._max_depth:
-#                print priority
-#                print distances
-#                print "Split level: %d" % self._level
-                self._split(quad_inc)
+            # If the quad is futher away than its size then dont split it
+            if distances[quad_inc] > quad_size:
+                continue
+
+#             if self._level <= self._planet_root._max_depth:
+# #                print priority
+# #                print distances
+# #                print "Split level: %d" % self._levelx 
+#                 Logger.Log("Splitting Quad: name: %s" % ( self.name) )
+#                 self._split(quad_inc)
                 
                 
             if self._is_split:
                 self._get_quad(quad_inc).update_surface()
+            elif self._level <= self._planet_root._max_depth:
+                #Logger.Log("Splitting Quad: name: %s" % ( self.name) )
+                self._split(quad_inc) 
     
     def _can_merge(self):
         
