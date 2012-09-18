@@ -46,13 +46,24 @@ class WireSphere(Node):
         self.renderer._teardown_draw()
         
 class Line(Node):
-    def __init__(self, position=Vector3(0,0,0), direction=Vector3(0,0,0), length=1.0):
+    def __init__(self, 
+                 position=Vector3(0,0,0), 
+                 direction=Vector3(0,0,0), 
+                 length=1.0, 
+                 colour=None, 
+                 start_colour=Preset.white, 
+                 end_colour=Preset.red):
         Node.__init__(self)
         self.transform.position = position
         self._direction = direction.normalized()
         self._length = length
-        self._start_colour = Preset.white
-        self._end_colour = Preset.red
+
+        if not colour is None:
+            self._start_colour = colour
+            self._end_colour = colour
+        else:
+            self._start_colour = start_colour
+            self._end_colour = end_colour
         
     @property
     def direction(self):
@@ -121,7 +132,8 @@ class WireCube(Node):
                  height=None, 
                  depth=None, 
                  max=Vector3(0.5, 0.5, 0.5), 
-                 min=Vector3(-0.5,-0.5,-0.5) ):
+                 min=Vector3(-0.5,-0.5,-0.5),
+                 colour=Preset.white ):
         
         Node.__init__(self, name="WireCube")
         
@@ -145,7 +157,7 @@ class WireCube(Node):
         
         self.gen_coords()
 
-        self._colour = Preset.white
+        self._colour = colour
         
     @property
     def min(self):
@@ -299,14 +311,14 @@ class WireCube(Node):
         
 class WirePlane(Node):
     
-    def __init__(self, pos, normal=Vector3.UP(), size=1.0):
+    def __init__(self, pos, normal=Vector3.UP(), size=1.0, colour=Preset.white):
         
         Node.__init__(self, name="WirePlane")
         
         self.transform.position = pos
         self._normal = normal.normalized()
         self._size = size
-        self._colour = Preset.white
+        self._colour = colour
         self._gen_offset_coords()
         
     @property
@@ -346,6 +358,8 @@ class WirePlane(Node):
             perp_z = self._normal.cross(Vector3.UP())
         
         perp_x = self._normal.cross(perp_z)
+        perp_x.normalize()
+        perp_z.normalize()
         
         perp_x *= self._size
         perp_z *= self._size
