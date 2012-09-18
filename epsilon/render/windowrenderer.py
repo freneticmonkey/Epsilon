@@ -22,6 +22,7 @@ from epsilon.render.shadermanager import ShaderManager
 from epsilon.render.colour import Preset
 
 from epsilon.render.renderevents import RenderListener
+from epsilon.render.rendersettings import RenderSettings
 
 from epsilon.ui.uimanager import UIManager
 
@@ -71,8 +72,11 @@ class GLWindowRenderer(WindowRenderer):
 		self._ui_manager = None
 		
 		# Render Settings
-		self._wireframe = False
-		self._grid = True
+		self._rendersettings = RenderSettings.get_instance()
+
+		RenderSettings.set_setting("wireframe", False)
+		RenderSettings.set_setting("grid", True)
+		RenderSettings.set_setting("draw_bounds",False)
 		
 		# Render Listener to allow access to settings
 		self._listener = RenderListener(self)
@@ -83,7 +87,7 @@ class GLWindowRenderer(WindowRenderer):
 		self._fatal_error_displayed = False
 		
 		# Back Colour
-		self._back_colour = Preset.grey
+		self._back_colour = Preset.lightgrey
 		
 	def init(self, width, height, title):
 		WindowRenderer.init(self, width, height, title)
@@ -123,7 +127,7 @@ class GLWindowRenderer(WindowRenderer):
 		glClearColor(*self._back_colour.get_gl_colour())
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		
-		if self._wireframe:
+		if RenderSettings.get_setting("wireframe"):
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 		else:
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
@@ -166,7 +170,7 @@ class GLWindowRenderer(WindowRenderer):
 			#execute the camera's look at
 			self._camera.look_at()
 			
-			if self._grid:
+			if RenderSettings.get_setting("grid"):
 				self.draw_grid()
 			
 			# Draw the scene meshes here
