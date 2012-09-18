@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from epsilon.events.eventbase import EventBase
-from epsilon.geometry.euclid import Vector3
+from epsilon.geometry.euclid import Vector3, Quaternion
 from epsilon.render.frustum import Frustum
 
 from epsilon.scene.node import Node
@@ -72,9 +72,10 @@ class CameraGL(CameraBase):
 	def look_at(self):
 		self.reset()
 		p = self.node_parent.transform.position
+		up = self.node_parent.transform.up
 		self.reset()
 		lookat = self._look_at_pos
-		gluLookAt(p.x, p.y, p.z, lookat.x, lookat.y, lookat.z, 0, 1, 0 )
+		gluLookAt(p.x, p.y, p.z, lookat.x, lookat.y, lookat.z, up.x, up.y, up.z )
 			
 class Camera(Node):
 	def __init__(self):
