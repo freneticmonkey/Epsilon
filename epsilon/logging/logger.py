@@ -1,5 +1,7 @@
 # Used Singleton implementation from - http://wiki.forum.nokia.com/index.php/How_to_make_a_singleton_in_Python
-from time import strftime
+#from time import strftime
+from datetime import datetime
+
 #import os
 from epsilon.core.basesingleton import BaseSingleton
 
@@ -33,6 +35,27 @@ class ClassLogger(object):
     def Log(self, message):
         Log(self._classname + " : " + message)
 
+class LogListener(object):
+    def __init__(self, name='unnamed log listener'):
+        self._register()
+        self._on_log_func = None
+
+    def __del__(self):
+        self._deregister()
+
+    def _register(self):
+        Logger.add_listener(self)
+
+    def _deregister(self):
+        Logger.remove_listener(self)
+
+    def set_log_func(self, log_func):
+        self._on_log_func = log_func
+
+    def on_log(self, log_text):
+        if not self._on_log_func is None:
+            self._on_log_func(log_text)
+
 ## Logger Core
 #  A Singleton class
 class Logger( BaseSingleton ):
@@ -45,6 +68,14 @@ class Logger( BaseSingleton ):
     @classmethod
     def Log(cls, text):
         cls.get_instance()._log(text)
+
+    @classmethod
+    def add_listener(cls, new_listener):
+        cls.get_instance()._add_listener(new_listener)
+
+    @classmethod
+    def remove_listener(cls, del_listener):
+        cls.get_instance()._remove_listener(del_listener)
     
     def __init__(self, output_console=False):
         self._configured = False
@@ -52,6 +83,7 @@ class Logger( BaseSingleton ):
         self._filename = ""
         self._file = None
         self._console_output = False
+        self._listeners = []
         
     ## When deleting the LoggingCore make sure that the log file is closed.    
     def __del__(self):
@@ -99,7 +131,15 @@ class Logger( BaseSingleton ):
             print 'Logger: Networking NYI' 
         
         self._configured = True
-    
+
+    # Adds a listener object which receives the output of the log
+    def _add_listener(self, new_listener):
+        self._listeners.append(new_listener)
+
+    # Removes a log listener
+    def _remove_listener(self, del_listener):
+        if del_listener in self._listeners:
+            self._listeners.remove(del_listener)
     
     ## Writes the Log output with a timestamp
     # @param text: The text string to be written out
@@ -107,7 +147,8 @@ class Logger( BaseSingleton ):
         
         can_write = False
         
-        currentTime = strftime('%H:%M:%S:')
+        #currentTime = strftime('%H:%M:%S:')
+        currentTime = datetime.now().strftime("%H:%M:%S.%f")
         if self._configured:
             if self._fileOpen:
                 can_write = True
@@ -128,6 +169,9 @@ class Logger( BaseSingleton ):
             
             if self._console_output:
                 print output_text
+
+            for listener in self._listeners:
+                listener.on_log(output_text)
            
  
 #    ## The constructor
