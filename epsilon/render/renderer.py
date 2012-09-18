@@ -4,6 +4,7 @@ from OpenGL.GL import *
 # This renderer is attached to node objects in order to render meshes.
 from epsilon.render.meshfactory import *
 from epsilon.render.material import GLMaterial
+from epsilon.render.rendersettings import RenderSettings
 
 from epsilon.scene.nodecomponent import NodeComponent
 
@@ -67,9 +68,11 @@ class Renderer(NodeComponent):
             self._setup_draw()
             
             # Draw bounds
-#            if self._material:
-#                self.node_parent.transform.bounds.colour = self._material.diffuse
-#            self.node_parent.transform.bounds.debug_draw()
+            if RenderSettings.get_setting("draw_bounds"):
+                if self._material:
+                    self.node_parent.transform.bounds.colour = self._material.diffuse
+                self.node_parent.transform.bounds.debug_draw()
+
             
             # Set Material
             # Every node _must_ have a material from now on.
