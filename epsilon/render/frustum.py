@@ -10,6 +10,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from epsilon.core.input import Input
+from epsilon.logging.logger import Logger
 
 from epsilon.core.settings import DisplaySettings
 from epsilon.geometry.euclid import Plane, Point3, Vector3, Matrix4
@@ -17,13 +18,33 @@ from epsilon.render.colour import Preset
 from epsilon.render.transform import Transform
 from epsilon.scene.nodecomponent import NodeComponent
 
+from epsilon.render.rendersettings import RenderSettings
+
 from epsilon.render.gizmos.gizmomanager import GizmoManager
+
+from epsilon.events.eventbase import EventBase
+
+class FrustumStatus(EventBase):
+    def __init__(self, status):
+        EventBase.__init__(self, 'FrustumStatus', status)
 
 class Frustum(NodeComponent):
     # Intersection Constants
     INSIDE = 0
     OUTSIDE = 1
     INTERSECT = 2
+
+    #near
+    NTL = 0
+    NBL = 1
+    NTR = 2
+    NBR = 3
+
+    #far
+    FTL = 0
+    FBL = 1
+    FTR = 2
+    FBR = 3
     
     def __init__(self, width=DisplaySettings.resolution[0], 
                        height=DisplaySettings.resolution[1]):
@@ -54,34 +75,17 @@ class Frustum(NodeComponent):
         
         # Debug
         self._update_frustum = True
+        RenderSettings.set_setting("update_frustum",self._update_frustum)
         
-        # Frustum Plane Gizmos
-        self._topg = GizmoManager.draw_plane(Vector3(), size=15.0)
-        self._topg.colour = Preset.blue
-        self._bottomg = GizmoManager.draw_plane(Vector3(), size=15.0)
-        self._bottomg.colour = Preset.red
-        self._leftg = GizmoManager.draw_plane(Vector3(), size=15.0)
-        self._leftg.colour = Preset.orange
-        self._rightg = GizmoManager.draw_plane(Vector3(), size=15.0)
-        self._rightg.colour = Preset.purple
+        self._top = None
+        self._bottom = None
+        self._left = None
+        self._right = None
 
-        # Lines
-        self._tl = GizmoManager.draw_line(Vector3())
-        self._tl.start_colour = Preset.red
-        self._tr = GizmoManager.draw_line(Vector3())
-        self._tr.start_colour = Preset.red
-        self._bl = GizmoManager.draw_line(Vector3())
-        self._bl.start_colour = Preset.red
-        self._br = GizmoManager.draw_line(Vector3())
-        self._br.start_colour = Preset.red
-        
-        self._forward = GizmoManager.draw_line(Vector3())
-        self._forward.start_colour = Preset.green
-        self._forward.end_colour = Preset.green
-        
+        self._verts = []
 
-        self._cam_pos = GizmoManager.draw_cube(Vector3(), 1.0, 1.0, 1.0)
-    
+        self._gizmos = None
+
     @property
     def width(self):
         return self._width
@@ -116,7 +120,10 @@ class Frustum(NodeComponent):
         
     def set_perspective(self):
         
+        self._update_frustum = RenderSettings.get_setting("update_frustum")
+
         if Input.get_key(Input.KEY_1):
+            
             if not self._update_frustum:
                 self._update_frustum = True#not self._update_frustum
                 print "Frustum update enabled"
@@ -127,18 +134,18 @@ class Frustum(NodeComponent):
                 self._update_frustum = False
                 print "Frustum update disabled"
                 print "@ cam pos: %s" % self._transform.position
-
-        if Input.get_key(Input.KEY_3):
-            print "Camera pos: %s" % self._transform.position
-            print "marker pos: %s" % self._cam_pos.transform.position
-        
-        if self._update_frustum:
-            self.calc_frustum()
             
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(self._fov, self._aspect, self._near_dist, self._far_dist)
         
+        if self._update_frustum:
+            #self.calc_frustum()
+            self.calc_frustum_lighthouse()
+        
+        # show the frustum visualisation
+        self._vis_frustum(not self._update_frustum)
+    
     def set_screen(self):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -156,160 +163,263 @@ class Frustum(NodeComponent):
         
         self._far_height = self._far_dist * tang
         self._far_width = self._far_height * tang
+
+    def _calc_frustum_verts(self):
         
-    def _vis_frustum(self):
         # calc centres of near/far planes
         near_centre = self._transform.position + self._transform.forward * self._near_dist
         far_centre = self._transform.position + self._transform.forward * self._far_dist
         
-        # Camera pos
-        self._cam_pos.transform.position = near_centre.copy()
-        self._cam_pos.transform.rotation = self.node_parent.transform.rotation.copy()
-
         # Frustrum Area
+        self._verts = []
+
+        # NTL
         tl = near_centre.copy()
         tl += self._transform.right * self._near_width
         tl += self._transform.up * self._near_height
+        self._verts.append(tl)
         
-        tlb = far_centre.copy()
-        tlb += self._transform.right * self._far_width
-        tlb += self._transform.up * self._far_height
-        self._tl.transform.position = tl
-        self._tl.line_to(tlb)
-        
-        tr = near_centre.copy()
-        tr += -self._transform.right * self._near_width
-        tr += self._transform.up * self._near_height
-        
-        trb = far_centre.copy()
-        trb += -self._transform.right * self._far_width
-        trb += self._transform.up * self._far_height
-        self._tr.transform.position = tr
-        self._tr.line_to(trb)
-        
+        # NBL
         bl = near_centre.copy()
         bl += self._transform.right * self._near_width
         bl += -self._transform.up * self._near_height
-        
-        blb = far_centre.copy()
-        blb += self._transform.right * self._far_width
-        blb += -self._transform.up * self._far_height
-        
-        self._bl.transform.position = bl
-        self._bl.line_to(blb)
-        
+        self._verts.append(bl)
+
+        # NTR
+        tr = near_centre.copy()
+        tr += -self._transform.right * self._near_width
+        tr += self._transform.up * self._near_height
+        self._verts.append(tr)
+
+        # NBR
         br = near_centre.copy()
         br += -self._transform.right * self._near_width
         br += -self._transform.up * self._near_height
-        
+        self._verts.append(br)
+
+        # FTL
+        tlb = far_centre.copy()
+        tlb += self._transform.right * self._far_width
+        tlb += self._transform.up * self._far_height
+        self._verts.append(tlb)
+
+        # FBL
+        blb = far_centre.copy()
+        blb += self._transform.right * self._far_width
+        blb += -self._transform.up * self._far_height
+        self._verts.append(blb)
+
+        # FTR
+        trb = far_centre.copy()
+        trb += -self._transform.right * self._far_width
+        trb += self._transform.up * self._far_height
+        self._verts.append(trb)
+
+        # FBR
         brb = far_centre.copy()
         brb += -self._transform.right * self._far_width
         brb += -self._transform.up * self._far_height
-        self._br.transform.position = br
-        self._br.line_to(brb)
+        self._verts.append(brb)
 
-        self._forward.transform.position = self._transform.position.copy()
-        self._forward.line_to(self._transform.forward * 3.0)
+    def _vis_frustum(self, show):
+
+        if show:
+            if self._gizmos is None:
+                # Create gizmos
+                # Frustum Plane Gizmos
+                self._gizmos = []
+
+                self._topg = GizmoManager.draw_plane(Vector3(), size=15.0, colour=Preset.blue)
+                self._bottomg = GizmoManager.draw_plane(Vector3(), size=15.0, colour=Preset.red)
+                self._leftg = GizmoManager.draw_plane(Vector3(), size=15.0, colour=Preset.orange)
+                self._rightg = GizmoManager.draw_plane(Vector3(), size=15.0, colour=Preset.purple)
+
+                self._gizmos.append(self._topg)
+                self._gizmos.append(self._bottomg)
+                self._gizmos.append(self._rightg)
+                self._gizmos.append(self._leftg)
+
+                # Lines
+                self._tl = GizmoManager.draw_line(Vector3(), colour=Preset.red)
+                self._tr = GizmoManager.draw_line(Vector3(), colour=Preset.red)
+                self._bl = GizmoManager.draw_line(Vector3(), colour=Preset.red)
+                self._br = GizmoManager.draw_line(Vector3(), colour=Preset.red)
+
+                self._gizmos.append(self._tl)
+                self._gizmos.append(self._tr)
+                self._gizmos.append(self._bl)
+                self._gizmos.append(self._br)
+                
+                self._oforward = GizmoManager.draw_line(Vector3(), colour=Preset.blue)
+                self._oup = GizmoManager.draw_line(Vector3(), colour=Preset.green)
+                self._oright = GizmoManager.draw_line(Vector3(), colour=Preset.red)
+                self._gizmos.append(self._oforward)
+                self._gizmos.append(self._oup)
+                self._gizmos.append(self._oright)
+
+                #self._cam_pos = GizmoManager.draw_cube(Vector3(), 1.0, 1.0, 1.0)
+            
+                self._tl.transform.position = self._verts[self.NTL]
+                self._tl.line_to(self._verts[self.FTL])
+                
+                self._tr.transform.position = self._verts[self.NTR]
+                self._tr.line_to(self._verts[self.FTR])
+                
+                self._bl.transform.position = self._verts[self.NBL]
+                self._bl.line_to(self._verts[self.FBL])
+                
+                self._br.transform.position = self._verts[self.NBR]
+                self._br.line_to(self._verts[self.FBR])
+
+                # Transform orientation
+                self._oforward.transform.position = self._transform.position.copy()
+                self._oforward.direction = self._transform.forward
+                self._oforward.length = 3.0
+                
+                self._oup.transform.position = self._transform.position.copy()
+                self._oup.direction = self._transform.up
+                self._oup.length = 3.0
+                
+                self._oright.transform.position = self._transform.position.copy()
+                self._oright.direction = self._transform.right
+                self._oright.length = 3.0
+
+                # Frustum plane visualisation
+                self._topg.transform.position = self._transform.position
+                self._topg.normal = self._top.n
+
+                self._bottomg.transform.position = self._transform.position
+                self._bottomg.normal = self._bottom.n
+
+                self._leftg.transform.position = self._transform.position
+                self._leftg.normal = self._left.n
+
+                self._rightg.transform.position = self._transform.position
+                self._rightg.normal = self._right.n
+        else:
+            if not self._gizmos is None:
+                for giz in self._gizmos:
+                    GizmoManager.remove_gizmo(giz)
+                self._gizmos = None
+        
         
     def calc_frustum(self):
         
-        self._vis_frustum()
+        # Using vector manipulation
+
         # Update frustrum planes
         self._frustum_planes = []
-        
+
         # calc centres of near/far planes
         near_centre = self._transform.position + self._transform.forward * self._near_dist
-        far_centre = self._transform.position + self._transform.forward * self._far_dist
+        #far_centre = self._transform.position + self._transform.forward * self._far_dist
         
         # Calc Top plane
+        # ------------------------------
+        
         aux = (near_centre + self._transform.up * self._near_height) - self._transform.position
         aux.normalize()
         normal = aux.cross(self._transform.right)
-        pp = near_centre + self._transform.up * self._near_height
-        p = Plane(Point3(pp.x, pp.y, pp.z), normal)
-        p.name = "top"
-        self._frustum_planes.append(p)
+        #pp = near_centre + self._transform.up * self._near_height
+        #self._top = Plane(Point3(pp.x, pp.y, pp.z), normal)
+        self._top = Plane(self._transform.position, normal)
+        self._top.name = "top"
+        self._frustum_planes.append(self._top)
         
-        self._topg.transform.position = pp + aux * 5.0
-        self._topg.normal = normal
-        
+        # -------------------------------
+
         # Calc Bottom plane
+
+        # -------------------------------
+
         aux = (near_centre - self._transform.up * self._near_height) - self._transform.position
         aux.normalize()
         normal = self._transform.right.cross(aux)
-        pp = near_centre - self._transform.up * self._near_height
-        p = Plane(Point3(pp.x, pp.y, pp.z), normal)
-        p.name = "bottom"
-        self._frustum_planes.append(p)
+        # pp = near_centre - self._transform.up * self._near_height
+        # self._bottom = Plane(Point3(pp.x, pp.y, pp.z), normal)
+        self._bottom = Plane(self._transform.position, normal)
+        self._bottom.name = "bottom"
+        self._frustum_planes.append(self._bottom)
         
-        self._bottomg.transform.position = pp  + aux * 5.0
-        self._bottomg.normal = normal
+        # -------------------------------
+
+        # Calc Right plane
+
+        # -------------------------------
         
-        # Calc Left plane
         aux = (near_centre - self._transform.right * self._near_width) - self._transform.position
         aux.normalize()
         normal = aux.cross(self._transform.up)
-        pp = near_centre - self._transform.right * self._near_width
+        # pp = near_centre - self._transform.right * self._near_width
+        # self._right = Plane(Point3(pp.x, pp.y, pp.z), normal)
+        self._right = Plane(self._transform.position, normal)
+        self._right.name = "right"
+        self._frustum_planes.append(self._right)
 
-        mat = glGetDoublev(GL_PROJECTION_MATRIX)
-        mat = list(chain.from_iterable(mat))
+        # -------------------------------
 
-        # The normal needs to be reflected, this is close but not quite.
-        # I think need to read the matrix differently
+        # Calc Left plane
 
-        x = float(mat[3] + mat[0])
-        y = float(mat[7] + mat[4])
-        z = float(mat[11] + mat[8])
-        # d = (mat[15] + mat[12])
+        # -------------------------------
 
-        norm = Vector3(x,y,z)
-        norm.normalize()    
-        if norm.magnitude() > 0.0:
-            normal = norm
-
-        # n = ( x*x + y*y + z*z ) / 3.0
-        # d /= n
-
-        if Input.get_key(Input.KEY_4):
-            print "Projection matrix:"
-
-            # mm = glGetDoublev(GL_MODELVIEW_MATRIX)
-            # mm = list(chain.from_iterable(mm))
-            # print mm
-            # model_mat = Matrix4()
-
-            # pm = glGetDoublev(GL_PROJECTION_MATRIX)
-
-            # proj_mat = Matrix4(list(chain.from_iterable(pm)))
-
-            # print proj_mat
-
-            
-            print "Left: %s d: %3.2f" % (normal, d)
-
-            print "plane: %s" % p
-
-            #p = Plane(Point3(x,y,z),d)
-        
-        p = Plane(Point3(pp.x, pp.y, pp.z), normal)
-        p.name = "left"
-        self._leftg.transform.position = pp  + aux.normalize() * 5.0
-        self._leftg.normal = normal
-
-
-        self._frustum_planes.append(p)
-
-        # Calc Right plane
         aux = (near_centre + self._transform.right * self._near_width) - self._transform.position
         aux.normalize()
         normal = self._transform.up.cross(aux)
-        pp = near_centre + self._transform.right * self._near_width
-        p = Plane(Point3(pp.x, pp.y, pp.z), normal)
-        p.name = "right"
-        self._frustum_planes.append(p)
+        # pp = near_centre + self._transform.right * self._near_width
+        # self._left = Plane(Point3(pp.x, pp.y, pp.z), normal)
+        self._left = Plane(self._transform.position, normal)
+        self._left.name = "left"
+        self._frustum_planes.append(self._left)
         
-        self._rightg.transform.position = pp  + aux.normalize() * 5.0
-        self._rightg.normal = normal
+        # Update the frustum visualisation
+        self._calc_frustum_verts()
+        self._vis_frustum()
+
+        # Reset stats for this frame
+        self._num_inside = 0
+        self._num_outside = 0
+        self._num_intersect = 0
+
+    def calc_frustum_lighthouse(self):
+
+        self._calc_frustum_verts()
+
+        # Update frustrum planes
+        self._frustum_planes = []
+
+        verts = []
+        for v in self._verts:
+            verts.append(Point3(v.x, v.y, v.z))
+
+        cp = Point3(self._transform.position.x,self._transform.position.y,self._transform.position.z)
+
+        self._top = Plane(verts[self.FTR],verts[self.FTL],cp)
+        self._top.name = "top"
+        self._frustum_planes.append(self._top)
+        
+        # -------------------------------
+        # Calc Bottom plane
+        # -------------------------------
+
+        self._bottom = Plane(verts[self.FBL],verts[self.FBR],cp)
+        self._bottom.name = "bottom"
+        self._frustum_planes.append(self._bottom)
+        
+        # -------------------------------
+        # Calc Right plane
+        # -------------------------------
+        
+        self._right = Plane(verts[self.FBR],verts[self.FTR],cp)
+        self._right.name = "right"
+        self._frustum_planes.append(self._right)
+
+        # -------------------------------
+        # Calc Left plane
+        # -------------------------------
+
+        self._left = Plane(verts[self.FTL],verts[self.FBL],cp)
+        self._left.name = "left"
+        self._frustum_planes.append(self._left)
         
         # Reset stats for this frame
         self._num_inside = 0
@@ -356,7 +466,10 @@ class Frustum(NodeComponent):
         
         result = self.INSIDE
         
-        for plane in self._frustum_planes:
+        # data = [True,True,True,True]
+
+        for i in range(0, len(self._frustum_planes)):
+            plane = self._frustum_planes[i]
             in_corners = 0
             out_corners = 0
             
@@ -367,14 +480,16 @@ class Frustum(NodeComponent):
                     out_corners += 1
                 else:
                     in_corners += 1
-            
-                # if all corners are out
-                if in_corners == 0:
-                    result = self.OUTSIDE
-                    print "Failing plane: " + plane.name
-                elif out_corners > 0:
-                    result = self.INTERSECT
         
+            # if all corners are out
+            if in_corners == 0:
+                result = self.OUTSIDE
+                # data[i]=False
+            elif out_corners > 0:
+                result = self.INTERSECT
+        
+        # FrustumStatus(data).send()
+
         if result == self.OUTSIDE:
             self._num_outside += 1
         elif result == self.INSIDE:
