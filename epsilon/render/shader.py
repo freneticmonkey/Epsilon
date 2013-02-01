@@ -158,7 +158,7 @@ class ShaderProgram(object):
     def get_message(self):
         messages = []
         for shader in self._shaders:
-            log = shader.get_info_log()
+            log = None#shader.get_info_log()
             if log:
                 messages.append(log)
         log = self.get_info_log()
