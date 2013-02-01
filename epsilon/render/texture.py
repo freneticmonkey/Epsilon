@@ -29,11 +29,13 @@ class Texture(ResourceBase):
         
         self._name = name
         self._opengl_id = None
-        #self._opengl_buffer = None
         self._size_x = None
         self._size_y = None
         
-        self._pyglet_texture = None
+        self._pyglet_image = None
+
+        self._smoothed = True
+        self._wrapped = True
         
     def __del__(self):
         if not self._opengl_id is None:
@@ -56,14 +58,33 @@ class Texture(ResourceBase):
     
     def height(self):
         return self._size_y
+
+    @property
+    def image(self):
+        return self._pyglet_image
+
+    @property
+    def smoothed(self):
+        return self._smoothed
+
+    @smoothed.setter
+    def smoothed(self, new_value):
+        self._smoothed = new_value
+
+    @property
+    def wrapped(self):
+        return self._wrapped
+
+    @wrapped.setter
+    def wrapped(self, new_value):
+        self._wrapped = new_value
         
     def load(self):
-        pic = image.load(self._filename)
-        self._pyglet_texture = pic.get_texture()
-        self._size_x = pic.width
-        self._size_y = pic.height
+        self._pyglet_image = image.load(self._filename)
+        self._size_x = self._pyglet_image.width
+        self._size_y = self._pyglet_image.height
         
-        self._opengl_id = self._pyglet_texture.id
+        self._opengl_id = self._pyglet_image.get_texture().id
         self._loaded = True
         
 #        # Open the image file
@@ -105,10 +126,25 @@ class Texture(ResourceBase):
         if self._loaded:
             # Configure OpenGL to use the texture
             glEnable(GL_TEXTURE_2D)
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+
             glBindTexture(GL_TEXTURE_2D, self._opengl_id)
+
+            if not self._smoothed:
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+            # if self._wrapped:
+            #     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+            #     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+            # else:
+            
+            # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+            # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
+            
         
     def unset(self):
         if self._loaded:
@@ -121,8 +157,45 @@ class Texture(ResourceBase):
         
         
         
-    
-    
+class GeneratedTexture(Texture):
+
+    def __init__(self, name=None, width=128, height=128, format="RGBA", data=None):
+        Texture.__init__(self, "", name)
+        self._size_x = width
+        self._size_y = height
+        self._format = format
+        self._pyglet_image = image.create(self._size_x, self._size_y, image.CheckerImagePattern())
+        self._opengl_id = self._pyglet_image.get_texture().id
+
+        if data is not None:
+            self.set_data(self._format, len(self._format) * self._size_x, data) 
+        self._loaded = True
+        
+    def load(self):
+        pass
+
+    # Data param is an array of GLubyte s
+    def set_data(self, format, pitch, data):
+        if data is not None:
+            self._format = format
+            self._pitch = pitch
+            self._pyglet_image.set_data(self._format, self._pitch, data)
+            self._opengl_id = self._pyglet_image.get_texture().id
+
+            #Logger.Log("GeneratedTexture: set_data(): Texture data changed: %d" % self._opengl_id)
+
+            self._loaded = True
+            # try:
+            #     #loaded_data = image.ImageData(width, height, "RGBA", data)
+            #     self._pyglet_image.blit_into(data,0,0,0)
+            # except:
+            #     Logger.Log("GeneratedTexture: set_data(): Unable to bind texture data")
+        else:
+            Logger.Log("GeneratedTexture: set_data(): Texture data is None")
+
+
+
+
     
     
         
