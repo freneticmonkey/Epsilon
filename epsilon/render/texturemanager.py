@@ -20,6 +20,8 @@ class TextureManager(BaseSingleton):
 	def add_texture(self, texture_obj):
 		if isinstance(texture_obj, Texture):
 			self._textures.append(texture_obj)
+		else:
+			Logger.Log("Not a texture: %s" % texture_obj.__class__.__name__)
 	
 #	def create_texture(self, filename):
 #		if os.path.exists(filename):
