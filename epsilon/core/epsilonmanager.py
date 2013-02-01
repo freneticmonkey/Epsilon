@@ -43,7 +43,7 @@ from epsilon.geometry.euclid import Vector3
 from epsilon.core.time import Time
 from epsilon.core.settings import *
 
-#from Scripting.TestScripts import ( RotateScript, 
+from epsilon.scripting.testscripts import ( RotateScript, )
 #                                  MoveController,  
 #                                  CameraMoveController,  
 #                                  DisplayCoordinate, 
@@ -163,7 +163,7 @@ class EpsilonManager(object):
         
         self._planet = PlanetSphere()
         self._scene.current_scene.root.transform.add_child(self._planet.transform)
-        
+        # self._planet.add_script(RotateScript())
 #        self._plane = Node()
 #        self._plane.renderer.mesh = MeshFactory.get_mesh(MeshTypes.OCTOHEDRON)
 #        self._plane.transform.position.y = 2.0
