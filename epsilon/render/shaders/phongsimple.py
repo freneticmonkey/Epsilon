@@ -77,25 +77,29 @@ class PhongSimple(ShaderProgram):
         self.disable()
     
     def render(self, material, mesh):
-        u_loc = self._uniform_locations['material.ambient']
-        if u_loc not in [None, -1]:
-            with material.ambient as ma:
-                glUniform4f(u_loc,ma.r,ma.g,ma.b,ma.a)
+        if 'material.ambient' in self._uniform_locations:
+            u_loc = self._uniform_locations['material.ambient']
+            if u_loc not in [None, -1]:
+                with material.ambient as ma:
+                    glUniform4f(u_loc,ma.r,ma.g,ma.b,ma.a)
         
-        u_loc = self._uniform_locations['material.diffuse']
-        if u_loc not in [None, -1]:
-            with material.diffuse as md:
-                glUniform4f(u_loc,md.r,md.g,md.b,md.a)
-                
-        u_loc = self._uniform_locations['material.specular']
-        if u_loc not in [None, -1]:
-            with material.specular as ms:
-                glUniform4f(u_loc,ms.r,ms.g,ms.b,ms.a)
-                
-        u_loc = self._uniform_locations['material.shininess']
-        if u_loc not in [None, -1]:
-            glUniform1f(u_loc,material.shininess)
-        
+        if 'material.diffuse' in self._uniform_locations:
+            u_loc = self._uniform_locations['material.diffuse']
+            if u_loc not in [None, -1]:
+                with material.diffuse as md:
+                    glUniform4f(u_loc,md.r,md.g,md.b,md.a)
+                    
+        if 'material.specular' in self._uniform_locations:
+            u_loc = self._uniform_locations['material.specular']
+            if u_loc not in [None, -1]:
+                with material.specular as ms:
+                    glUniform4f(u_loc,ms.r,ms.g,ms.b,ms.a)
+                    
+        if 'material.shininess' in self._uniform_locations:
+            u_loc = self._uniform_locations['material.shininess']
+            if u_loc not in [None, -1]:
+                glUniform1f(u_loc,material.shininess)
+            
         if not self._vertex_position_attr_location is None and \
            not self._vertex_normal_attr_location is None and \
            not self._vertex_texture_coord_attr_location is None:
@@ -120,4 +124,3 @@ class PhongSimple(ShaderProgram):
                     glDisableVertexAttribArray(self._vertex_position_attr_location)
                     glDisableVertexAttribArray(self._vertex_normal_attr_location)
                     glDisableVertexAttribArray(self._vertex_texture_coord_attr_location)
-                
