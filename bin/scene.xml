@@ -2,7 +2,7 @@
 	<texture name="checkers" filename="../media/checkerboard64.png"/>
 	
 	<camera>
-		<transform position="0 0 -200" rotation="0 0 0 0"/>
+		<transform position="0 1 -300" rotation="0 0 0 0"/>
 		<children>
 			<!--
 			<light>
@@ -21,7 +21,7 @@
 	<node name="light_parent">
 		<children>
 			<light>
-				<transform position="2 0 0"/>
+				<transform position="200 0 0"/>
 			</light>
 		</children>
 	</node>
@@ -33,6 +33,38 @@
 			<texture name="checkers"/>
 		</material>
 	</node>
+
+	<node name="test_plane">
+		<transform position="0 0 -190" rotation="3.141526 0 1 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+		<material>
+			<texture name="checkers"/>
+		</material>
+	</node>
+	<node name="test_plane_right">
+		<transform position="10 0 -190" rotation="3.141526 0 1 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+		<material>
+			<texture name="checkers"/>
+		</material>
+	</node>
+	<node name="test_plane_left">
+		<transform position="-10 0 -190" rotation="3.141526 0 1 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+		<material>
+			<texture name="checkers"/>
+		</material>
+	</node>
+
+	<node name="test_plane_front">
+		<transform position="-20 0 -190" rotation="3.141526 0 1 0" scale="10 10 10"/>
+		<mesh preset="PLANE_HI"/>
+		<material>
+			<texture name="checkers"/>
+		</material>
+	</node>
+
+	
 	
 	
 	<node name="octo_parent">
