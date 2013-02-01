@@ -103,20 +103,21 @@ class PhongSimple(ShaderProgram):
             glEnableVertexAttribArray(self._vertex_normal_attr_location)
             glEnableVertexAttribArray(self._vertex_texture_coord_attr_location)
         
-        with mesh.vertex_buffer as vb:
-            if not self._vertex_position_attr_location is None and \
-               not self._vertex_normal_attr_location is None and \
-               not self._vertex_texture_coord_attr_location is None:
-                glVertexAttribPointer(self._vertex_position_attr_location, *vb.GetVertexAttribute())
-                glVertexAttribPointer(self._vertex_normal_attr_location, *vb.GetNormalAttribute())
-                glVertexAttribPointer(self._vertex_texture_coord_attr_location, *vb.GetTexCoordAttribute())
-            
-            glDrawElements(GL_TRIANGLES, vb.count, GL_UNSIGNED_SHORT, vb.indices)
-            
-            if not self._vertex_position_attr_location is None and \
-               not self._vertex_normal_attr_location is None and \
-               not self._vertex_texture_coord_attr_location is None:
-                glDisableVertexAttribArray(self._vertex_position_attr_location)
-                glDisableVertexAttribArray(self._vertex_normal_attr_location)
-                glDisableVertexAttribArray(self._vertex_texture_coord_attr_location)
+        if mesh.vertex_buffer.is_setup:
+            with mesh.vertex_buffer as vb:
+                if not self._vertex_position_attr_location is None and \
+                   not self._vertex_normal_attr_location is None and \
+                   not self._vertex_texture_coord_attr_location is None:
+                    glVertexAttribPointer(self._vertex_position_attr_location, *vb.GetVertexAttribute())
+                    glVertexAttribPointer(self._vertex_normal_attr_location, *vb.GetNormalAttribute())
+                    glVertexAttribPointer(self._vertex_texture_coord_attr_location, *vb.GetTexCoordAttribute())
+                
+                glDrawElements(GL_TRIANGLES, vb.count, GL_UNSIGNED_SHORT, vb.indices)
+                
+                if not self._vertex_position_attr_location is None and \
+                   not self._vertex_normal_attr_location is None and \
+                   not self._vertex_texture_coord_attr_location is None:
+                    glDisableVertexAttribArray(self._vertex_position_attr_location)
+                    glDisableVertexAttribArray(self._vertex_normal_attr_location)
+                    glDisableVertexAttribArray(self._vertex_texture_coord_attr_location)
                 
