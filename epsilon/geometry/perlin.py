@@ -72,10 +72,16 @@ class Perlin(object):
 		return rx * x + ry * y + rz * z
 
 	def setup(self, value):
+		# print "value: %d" % value
+		# print "n: %f" % self.N
 		t = value + self.N
+		# print "t: %f" % t
 		b0 = int(t) & self.BM
+		# print "t: %f" % t
 		b1 = (b0 + 1) & self.BM
 		r0 = t - int(t)
+		# print "t: %f" % t
+		# print "r0: %f" % r0
 		r1 = r0 - 1.0
 		return b0, b1, r0, r1
 
@@ -85,10 +91,6 @@ class Perlin(object):
 		sx = self.s_curve(rx0)
 		u = rx0 * self._g1[ self._p[bx0] ]
 		v = rx1 * self._g1[ self._p[bx1] ]
-
-		print sx
-		print u
-		print v
 
 		return self.lerp(sx, u, v)
 
@@ -297,20 +299,20 @@ if __name__ == "__main__":
 		b = i * 2.34
 		c = i * 3.123
 		print "cycle: %d a: %3.2f b: %3.2f c: %3.2f" % (i, a, b, c)
-
-		print "noise: 1: %3.3f" % p.noise(a)
+		print ">> noise: 1: %3.3f" % p.noise(a)
 
 		print "noise: 2: %3.3f" % p.noise2(a, b)
 
 		print "noise: 3: %3.3f" % p.noise3(a, b, c)
 
-		print "hybrid: %3.2f" % f.hybrid_multi_fractal2(a, b, 0.1)
-		print "ridged_multi_fractal: %3.2f" % f.ridged_multi_fractal2(a,b, 0.1, 3.0)
-		print "brownian_motion: %3.2f" % f.brownian_motion2(a,b)
+		print "hybrid multi fractal 2: %3.2f" % f.hybrid_multi_fractal2(a, b, 0.1)
+		print "hybrid multi fractal 3: %3.2f" % f.hybrid_multi_fractal3(a, b, c, 0.1)
 
-		print "hybrid: %3.2f" % f.hybrid_multi_fractal3(a, b, c, 0.1)
-		print "ridged_multi_fractal: %3.2f" % f.ridged_multi_fractal3(a,b,c, 0.1, 3.0)
-		print "brownian_motion: %3.2f" % f.brownian_motion3(a,b,c)
+		print "ridged multi fractal 2: %3.2f" % f.ridged_multi_fractal2(a,b, 0.1, 3.0)
+		print "ridged multi fractal 3: %3.2f" % f.ridged_multi_fractal3(a,b,c, 0.1, 3.0)
+
+		print "brownian motion 2: %3.2f" % f.brownian_motion2(a,b)
+		print "brownian motion 3: %3.2f" % f.brownian_motion3(a,b,c)
 
 		print "\n----------------------\n"
 
