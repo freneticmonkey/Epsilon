@@ -54,9 +54,10 @@ class SphereQuad(Node):
     SPLIT_DISTANCE = 1.5 # Size Multiplier
     MAX_DEPTH = 2
     
-    def __init__(self, sphere_parent,
+    def __init__(self, name,
+                       sphere_parent,
                        planet_root, 
-#                       split_distance=1.0, 
+                       split_distance=1.0, 
                        radius=1.0,
                        root=True, 
                        level=-1,
@@ -67,7 +68,7 @@ class SphereQuad(Node):
         # Override the default renderer
         Node.__init__(self, renderer=SphereQuadRenderer())
         
-        self._name = ""
+        self._name = name
 
         self._sphere_parent = sphere_parent
         
@@ -105,15 +106,16 @@ class SphereQuad(Node):
         
         #self._mesh = MeshFactory.get_mesh(MeshTypes.PLANE_HI)
         
-        self._material = GLMaterial()
-        if quad == QuadName.TL:
-            self._material.diffuse = Preset.blue
-        elif quad == QuadName.TR:
-            self._material.diffuse = Preset.green
-        elif quad == QuadName.BR:
-            self._material.diffuse = Preset.yellow
-        elif quad == QuadName.BL:
-            self._material.diffuse = Preset.purple
+        # self._material = GLMaterial()
+        # if quad == QuadName.TL:
+        #     self._material.diffuse = Preset.blue
+        # elif quad == QuadName.TR:
+        #     self._material.diffuse = Preset.green
+        # elif quad == QuadName.BR:
+        #     self._material.diffuse = Preset.yellow
+        # elif quad == QuadName.BL:
+        #     self._material.diffuse = Preset.purple
+
         
 #        # FIXME: This is a hack and needs to be fixed by a proper Bounds implementation
 #        self._size = split_distance
@@ -138,12 +140,6 @@ class SphereQuad(Node):
     def _init_quad(self):
         self._calc_corners()
         
-        # generate a unique name for debug purposes
-        if self._root:
-            self._name = "root_quad"
-        else:
-            self._name = self.transform.parent.node.name + "->" + QuadName.quad_string(self._quad)
-        
         #Logger.Log("Created Quad: name: %s" % ( self.name ) )
         
         # build the mesh for the quad
@@ -160,19 +156,26 @@ class SphereQuad(Node):
 #                                                                                                    bound_max_x,
 #                                                                                                    bound_min_z,
 #                                                                                                    bound_max_z,)
-        self._surface = SphereSurface(bound_min_x=bound_min_x,
-                                      bound_max_x=bound_max_x,
-                                      bound_min_z=bound_min_z,
-                                      bound_max_z=bound_max_z,
-                                      increments=self._density,
-                                      radius=self._radius,
-                                      face=self._face,
-                                      planet_root=self._planet_root)
+        # self._surface = SphereSurface(bound_min_x=bound_min_x,
+        #                               bound_max_x=bound_max_x,
+        #                               bound_min_z=bound_min_z,
+        #                               bound_max_z=bound_max_z,
+        #                               increments=self._density,
+        #                               radius=self._radius,
+        #                               face=self._face,
+        #                               planet_root=self._planet_root)
         
-        self.renderer.mesh = self._surface.mesh
+        # self.renderer.mesh = self._planet_root.generator.gen_mesh(bound_min_x=bound_min_x,
+        #                                                           bound_max_x=bound_max_x,
+        #                                                           bound_min_z=bound_min_z,
+        #                                                           bound_max_z=bound_max_z,
+        #                                                           face=self._face)
 
-        # Set checkers texture
-        self.renderer.material.texture = "checkers"
+        self.renderer.mesh = self._planet_root.generator.gen_mesh(self._name)
+
+        # Set PLANET texture
+        self.renderer.material.texture = self._planet_root.generator.get_texture(self._name)
+        self.renderer.material.shininess = 0.1
 
         
     def _get_quad(self, quadrant):
@@ -192,53 +195,81 @@ class SphereQuad(Node):
         
     def _calc_corners(self):
         # Calculate the Cubic coordinates of this quad
-        self._corners = []
-        
-        if self._root:
-            self._corners.append(0.0) #tl x
-            self._corners.append(0.0) #tl y
-            self._corners.append(1.0) #br x
-            self._corners.append(1.0) #br y
-        else:
-            parent_corners = self.transform.parent.node.corners
-            
-            if self._quad == QuadName.TL:
-                self._corners.append(parent_corners[0])
-                self._corners.append(parent_corners[1])
-                self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5 )
-                self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5 )
-                
-            elif self._quad == QuadName.TR:
-                self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
-                self._corners.append(parent_corners[1])
-                self._corners.append(parent_corners[2])
-                self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5 )
-                
-            elif self._quad == QuadName.BL:
-                self._corners.append(parent_corners[0])
-                self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5)
-                self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
-                self._corners.append(parent_corners[3])
-                
-            
-            elif self._quad == QuadName.BR:
-                self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
-                self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5)
-                self._corners.append(parent_corners[2])
-                self._corners.append(parent_corners[3])
-                
-                
-        mid_x = (self._corners[2] - self._corners[0]) / 2
-        mid_y = (self._corners[3] - self._corners[1]) / 2
-        
-        self._centre_coords = [(self._corners[0] + mid_x), (self._corners[1] + mid_y)]
-        
-        self._quad_centres = [ [self._corners[0] + (mid_x/2), self._corners[1] + (mid_y/2)], #TL
-                               [self._corners[2] - (mid_x/2), self._corners[1] + (mid_y/2)], #TR
-                               [self._corners[2] - (mid_x/2), self._corners[3] - (mid_y/2)], #BR
-                               [self._corners[0] + (mid_x/2), self._corners[3] - (mid_y/2)]  #BL
+        x0, y0, x1, y1, face = CubeSphereMap.get_address_bounds(self._name)
+
+        self._corners = [x0, y0, x1, y1]
+        self._centre_coords = CubeSphereMap.get_address_centre(self._name)
+        self._quad_centres = [
+                                CubeSphereMap.get_address_centre(self._name+'A'),
+                                CubeSphereMap.get_address_centre(self._name+'B'),
+                                CubeSphereMap.get_address_centre(self._name+'D'),
+                                CubeSphereMap.get_address_centre(self._name+'C')
                              ]
+
+        # if self._root:
+        #     self._corners.append(0.0) #tl x
+        #     self._corners.append(0.0) #tl y
+        #     self._corners.append(1.0) #br x
+        #     self._corners.append(1.0) #br y
+        # else:
+        #     parent_corners = self.transform.parent.node.corners
+            
+        #     if self._quad == QuadName.TL:
+        #         self._corners.append(parent_corners[0])
+        #         self._corners.append(parent_corners[1])
+        #         self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5 )
+        #         self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5 )
+                
+        #     elif self._quad == QuadName.TR:
+        #         self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
+        #         self._corners.append(parent_corners[1])
+        #         self._corners.append(parent_corners[2])
+        #         self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5 )
+                
+        #     elif self._quad == QuadName.BL:
+        #         self._corners.append(parent_corners[0])
+        #         self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5)
+        #         self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
+        #         self._corners.append(parent_corners[3])
+                
+            
+        #     elif self._quad == QuadName.BR:
+        #         self._corners.append(parent_corners[0] + (parent_corners[2] - parent_corners[0]) * 0.5)
+        #         self._corners.append(parent_corners[1] + (parent_corners[3] - parent_corners[1]) * 0.5)
+        #         self._corners.append(parent_corners[2])
+        #         self._corners.append(parent_corners[3])
+                
+                
+        # mid_x = (self._corners[2] - self._corners[0]) / 2
+        # mid_y = (self._corners[3] - self._corners[1]) / 2
         
+        # self._centre_coords = [(self._corners[0] + mid_x), (self._corners[1] + mid_y)]
+        
+        # self._quad_centres = [ [self._corners[0] + (mid_x/2), self._corners[1] + (mid_y/2)], #TL
+        #                        [self._corners[2] - (mid_x/2), self._corners[1] + (mid_y/2)], #TR
+        #                        [self._corners[2] - (mid_x/2), self._corners[3] - (mid_y/2)], #BR
+        #                        [self._corners[0] + (mid_x/2), self._corners[3] - (mid_y/2)]  #BL
+        #                      ]
+        
+        # Get world positions for centres of child quads
+        self._child_pos = [CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.TL][0],
+                                                               self._quad_centres[QuadName.TL][1],
+                                                               self._face,
+                                                               self._sphere_parent.radius),
+                             CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.TR][0],
+                                                               self._quad_centres[QuadName.TR][1],
+                                                               self._face,
+                                                               self._sphere_parent.radius),
+                             CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.BR][0],
+                                                               self._quad_centres[QuadName.BR][1],
+                                                               self._face,
+                                                               self._sphere_parent.radius),
+                             CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.BL][0],
+                                                               self._quad_centres[QuadName.BL][1],
+                                                               self._face,
+                                                               self._sphere_parent.radius),
+                             ]
+
     def _get_centre_position(self):
         return CubeSphereMap.get_sphere_position(self._centre_coords[0], 
                                                  self._centre_coords[1], 
@@ -249,30 +280,13 @@ class SphereQuad(Node):
         
         pos = self._sphere_parent.camera.node_parent.transform.position
         
-        # Get world positions for centres of child quads
-        child_pos = [CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.TL][0],
-                                                       self._quad_centres[QuadName.TL][1],
-                                                       self._face,
-                                                       self._sphere_parent.radius),
-                     CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.TR][0],
-                                                       self._quad_centres[QuadName.TR][1],
-                                                       self._face,
-                                                       self._sphere_parent.radius),
-                     CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.BR][0],
-                                                       self._quad_centres[QuadName.BR][1],
-                                                       self._face,
-                                                       self._sphere_parent.radius),
-                     CubeSphereMap.get_sphere_position(self._quad_centres[QuadName.BL][0],
-                                                       self._quad_centres[QuadName.BL][1],
-                                                       self._face,
-                                                       self._sphere_parent.radius),
-                     ]
-        
         # Get the distances of the camera from the quads
-        distances = [pos.distance(child_pos[QuadName.TL]),
-                     pos.distance(child_pos[QuadName.TR]),
-                     pos.distance(child_pos[QuadName.BR]),
-                     pos.distance(child_pos[QuadName.BL]),
+        # This needs to be updated in future to handle transform applied to the planet
+        # i.e. rotation and position
+        distances = [pos.distance(self._child_pos[QuadName.TL]),
+                     pos.distance(self._child_pos[QuadName.TR]),
+                     pos.distance(self._child_pos[QuadName.BR]),
+                     pos.distance(self._child_pos[QuadName.BL]),
                     ]
         
         # Sort the quads by distance from the camera for updating and rendering.
@@ -316,7 +330,7 @@ class SphereQuad(Node):
         
         # Calculate the quadrant size using the length of the diagonal across the quadrant
         #TODO: Maybe this is used to adjust the frustrum on the fly when the camera gets close to the planet??
-        quad_size = child_pos[QuadName.TL] - child_pos[QuadName.BR] * 1.0 #( radius / frustrum radius)....
+        quad_size = self._child_pos[QuadName.TL] - self._child_pos[QuadName.BR] * 1.0 #( radius / frustrum radius)....
         
         radius = self._sphere_parent.radius
         
@@ -345,7 +359,7 @@ class SphereQuad(Node):
                 # Check the quadrant against the view frustrum
                 if not self._get_quad(quad_inc) is None and not self._get_quad(quad_inc)._is_split:
                     child_quad_size = quad_size / 2.0
-                    inside = self._sphere_parent.camera.sphere_inside(child_pos[quad_inc], child_quad_size) 
+                    inside = self._sphere_parent.camera.sphere_inside(self._child_pos[quad_inc], child_quad_size) 
                     if inside == 1:
                         quad = self._get_quad(quad_inc)
                         #Logger.Log("Culling Quad: sz: %f name: %s pos: %s" % ( child_quad_size, quad.name, str(child_pos[quad_inc]) ) )
@@ -420,22 +434,22 @@ class SphereQuad(Node):
             next_level = self._level + 1
             
             # build top left
-            self._tl = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TL )
+            self._tl = SphereQuad(self._name+'A', self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TL )
             self.transform.add_child( self._tl.transform )
             self._tl._init_quad()
             
             # top right
-            self._tr = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TR )
+            self._tr = SphereQuad(self._name+'B', self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.TR )
             self.transform.add_child( self._tr.transform )
             self._tr._init_quad()
             
             # bottom left
-            self._bl = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BL )
+            self._bl = SphereQuad(self._name+'C', self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BL )
             self.transform.add_child( self._bl.transform )
             self._bl._init_quad()
             
             # bottom right
-            self._br = SphereQuad(self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BR )
+            self._br = SphereQuad(self._name+'D', self._sphere_parent, self._planet_root, radius=self._radius, root=False, level=next_level, density=self._density, face=self._face, quad=QuadName.BR )
             self.transform.add_child( self._br.transform )
             self._br._init_quad()
             
@@ -444,8 +458,8 @@ class SphereQuad(Node):
     def hit_test(self, coord, quad=-1):
         if coord.face == self.face:
             if not quad == -1:
-                mid_x = ((self._corners[0] + self._corners[2]) / 2)
-                mid_y = ((self._corners[1] + self._corners[3]) / 2)
+                mid_x = ((self._corners[0] + self._corners[2]) / 2.0)
+                mid_y = ((self._corners[1] + self._corners[3]) / 2.0)
                 
                 if quad == QuadName.TL:
                     return (coord.x >= self._corners[0] and coord.x <= mid_x and \
