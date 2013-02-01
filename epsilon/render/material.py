@@ -10,6 +10,8 @@ from epsilon.render.texturemanager import TextureManager
 from epsilon.render.texture import Texture
 from epsilon.render.shadermanager import ShaderManager
 from epsilon.render.glutilities import *
+
+from epsilon.logging.logger import Logger
  
 class BaseMaterial(object):
     
@@ -90,6 +92,8 @@ class BaseMaterial(object):
         if the_texture is not None:
             self._tex_obj = the_texture
             self._tex_name = the_texture.name
+        else:
+            Logger.Log("Can't find texture: %s" % new_tex)
         
 class GLMaterial(BaseMaterial):
     def __init__(self, ambient=None, diffuse=None, specular=None, emission=None, shininess=None):
