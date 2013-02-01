@@ -108,7 +108,7 @@ class MoveWindow(UIBaseWindow):
             self._camera = SceneManager.get_instance().current_scene.active_camera
 
         if not self._camera is None:
-            self._camera.node_parent.transform.position = Vector3(0, 1, -10)
+            self._camera.node_parent.transform.position = Vector3(0, 1, -300)
             if hasattr( self._camera, 'look_at_position'):
                 self._camera.node_parent.transform.rotation = Quaternion()
                 self._camera.look_at_position = Vector3(0,0,0)
