@@ -278,7 +278,7 @@ class CameraMoveController(MoveController):
                  angle_speed=120,
                  mouse_speed_x=0.002, 
                  mouse_speed_y=0.002,
-                 mouse_y_invert=True):
+                 mouse_y_invert=False): # This should be in the Settings object.
         super(CameraMoveController, self).__init__(parent_node,speed=speed,angle_speed=angle_speed)
         
         self._param_types = {"speed":ScriptParamTypes.FLOAT, 
