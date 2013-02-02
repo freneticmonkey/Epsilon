@@ -188,7 +188,7 @@ class GLMesh(object):
             a = datetime.now()
             # self._glnormals = self._get_glnormals(vertices, faces)
             self._get_glnormals(vertices, faces)
-            print ">> glnormals time: %3.5f" % (datetime.now() - a).total_seconds()
+            #print ">> glnormals time: %3.5f" % (datetime.now() - a).total_seconds()
             
             self._v_len = len(self._vertices)
             
@@ -210,7 +210,7 @@ class GLMesh(object):
             # Configure Vertex Buffer object
             self._vertex_buffer.setup(self._vertices, self._indices, self._normals,self._colours,self._tex_coords)
             
-            print ">> vertex buffer time: %3.5f" % (datetime.now() - b).total_seconds()
+            #print ">> vertex buffer time: %3.5f" % (datetime.now() - b).total_seconds()
         else:
             self._num_glvertices = None
             self._glvertices = None
