@@ -12,7 +12,7 @@ from OpenGL.GLU import *
 from epsilon.core.input import Input
 from epsilon.logging.logger import Logger
 
-from epsilon.core.settings import DisplaySettings
+from epsilon.core.settings import Settings
 from epsilon.geometry.euclid import Plane, Point3, Vector3, Matrix4
 from epsilon.render.colour import Preset
 from epsilon.render.transform import Transform
@@ -46,10 +46,16 @@ class Frustum(NodeComponent):
     FTR = 2
     FBR = 3
     
-    def __init__(self, width=DisplaySettings.resolution[0], 
-                       height=DisplaySettings.resolution[1]):
+    def __init__(self, width=None, 
+                       height=None):
         NodeComponent.__init__(self)
         
+        if width is None:
+            width = Settings.get('DisplaySettings','resolution')[0]
+
+        if height is None:
+            height = Settings.get('DisplaySettings','resolution')[1]
+
         self._width = width
         self._height = height
         

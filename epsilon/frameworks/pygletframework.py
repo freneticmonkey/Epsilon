@@ -15,6 +15,8 @@ from epsilon.core.input import *
 from epsilon.logging.logger import Logger
 from epsilon.frameworks.baseframework import BaseFramework
 
+from epsilon.core.settings import Settings
+
 def on_key_press(symbols, modifiers):
     pass
 
@@ -38,6 +40,7 @@ class PygletFramework(BaseFramework):
         self._title = title
     
         self._window = pyglet.window.Window(self._width, self._height, self._title, True, vsync=False)
+        self._window.set_location(Settings.get('DisplaySettings','location')[0], Settings.get('DisplaySettings','location')[1])
         self._window.on_draw = self._draw
         
         # Configure the input object
@@ -74,6 +77,11 @@ class PygletFramework(BaseFramework):
         pyglet.app.run()
         
     def stop(self):
+        location = self._window.get_location() # returns a tuple? So convert to array
+        
+        Settings.set('DisplaySettings','location', [location[0], location[1]] )
+        
+        self._shutdown()
         pyglet.app.exit()
         
 

@@ -10,7 +10,6 @@ from epsilon.logging.logger import Logger
 from epsilon.frameworks.baseframework import BaseFramework
 
 from epsilon.core.input import Input
-import epsilon.core.settings as Settings
 
 class PyGameFramework(BaseFramework):
     def __init__(self):
@@ -45,6 +44,7 @@ class PyGameFramework(BaseFramework):
             
     def stop(self):
         self._keep_alive = False
+        self._shutdown()
         
 
 class PyGameInput(Input):

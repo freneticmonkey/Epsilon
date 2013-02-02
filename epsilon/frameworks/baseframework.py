@@ -12,6 +12,7 @@ class BaseFramework(BaseSingleton):
         self._setup = None
         self._run_loop = None
         self._drawfunc = None
+        self._shutdown = None
         
     @property
     def run_loop(self):
@@ -36,6 +37,14 @@ class BaseFramework(BaseSingleton):
     @on_draw.setter
     def on_draw(self, set_on_draw):
         self._drawfunc = set_on_draw
+
+    @property
+    def on_shutdown(self):
+        return self._shutdown
+
+    @on_shutdown.setter
+    def on_shutdown(self, on_shutdown):
+        self._shutdown = on_shutdown
     
     def stop(self):
         pass

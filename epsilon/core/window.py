@@ -6,7 +6,7 @@ class Window(object):
 		self._height = 600
 		self._title = "Epsilon Engine"
 		
-		self._framework = FrameworkManager.get_instance().framework
+		self._framework = FrameworkManager.framework()
 	
 	def __del__(self):
 		self.shutdown()

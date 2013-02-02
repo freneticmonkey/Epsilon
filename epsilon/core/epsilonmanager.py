@@ -1,3 +1,6 @@
+from epsilon.core.settings import Settings # This must be included before any other epsilon component
+from epsilon.core.configurationmanager import ConfigurationManager
+
 from epsilon.logging.logger import Logger
 
 from epsilon.events.eventmanager import EventManager
@@ -66,8 +69,14 @@ class FrameEnded(EventBase):
 class EpsilonManager(object):
     
     def __init__(self):
+        # Load Configuration settings
+        ConfigurationManager.load_configuration()
+
         #Start Logger
-        Logger.Configure(LoggerSettings.method, LoggerSettings.filename, LoggerSettings.log_to_console)
+        method = Settings.get('LoggerSettings','method')
+        filename = Settings.get('LoggerSettings','filename')
+        to_console = Settings.get('LoggerSettings','log_to_console')
+        Logger.Configure(method, filename, to_console)
         Logger.Log('Initialising Core Systems')
         
         # The order of initialisation in this function is extremely important
@@ -90,16 +99,19 @@ class EpsilonManager(object):
         
         #Start Render System
         self._render_manager = RenderManager.get_instance()
-        self._render_manager.init(DisplaySettings.resolution[0],
-                                  DisplaySettings.resolution[1],
-                                  DisplaySettings.window_title)
+
+        self._render_manager.init( Settings.get('DisplaySettings','resolution')[0],
+                                   Settings.get('DisplaySettings','resolution')[1],
+                                   Settings.get('DisplaySettings','window_title')
+                                 )
         
         # Setup the framework callbacks
-        self._framework = FrameworkManager.get_instance().framework
+        self._framework = FrameworkManager.framework()
         self._framework.setup = self.setup
         self._framework.run_loop = self.update
         self._framework.on_draw = self._render_manager.draw
-                
+        self._framework.on_shutdown = self.shutdown
+        
         # Initialise Input
         #self._input = Input.get_instance()
         
@@ -131,9 +143,6 @@ class EpsilonManager(object):
         self._resource_manager.add_handler(SceneResourceHandler())
         # enable Wavefront Obj Loading
         self._resource_manager.add_handler(WavefrontResourceHandler())
-        
-    def __del__(self):
-        self.shutdown()
         
     def set_scene(self):
         # Default Shaders
@@ -205,7 +214,11 @@ class EpsilonManager(object):
         self._frame_end.send()
         
     def shutdown(self):
-        del self._render_manager
+
+        self._ui_manager.shutdown()
+        Logger.shutdown()
+        ConfigurationManager.save_configuration()
+        print "After EpsilonManager shutdown"
 
 
     
