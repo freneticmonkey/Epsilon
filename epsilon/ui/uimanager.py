@@ -5,9 +5,9 @@ Created on Feb 4, 2012
 '''
 from epsilon.core.basemanager import FrameListenerManager
 from epsilon.logging.logger import Logger
-from epsilon.core.settings import DisplaySettings
 
 class UIManager(FrameListenerManager):
+
     def init(self):
         Logger.Log("Created UIManager")
         self._ui_list = []
@@ -31,3 +31,6 @@ class UIManager(FrameListenerManager):
     
     def on_frame_end(self):
         pass
+
+    def shutdown(self):
+        self._ui_list = []

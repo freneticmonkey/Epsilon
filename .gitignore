@@ -29,6 +29,8 @@ src/UnitTests/InheritanceTest.py
 
 src/UnitTests/SingletonTest.py
 
+tests
+
 tests/randtest.py
 
 tests/starfield.py
