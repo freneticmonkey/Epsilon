@@ -76,6 +76,10 @@ class Logger( BaseSingleton ):
     @classmethod
     def remove_listener(cls, del_listener):
         cls.get_instance()._remove_listener(del_listener)
+
+    @classmethod
+    def shutdown(cls):
+        cls.get_instance()._shutdown()
     
     def __init__(self, output_console=False):
         self._configured = False
@@ -85,13 +89,15 @@ class Logger( BaseSingleton ):
         self._console_output = False
         self._listeners = []
         
-    ## When deleting the LoggingCore make sure that the log file is closed.    
-    def __del__(self):
-        self._shutdown()
-            
+    ## When shutting down the LoggingCore make sure that the log file is closed.
     def _shutdown(self):
-    	self.Log("Logger Shutdown")
-        if self._type == 'file' and self._file:
+        # Not super comfortable with this idea, there should be some kind of managed shutdown where
+        # logger is called
+
+    	#self.Log("Logger Shutdown")
+        print "Logger Shutdown"
+
+        if self._type == 'file' and self._file is not None:
             self._file.flush()
             self._file.close()
 
@@ -172,32 +178,3 @@ class Logger( BaseSingleton ):
 
             for listener in self._listeners:
                 listener.on_log(output_text)
-           
- 
-#    ## The constructor
-#    #  @param self The object pointer.
-#    def __init__( self ):
-#        # Check whether we already have an instance
-#        if LoggerCore._instance is None:
-#            # Create and remember instance
-#            LoggerCore._instance = LoggerCore.Singleton()
-# 
-#        # Store instance reference as the only member in the handle
-#        self.__dict__['_EventHandler_instance'] = LoggerCore._instance        
-        
-    
-#    ## Delegate access to implementation.
-#    #  @param self The object pointer.
-#    #  @param attr Attribute wanted.
-#    #  @return Attribute
-#    def __getattr__(self, aAttr):
-#        return getattr(self._instance, aAttr)
-# 
-# 
-#    ## Delegate access to implementation.
-#    #  @param self The object pointer.
-#    #  @param attr Attribute wanted.
-#    #  @param value Vaule to be set.
-#    #  @return Result of operation.
-#    def __setattr__(self, aAttr, aValue):
-#        return setattr(self._instance, aAttr, aValue)
