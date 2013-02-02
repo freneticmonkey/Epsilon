@@ -10,6 +10,8 @@ from epsilon.ui.simplui import *
 from epsilon.ui.uibasewindow import UIBaseWindow
 from epsilon.core.time import Time
 
+from epsilon.core.settings import Settings
+
 from epsilon.logging.logger import Logger
 from epsilon.core.coreevents import QuitEvent
 
@@ -60,14 +62,30 @@ class MainUI(UIBaseWindow):
                             ])
                         )
         
+        wf = False
+        sg = True
+        sb = False
+        uf = True
+        if Settings.has_option('RenderSettings','wireframe'):
+            wf = Settings.get('RenderSettings','wireframe')
+
+        if Settings.has_option('RenderSettings','grid'):
+            sg = Settings.get('RenderSettings','grid')
+
+        if Settings.has_option('RenderSettings','draw_bounds'):
+            sb = Settings.get('RenderSettings','draw_bounds')
+
+        if Settings.has_option('RenderSettings','update_frustum'):
+            uf = Settings.get('RenderSettings','update_frustum')
+        
         settings_layout = FoldingBox('settings', content=
                                 VLayout(children=
                                 [
                                     # a checkbox, note the action function is provided directly
-                                    Checkbox('Show wireframe', h=100, action=self.show_wireframe_action),
-                                    Checkbox('Show Grid', h=100, action=self.show_grid_action,value=True),
-                                    Checkbox('Show Bounds', h=100, action=self.show_bounds_action,value=False),
-                                    Checkbox('Update Frustum', h=100, action=self.update_frustum_action,value=True),
+                                    Checkbox('Show wireframe', h=100, action=self.show_wireframe_action, value=wf),
+                                    Checkbox('Show Grid', h=100, action=self.show_grid_action,value=sg),
+                                    Checkbox('Show Bounds', h=100, action=self.show_bounds_action,value=sb),
+                                    Checkbox('Update Frustum', h=100, action=self.update_frustum_action,value=uf),
                                     Button('Quit', action=self.quit_action),
                                 ])
                             )
@@ -114,16 +132,20 @@ class MainUI(UIBaseWindow):
         Logger.Log("A button was clicked!")
         
     def show_wireframe_action(self, checkbox):
-        RenderSettings.set_setting("wireframe",checkbox.value)
+        #RenderSettings.set_setting("wireframe",checkbox.value)
+        Settings.set('RenderSettings','wireframe', checkbox.value)
         
     def show_grid_action(self, checkbox):
-        RenderSettings.set_setting("grid",checkbox.value)
+        #RenderSettings.set_setting("grid",checkbox.value)
+        Settings.set('RenderSettings','grid', checkbox.value)
         
     def show_bounds_action(self, checkbox):
-        RenderSettings.set_setting("draw_bounds",checkbox.value)
+        #RenderSettings.set_setting("draw_bounds",checkbox.value)
+        Settings.set('RenderSettings','draw_bounds', checkbox.value)
 
     def update_frustum_action(self, checkbox):
-        RenderSettings.set_setting("update_frustum",checkbox.value)
+        #RenderSettings.set_setting("update_frustum",checkbox.value)
+        Settings.set('RenderSettings','update_frustum', checkbox.value)
 
     def quit_action(self, button):
         QuitEvent().send()

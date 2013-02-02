@@ -9,6 +9,8 @@ from itertools import chain
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from epsilon.core.settings import Settings
+
 from epsilon.core.input import Input
 from epsilon.logging.logger import Logger
 
@@ -81,7 +83,10 @@ class Frustum(NodeComponent):
         
         # Debug
         self._update_frustum = True
-        RenderSettings.set_setting("update_frustum",self._update_frustum)
+        if Settings.has_option('RenderSettings','update_frustum'):
+            self._update_frustum = Settings.get('RenderSettings','update_frustum')
+        else:
+            Settings.set('RenderSettings','update_frustum', self._update_frustum)
         
         self._top = None
         self._bottom = None
@@ -126,7 +131,7 @@ class Frustum(NodeComponent):
         
     def set_perspective(self):
         
-        self._update_frustum = RenderSettings.get_setting("update_frustum")
+        self._update_frustum = Settings.get('RenderSettings','update_frustum')
 
         if Input.get_key(Input.KEY_1):
             
