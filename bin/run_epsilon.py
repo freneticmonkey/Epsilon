@@ -22,6 +22,7 @@ def main():
             traceback.print_exc(file=sys.stdout)
     if core:
         del core
+    print "Epsilon Engine Terminated.."
 
 if __name__ == "__main__":
     main()
