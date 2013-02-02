@@ -25,6 +25,36 @@ class ConfigurationManager(BaseSingleton):
     def __del__(self):
         self.save_configuration()
 
+    def _check_type(self, value):
+
+        # Default to string
+        value_type = "str"
+
+        # Check Boolean
+        if value == "True" or value == "False":
+            value_type = "bool"
+        
+        # Check list
+        elif value[0] == "[" and value[-1] == "]":
+            value_type = "list"
+
+        # Check int
+        elif value.find('.') == -1:
+            try:
+                int(value)
+                value_type = "int"
+            except ValueError:
+                pass
+
+        elif value.find('.') > -1:
+            try:
+                float(value)
+                value_type = "float"
+            except ValueError:
+                pass
+
+        return value_type
+
     def _load_configuration(self):
         if self._config_exists:
             # If read ok
@@ -34,21 +64,21 @@ class ConfigurationManager(BaseSingleton):
 
                 # Populate the classes with the appropriate values
                 for section in self._config.sections():
-
-                    # Get the class definition for the current settings section
-                    # class_def = None
-                    # for cd in self._settings_classes:
-                    #     if cd.__name__ == section:
-                    #         class_def = cd
-                    #         break
-
-                    # # If found read the settings for the settings class
-                    # if class_def is not None:
-
+                    #print "Reading Config Section: " + section
+                    
                     for option in self._config.options(section):
                         
-                        value_type = Settings.get(section, option).__class__.__name__
+                        value_type = "str"
+
+                        # If the section has been defined in the default settings
+                        if Settings.has_section(section):
+                            value_type = Settings.get(section, option).__class__.__name__
                         
+                        # Else use a manual technique to figure this out.
+                        else:
+                            value = self._config.get(section, option)
+                            value_type = self._check_type( value )
+                            
                         if value_type == "str":
                             Settings.set(section, option, self._config.get(section, option) )
 
@@ -65,14 +95,34 @@ class ConfigurationManager(BaseSingleton):
                             # If the item is a list get it as a string and process it as appropriate
                             # only lists containing homogeneous values are supported
 
-                            #assuming that the list has more than one value...
-                            list_type = Settings.get(section, option)[0].__class__.__name__
+                            list_value = self._config.get(section, option)
+
+                            # If the section has already been defined in the default settings
+                            if Settings.has_section(section):
+                                #assuming that the list has more than one value...
+                                list_type = Settings.get(section, option)[0].__class__.__name__
+
+                            # Otherwise extract the type
+                            else:
+                                #Extract the first list element
+
+                                # Default to a single element list
+                                list_element = list_value[1:-1]
+
+                                #Check for more and adjust as necessary
+                                if list_value.find(',') > 0:
+                                    list_element = list_value[1:list_value.find(',')]
+
+                                # Get the element_type
+                                list_type = self._check_type( list_element )
 
                             # In place of python's lack of a switch statement, defaulting to str if None
                             cast_func = { 'int' : int, 'float' : float, 'bool' : bool, 'str' : str, 'NoneType' : str }[list_type]
 
                             # Generate a list from the string
-                            Settings.set(section, option, [cast_func(value) for value in self._config.get(section, option)[1:-1].split(',')] )
+                            Settings.set(section, option, [cast_func(value) for value in list_value[1:-1].split(',')] )
+
+
 
                         value = self._config.get(section, option)
                         # print "Reading property class: %s name: %s value: %s" % ( section, option, str(value) )

@@ -11,23 +11,24 @@ class Frameworks:
 
 class Settings(BaseSingleton):
 
-    settings = {
+    def __init__(self):
+        self.settings = {
 
-        'DisplaySettings' : {
-            'resolution' : [1000, 600],
-            'location' : [100,100],
-            'window_title' : "Epsilon",
-            'fullscreen' : False
-        },
-        'LoggerSettings' : {
-            'method' : 'file',
-            'filename' : 'EpsilonLog.txt',
-            'log_to_console' : True
-        },
-        'FrameworkSettings' : {
-            'use_framework' : Frameworks.PYGLET
+            'DisplaySettings' : {
+                'resolution' : [1000, 600],
+                'location' : [100,100],
+                'window_title' : "Epsilon",
+                'fullscreen' : False
+            },
+            'LoggerSettings' : {
+                'method' : 'file',
+                'filename' : 'EpsilonLog.txt',
+                'log_to_console' : True
+            },
+            'FrameworkSettings' : {
+                'use_framework' : Frameworks.PYGLET
+            }
         }
-    }
 
     @classmethod
     def get(cls, section, option):
@@ -49,6 +50,8 @@ class Settings(BaseSingleton):
     def has_option(cls, section, option):
         if Settings.has_section(section):
             return option in cls.get_instance().settings[section]
+        print "Can't find section: " + section
+        print cls.get_instance().settings
         return False
 
     @classmethod
@@ -64,6 +67,6 @@ class Settings(BaseSingleton):
         return None
 
     def _set(self, section, option, value):
-        if section in self.settings:
-            if option in self.settings[section]:
-                self.settings[section][option] = value
+        if not section in self.settings:
+            self.settings[section] = {}
+        self.settings[section][option] = value
