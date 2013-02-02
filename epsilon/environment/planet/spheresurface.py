@@ -258,7 +258,7 @@ class SphereSurface(object):
             self._generated_meshes[address] = mesh
             self._generated_noise[address] = noise
 
-            print "%s Mesh obj Gen time: %3.5f" % (address, (datetime.now() - b).total_seconds())
+            #print "%s Mesh obj Gen time: %3.5f" % (address, (datetime.now() - b).total_seconds())
         
         return mesh
 

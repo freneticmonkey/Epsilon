@@ -17,10 +17,7 @@ from epsilon.environment.planet.spherequad import SphereQuad
 
 from epsilon.environment.planet.spheresurface import SphereSurface
 
-#from epsilon.geometry.cperlin import Perlin, FractalNoise
 from epsilon.geometry.cperlin import Perlin, FractalNoise
-
-from noise import pnoise3, snoise3
 
 from epsilon.render.colour import Preset
 
