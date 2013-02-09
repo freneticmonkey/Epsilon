@@ -22,6 +22,10 @@ class SceneManagerEvents:
 
 class SceneManager(BaseSingleton):
     
+    @classmethod
+    def get_current_scene(cls):
+        return cls.get_instance().current_scene
+
     def __init__(self):
         #self._root = None
         #self._cameras = []
@@ -61,7 +65,7 @@ class SceneManager(BaseSingleton):
     
     def update(self):
         # Update the scenegraph transforms.
-        if not self._current_scene is None and self._current_scene.need_update:
+        if not self._current_scene is None:
             self._current_scene.update()
             
         # Cull invisible geometry
