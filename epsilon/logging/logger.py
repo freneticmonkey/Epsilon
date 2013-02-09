@@ -92,10 +92,11 @@ class Logger( BaseSingleton ):
     ## When shutting down the LoggingCore make sure that the log file is closed.
     def _shutdown(self):
         # Not super comfortable with this idea, there should be some kind of managed shutdown where
-        # logger is called
+        # logger is called - 2/2/12
+        #print "Logger Shutdown"
 
-    	#self.Log("Logger Shutdown")
-        print "Logger Shutdown"
+        # 3/2/12 - This is no longer causing an issue, need to keep an eye on this.
+    	self.Log("Logger Shutdown")
 
         if self._type == 'file' and self._file is not None:
             self._file.flush()
