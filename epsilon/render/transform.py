@@ -55,8 +55,11 @@ class Transform(object):
         self._need_parent_update = False
         self._need_child_update = False
         self._parent_notified = False
-        self._force_parent_update = False        
-        
+        self._force_parent_update = False     
+
+        # Property to indicate that the transform has changed this frame
+        self._has_changed_this_frame = False
+
         self._forward = Vector3(0,0,1)
         self._up = Vector3(0,1,0)
         self._right = Vector3(1,0,0)
@@ -96,6 +99,10 @@ class Transform(object):
             return True
         else:
             return False
+
+    @property
+    def has_changed_this_frame(self):
+        return self._has_changed_this_frame
         
     # Transform properties
     @property
@@ -329,6 +336,15 @@ class Transform(object):
                 if not ret_child is None:
                     break
         return ret_child
+
+    def set_unchanged(self):
+
+        # Set this node and any children that may have been changed last frame
+        # to unchanged
+        self._has_changed_this_frame = False
+
+        for child in self._children:
+            child.set_unchanged()
     
     # Update the Node and it's children's transforms
     def _update(self, update_children, parent_has_changed):
@@ -336,13 +352,20 @@ class Transform(object):
         # Always clear information about parent notification
         self._parent_notified = False
         
+        #if self._need_parent_update or self._need_child_update:
+        if self.need_update:
+            self._has_changed_this_frame = True
+        else:
+            self.set_unchanged()
+
         # If there is no reason to continue updating stop.
         if not update_children and \
            not self._need_parent_update and \
            not self._need_child_update and \
            not parent_has_changed:
+
             return
-        
+
         # See if we should update the transform
         if self._need_parent_update or parent_has_changed:
             # Update transforms from parent
@@ -362,7 +385,7 @@ class Transform(object):
                         child_node._update(True,False)
                         break
             self._children_to_update = []
-        
+
         self._need_child_update = False
         
         # Now that the children's transforms have been updated, update

@@ -48,7 +48,11 @@ class SceneBase(ResourceBase):
         return self._root.transform.need_update
     
     def update(self, children=True, parent_changed=False):
-        self._root.transform._update(children, parent_changed)
+        if self.need_update:
+            self._root.transform._update(children, parent_changed)
+        else:
+            if self._root.transform.has_changed_this_frame:
+                self._root.transform.set_unchanged()
         
     def cull(self):
         self._root.cull(self.active_camera)
