@@ -145,14 +145,15 @@ class GLWindowRenderer(WindowRenderer):
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         
         # If the SceneManager instance hasn't been set
-        if not SceneManager.get_instance().current_scene is None:
-            # If there isn't a camera set, get the active camera from the SceneManager
-            if self._camera is None:
-                self._camera = SceneManager.get_instance().current_scene.active_camera
-            
-            # Get the Scene Root
-            if self._scene_root is None:    
-                self._scene_root = SceneManager.get_instance().current_scene.root
+        if self._camera is None and self._scene_root is None:
+            if not SceneManager.get_current_scene() is None:
+                # If there isn't a camera set, get the active camera from the SceneManager
+                if self._camera is None:
+                    self._camera = SceneManager.get_current_scene().active_camera
+                
+                # Get the Scene Root
+                if self._scene_root is None:    
+                    self._scene_root = SceneManager.get_current_scene().root
         
         setup_ok = False
         if self._camera is None:
@@ -161,6 +162,7 @@ class GLWindowRenderer(WindowRenderer):
             Logger.Log("RENDER ERROR: Scene Root not found.")
         else:
             setup_ok = True
+            
             # Activate the camera for rendering
             # set_projection, etc
             self._camera.activate()
@@ -177,22 +179,17 @@ class GLWindowRenderer(WindowRenderer):
         
     def draw_meshes(self):
         # Set 3D Drawing settings
-        if self.setup_3d():
+        #if self.setup_3d():
             
-            #execute the camera's look at
-            self._camera.look_at()
-            
-            #if RenderSettings.get_setting("grid"):
-            if Settings.get('RenderSettings','grid'):
-                self.draw_grid()
-            
-            # Draw the scene meshes here
-            self.draw_node(self._scene_root)
-            
-            self._gizmo_manager.draw()
-
-            self.teardown_3d()
-            #glEnd()
+        #execute the camera's look at
+        self._camera.look_at()
+        
+        #if RenderSettings.get_setting("grid"):
+        if Settings.get('RenderSettings','grid'):
+            self.draw_grid()
+        
+        # Draw the scene meshes here
+        self.draw_node(self._scene_root)
             
     def draw_node(self, node):
         
@@ -209,21 +206,9 @@ class GLWindowRenderer(WindowRenderer):
         self._camera.set_screen()
         self._camera.reset()
         
-#        glColor3f(1.0,1.0,1.0)
-#        self._print_font.glPrint(5, 50, "Camera:")
-#        self._print_font.glPrint(5, 35, "Pos: %s" % str(self._camera.position))
-#        self._print_font.glPrint(5, 20, "Ori: %s" % str(self._camera.rotation))
-##        fps = ((1/Time.deltaTime))
-#        fps = 1 / (Time.delta_time * 0.9) + (self._last_time * 0.1)
-#        self._last_time = Time.delta_time
-#        
-#        #self._print_font.glPrint(5, 5, "FPS: %.2f" % fps) 
-#        self._print_font.glPrint(5, 5, "FPS: %.2f" % Time.Time.get_instance().get_fps())
-        
         self._ui_manager.draw()
         
     def draw_gizmos(self):
-        pass
         self._gizmo_manager.draw()
     
     def draw_grid(self):
@@ -273,13 +258,10 @@ class GLWindowRenderer(WindowRenderer):
         
         # Draw the Scene Meshes
         self.draw_meshes()
-#        glFlush()
-        
         self.draw_gizmos()
+        self.teardown_3d()
         
         self.draw_gui()
-                
-        #self._flip()
         
     @property
     def wireframe(self):
