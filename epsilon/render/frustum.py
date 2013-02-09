@@ -131,31 +131,34 @@ class Frustum(NodeComponent):
         
     def set_perspective(self):
         
-        self._update_frustum = Settings.get('RenderSettings','update_frustum')
-
-        if Input.get_key(Input.KEY_1):
-            
-            if not self._update_frustum:
-                self._update_frustum = True#not self._update_frustum
-                print "Frustum update enabled"
-                print "cam pos: %s" % self._transform.position
-
-        if Input.get_key(Input.KEY_2):
-            if self._update_frustum:
-                self._update_frustum = False
-                print "Frustum update disabled"
-                print "@ cam pos: %s" % self._transform.position
-            
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(self._fov, self._aspect, self._near_dist, self._far_dist)
-        
-        if self._update_frustum:
-            #self.calc_frustum()
-            self.calc_frustum_lighthouse()
-        
-        # show the frustum visualisation
-        self._vis_frustum(not self._update_frustum)
+
+        # If the transform for the camera has changed, then recalculate the frustrum
+        if self.node_parent.transform.has_changed_this_frame:
+
+            self._update_frustum = Settings.get('RenderSettings','update_frustum')
+
+            if Input.get_key(Input.KEY_1):
+                
+                if not self._update_frustum:
+                    self._update_frustum = True#not self._update_frustum
+                    print "Frustum update enabled"
+                    print "cam pos: %s" % self._transform.position
+
+            if Input.get_key(Input.KEY_2):
+                if self._update_frustum:
+                    self._update_frustum = False
+                    print "Frustum update disabled"
+                    print "@ cam pos: %s" % self._transform.position
+
+            if self._update_frustum:
+                #self.calc_frustum()
+                self.calc_frustum_lighthouse()
+            
+            # show the frustum visualisation
+            self._vis_frustum(not self._update_frustum)
     
     def set_screen(self):
         glMatrixMode(GL_PROJECTION)
