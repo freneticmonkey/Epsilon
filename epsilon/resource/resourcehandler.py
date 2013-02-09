@@ -24,8 +24,8 @@ class ResourceHandlerBase(object):
     def filetypes(self):
         return self._filetypes
     
-    def process_resource(self, filename):
-        pass
+    def process_resource(self, filename, name):
+        print "Errrpp you shouldn't be seeing this."
     
     def remove_resource(self, filename=""):
         pass

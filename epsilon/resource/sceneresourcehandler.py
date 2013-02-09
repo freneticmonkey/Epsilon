@@ -51,7 +51,7 @@ class SceneResourceHandler(ResourceHandlerBase):
         self._filetypes = ["xml"]
         self._log = SceneResourceHandlerLog()
         
-    def process_resource(self, filename):
+    def process_resource(self, filename, name):
         
         new_scene = None
         
@@ -198,11 +198,19 @@ class SceneResourceHandler(ResourceHandlerBase):
                     else:
                         self._log.Log( "Invalid Mesh Preset: [%s]" % ( preset ) )
                         
-                if "file" in node.attrib:
+                if "filename" in node.attrib:
+                    
+                    # Get the name
+                    name = None
+                    if 'name' in node.attrib:
+                        name = node.attrib['name']
+
                     # Load the mesh
-                    mesh = ResourceManager.get_instance().process_resource(node.attrib["file"])
+                    filename = node.attrib["filename"]
+                    mesh = ResourceManager.get_instance().process_resource(filename, name)
+
                     # Set it to the node
-                    parent.mesh = mesh
+                    parent.renderer.mesh = mesh
         
         # Children        
         elif node.tag == "children":
@@ -283,18 +291,21 @@ class SceneResourceHandler(ResourceHandlerBase):
         elif node.tag == "texture":
             texture = None
             
+            # Get the name
+            name = None
+            if "name" in node.attrib:
+                name = node.attrib["name"]
+
             # If the texture is referenced by filename
             if "filename" in node.attrib:
-                # Load the texture
-                texture = ResourceManager.get_instance().process_resource(node.attrib["filename"])
                 
-                if not texture is None:
-                    if "name" in node.attrib:
-                        texture.name = node.attrib["name"]
+                # Load the texture
+                filename = node.attrib["filename"]
+                texture = ResourceManager.get_instance().process_resource(filename, name)                    
             
             # If the texture is just a reference, retrieve it from the TextureManager for assignment
-            if "name" in node.attrib and texture is None:
-                texture = TextureManager.get_instance().get_texture_by_name(node.attrib["name"])
+            if texture is None and name is not None:
+                texture = TextureManager.get_instance().get_texture_by_name(name)
             
             # If the current parent is a Material node, set the material node's texture 
             if not parent is None:

@@ -68,7 +68,7 @@ class ResourceManager(BaseSingleton):
         pass
     
     # External function that can in turn be called by the ResourceHandlers allowing for recursive loading
-    def process_resource(self, filename):
+    def process_resource(self, filename, name=None):
         
         # check if this resource has already been loaded
         new_resource = self.get_resource_by_filename(filename)
@@ -107,9 +107,10 @@ class ResourceManager(BaseSingleton):
                     self._current_path = dirname(abs_filename)
                     
                     # Process the Resource
-                    new_resource = the_handler.process_resource(abs_filename)
+                    new_resource = the_handler.process_resource(abs_filename, name)
                     if not new_resource is None:
                         self._add_resource(new_resource)
+                        self._log.Log("Added Resource: file: %s name: %s" % (filename, name))
                     
                     # Rollback the current relative path set in the ResourceManager
                     self._current_path = current_resource_path

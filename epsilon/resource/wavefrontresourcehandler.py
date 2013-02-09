@@ -22,7 +22,7 @@ class WavefrontResourceHandler(ResourceHandlerBase):
         self._resource_type = ResourceType.MESH
         self._filetypes = ["obj"]
         
-    def process_resource(self, filename):
+    def process_resource(self, filename, name):
         new_mesh = None
         
         try:
@@ -32,9 +32,9 @@ class WavefrontResourceHandler(ResourceHandlerBase):
             if len(vertices) and len(faces):
                 
                 new_mesh = Mesh(vertices, faces, tex_coords=uvs, filename=filename )
-            
+
         except Exception, e:
-            Logger.Log("ERROR: Parsing Wavefront object file: " + e.message)
+            Logger.Log("ERROR: Parsing Wavefront object file: %s. Info: %s" % (filename, e.message) )
         
         # Return the new Resource
         return new_mesh

@@ -16,7 +16,7 @@ class ImageResourceHandler(ResourceHandlerBase):
         self._resource_type = ResourceType.IMAGE
         self._filetypes = ["jpg","png"]
         
-    def process_resource(self, filename):
+    def process_resource(self, filename, name):
         
 #        new_texture = None
         # Does the Texture already exist in the Texture Manager
@@ -29,7 +29,7 @@ class ImageResourceHandler(ResourceHandlerBase):
         # If the texture isn't in the texture manager
         if new_texture is None:
             # Load the image
-            new_texture = Texture(filename=filename)
+            new_texture = Texture(filename=filename, name=name)
             
             # Add it to the TextureManager
             TextureManager.get_instance().add_texture(new_texture)
