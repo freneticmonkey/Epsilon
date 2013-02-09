@@ -11,6 +11,7 @@ from OpenGL.GL.shaders import *
 
 from epsilon.render.colour import Colour
 
+from epsilon.logging.logger import Logger
 
 class ShaderError(Exception):
     pass
@@ -65,8 +66,9 @@ class Shader(object):
         if length == 0:
             return ""
         buffer = create_string_buffer(length)
-        glGetShaderInfoLog(self._id, length, None, buffer)
-        return buffer.value
+        #glGetShaderInfoLog(self._id, length, None, buffer)
+        buffer = glGetShaderInfoLog(self._id)
+        return buffer#.value
     
     def shader_source_to_array(self):
         num = len(self._shader_source)
@@ -91,7 +93,21 @@ class Shader(object):
         try:
             self._id = compileShader(self._shader_source, self._shader_type)
         except RuntimeError, e:
-            print "ERROR: Shader Compile Fail\n" + e.message
+            print "ERROR: Shader Compile Fail:\nErrors:"
+
+            # Print compile errors
+            for arg in e.args:
+                if type(arg).__name__ == 'str':
+                    print arg
+                elif type(arg).__name__ == 'list':
+
+                    #print source
+                    for source in arg:
+                        line_count = 1
+                        for line in source.split('\n'):
+                            print "%d : %s" % ( line_count, line )
+                            line_count +=1
+                        print ""
         
 #        num, src = self.ShaderSourceToArray()
 #        for source in src:
@@ -106,13 +122,16 @@ class Shader(object):
         if not self.get_compile_status():
             info = self.get_info_log()
             if len(info) == 0:
-                print "No error Log for source:"
-                print "\n".join(self._shader_source)
+                print "No error info Log."#" for source:"
+                #print "\n".join(self._shader_source)
             raise CompileError(info)
         
 
 class VertexShader(Shader):
     _shader_type = GL_VERTEX_SHADER
+
+class GeometryShader(Shader):
+    _shader_type = GL_GEOMETRY_SHADER
     
 class FragmentShader(Shader):
     _shader_type = GL_FRAGMENT_SHADER    
@@ -123,6 +142,13 @@ class ShaderProgram(object):
         self._shaders = list(shaders)
         self._id = None
         
+        self._uniform_names = []
+        self._attribute_names = []
+
+        self._uniform_locations = {}
+        self._attribute_locations = {}
+        self._attribute_locations_valid = False
+
     def __enter__(self):
         self.use()
         return self
@@ -138,6 +164,75 @@ class ShaderProgram(object):
             msg = "%s from glGetProgram(%s, %s, &value)"
             raise ValueError(msg % (ShaderConstants.shader_errors[value], self._id, param_id))
         return value
+
+    # Helper functions for handling repetitive Shader Code.
+    def _configure_properties(self):
+        # Get the Memory locations of the Shader Uniforms
+        for uniform_name in self._uniform_names:
+            u_loc = self.get_gl_uniform_location(uniform_name)
+            if u_loc is not None:
+                self._uniform_locations[uniform_name] = u_loc
+                
+        # Get the Memory locations of the Shader Attributes
+        self._attribute_locations_valid = True
+        for attribute_name in self._attribute_names:
+            self._attribute_locations[attribute_name] = self.get_gl_attribute_location(attribute_name)
+            if self._attribute_locations[attribute_name] is None:
+                self._attribute_locations_valid = False
+
+    def get_gl_uniform_location(self, name):
+        # Get the Memory locations of the Shader Attributes
+        uniform_location_request = glGetUniformLocation(self._id, name)
+        uniform_location = None
+        if not uniform_location_request in [None,-1]:
+                uniform_location = uniform_location_request
+        else:
+            Logger.Log("Shader error: uniform not found: %s" % name)
+        return uniform_location
+
+    def get_uniform_location(self, name):
+        loc = None
+        if name in self._uniform_locations:
+            loc = self._uniform_locations[name]
+        return loc
+
+    def get_gl_attribute_location(self, name):
+        # Get the Memory locations of the Shader Attributes
+        attribute_location_request = glGetAttribLocation(self._id, name)
+        attribute_location = None
+        if not attribute_location_request in [None,-1]:
+                attribute_location = attribute_location_request
+        else:
+            Logger.Log("Shader error: attribute not found: %s" % name)
+        return attribute_location
+
+    def get_attribute_location(self, name):
+        loc = None
+        if name in self._attribute_locations:
+            loc = self._attribute_locations[name]
+        return loc
+
+    def attributes_valid(self):
+        return self._attribute_locations_valid
+
+    def set_uniform_data(self, name, data):
+        if name in self._uniform_locations:
+            u_loc = self._uniform_locations[name]
+
+            if type(data) == Colour:
+                glUniform4f(u_loc, data.r, data.g, data.b, data.a)
+                
+            # TODO: Add other data types here.
+
+    # FIXME/TODO: This is hardcoded so that all attributes are treated as arrays.
+    #             This is clearly not correct but for now only. Fix to check for types asap.
+    def enable_attribute_arrays(self):
+        for attribute in self._attribute_locations.values():
+            glEnableVertexAttribArray(attribute)
+
+    def disable_attribute_arrays(self):
+        for attribute in self._attribute_locations.values():
+            glDisableVertexAttribArray(attribute)
     
     def get_link_status(self):
         return bool(self.get_param(GL_LINK_STATUS))
@@ -182,10 +277,6 @@ class ShaderProgram(object):
             self._configure_properties()
         
         return message
-    
-    # This is a stub for child classes
-    def _configure_properties(self):
-        pass
     
     # This is called by the Shader Manager at the start of a Frame
     # This is a stub for child classes     
