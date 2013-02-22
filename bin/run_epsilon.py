@@ -3,8 +3,6 @@
 import sys, traceback
 import os
 
-import cProfile
-
 # Add the epsilon path to the python path
 epsilon_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
 sys.path.append(epsilon_path)
