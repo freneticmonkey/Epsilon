@@ -67,10 +67,7 @@ class Renderer(NodeComponent):
         
         if self._visible and not self._culled:
         
-            self._setup_draw()
-            
             # Draw bounds
-            #if RenderSettings.get_setting("draw_bounds"):
             if Settings.get('RenderSettings','draw_bounds'):
                 if self._material:
                     self.node_parent.transform.bounds.colour = self._material.diffuse
@@ -83,15 +80,8 @@ class Renderer(NodeComponent):
             # as such all meshes cannot be rendered without a material 
             # definition
             if self._mesh and self._material:
-                self._material.draw(self._mesh.glmesh)
-                
-            # If there is a mesh defined and the bounds needs to be drawn
-#            if not self._mesh is None and self._mesh.bounds.get_draw_bounds():
-#                self._mesh.bounds.gizmo.draw(transform.position)
-            
-            
-            self._teardown_draw()
-            
+                self._material.draw(self._mesh.glmesh, self.node_parent.transform)
+                        
     def _setup_draw(self):
         glPushMatrix()
         
