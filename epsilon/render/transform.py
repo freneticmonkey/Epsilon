@@ -37,6 +37,9 @@ class Transform(object):
         self._world_position = pos
         self._world_rotation = rot
         self._world_scale = scale
+
+        # World Matrix
+        self._world_matrix = Matrix4()
         
         # Bounds of transform including children
         self._bounds = Bounds(world_centre=self.position)
@@ -59,6 +62,9 @@ class Transform(object):
 
         # Property to indicate that the transform has changed this frame
         self._has_changed_this_frame = False
+
+        # If looking at a position, store the position here.
+        self._look_at_position = None
 
         self._forward = Vector3(0,0,1)
         self._up = Vector3(0,1,0)
@@ -167,12 +173,10 @@ class Transform(object):
         self._local_scale = new_scale
         self._need_update()
     
-#    # Get world scale
-#    @property
-#    def world_scale(self):
-##        return self._scale
-#        return self._world_scale
-    
+    @property
+    def world_matrix(self):
+        return self._world_matrix
+
     @property
     def forward(self):
         return self._local_rotation * Vector3.FORWARD()
@@ -212,8 +216,10 @@ class Transform(object):
                 
         if relative_to == Space.SELF:
             self._local_rotation = self._local_rotation * qnorm
+
         elif relative_to == Space.PARENT:
             self._local_rotation = qnorm * self._local_rotation
+
         elif relative_to == Space.WORLD:
             self._local_rotation = self._local_rotation * self._world_rotation.conjugated() * qnorm * self._world_rotation
         
@@ -223,6 +229,18 @@ class Transform(object):
     def scale(self, new_scale):
         self._local_scale = self._local_scale * new_scale
         self._need_update()
+
+    def look_at(self, eye, to, up):
+        if not self.position == eye or (self._look_at_position is not None and not self._look_at_position == to):
+            mat = Matrix4.new_look_at(eye, to, up)
+            r = Quaternion.new_rotate_matrix(mat)
+
+            self.rotate(r, Space.WORLD)
+            self.position = eye
+            self._look_at_position = to
+
+            self._need_update()
+
     
     # Child Node handling
     def add_child(self, child_node_trans):
@@ -363,12 +381,11 @@ class Transform(object):
            not self._need_parent_update and \
            not self._need_child_update and \
            not parent_has_changed:
-
             return
 
         # See if we should update the transform
         if self._need_parent_update or parent_has_changed:
-            # Update transforms from parent
+            # Update transform from parent
             self._update_from_parent()
         
         # Update the children of the node
@@ -418,11 +435,31 @@ class Transform(object):
             
             # Add altered position vector to parent's position
             self._world_position += self._parent.position
+
         else:
             # This is the root node.
             self._world_position = self._local_position
             self._world_rotation = self._local_rotation
             self._world_scale    = self._local_scale
+
+        # Create a new world matrix
+        rot_matrix = self._world_rotation.get_matrix()
+        scale_matrix = Matrix4.new_scale(self._local_scale)
+        res = rot_matrix * scale_matrix
+
+        self._world_matrix = Matrix4()
+        for i in range(3):
+            self._world_matrix[ 4 * i ]     = res[ 4 * i ]
+            self._world_matrix[ 4 * i  + 1] = res[ 4 * i + 1]
+            self._world_matrix[ 4 * i  + 2] = res[ 4 * i + 2]
+            self._world_matrix[ 4 * i  + 3] = 0
+        
+        tm = Matrix4()
+        tm[3] = self._world_position.x
+        tm[7] = self._world_position.y
+        tm[11] = self._world_position.z
+
+        self._world_matrix = tm * self._world_matrix
             
         self._need_parent_update = False
             
