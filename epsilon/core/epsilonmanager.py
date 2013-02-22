@@ -5,18 +5,14 @@ from epsilon.logging.logger import Logger
 
 from epsilon.events.eventmanager import EventManager
 from epsilon.events.eventbase import EventBase
-#from epsilon.input import Input
 from epsilon.render.rendermanager import RenderManager
 from epsilon.scene.scenemanager import SceneManager  
 from epsilon.scripting.scriptmanager import ScriptManager
 from epsilon.ui.uimanager import UIManager
 from epsilon.ui.ui import MainUI
-from epsilon.render.texturemanager import TextureManager # Disabled until textures are implemented in Pyglet
+from epsilon.render.texturemanager import TextureManager
 from epsilon.render.shadermanager import ShaderManager
-from epsilon.render.shaders.phong import PhongShader
-from epsilon.render.shaders.phongsimple import PhongSimple
 from epsilon.render.gizmos.gizmomanager import GizmoManager
-from epsilon.render.gizmos.gizmos import WirePlane
 
 from epsilon.frameworks.frameworkmanager import FrameworkManager
 
@@ -29,28 +25,13 @@ from epsilon.resource.wavefrontresourcehandler import WavefrontResourceHandler
 from epsilon.core.coreevents import CoreListener
 
 # Terrain testing
-from epsilon.environment.terrain import Terrain
 from epsilon.environment.planet.planetsphere import PlanetSphere
 
 from epsilon.render.gizmos.gizmos import WireCube
 from epsilon.geometry.euclid import Vector3
 
-#from Render.Camera import CameraGL
-#from Render.Light import GLLight
-#from Render.Material import GLMaterial
-#from Render.Colour import Colour, Preset
-#from Scene.Node import Node, Plane
-#from Render.MeshFactory import MeshFactory, MeshTypes
-#from Geometry.euclid import Vector3, Quaternion
-
 from epsilon.core.time import Time
 from epsilon.core.settings import *
-
-from epsilon.scripting.testscripts import ( RotateScript, )
-#                                  MoveController,  
-#                                  CameraMoveController,  
-#                                  DisplayCoordinate, 
-#                                  SettingsController )
 
 from epsilon.render.meshfactory import MeshFactory, MeshTypes
 from epsilon.scene.node import Node
@@ -111,10 +92,7 @@ class EpsilonManager(object):
         self._framework.run_loop = self.update
         self._framework.on_draw = self._render_manager.draw
         self._framework.on_shutdown = self.shutdown
-        
-        # Initialise Input
-        #self._input = Input.get_instance()
-        
+                
         # Setup Frame Start/End Events
         self._frame_start = FrameStarted()
         self._frame_end = FrameEnded()
@@ -144,39 +122,12 @@ class EpsilonManager(object):
         # enable Wavefront Obj Loading
         self._resource_manager.add_handler(WavefrontResourceHandler())
         
-    def set_scene(self):
-        # Default Shaders
-        self._shader_manager.add_shader_object("phong_simple", PhongSimple())
-        
+    def set_scene(self):        
         # Testing loading using the ResourceManager
         self._resource_manager.process_resource("scene.xml")
-        #self._resource_manager.process_resource("empty_scene.xml")
         
-        # Create a terrain node
-#        self._terrain = Terrain()
-#        
-#        # Generate the terrain mesh
-#        self._terrain.generate()
-#        
-#        self._terrain.local_scale.x = 20
-#        self._terrain.local_scale.z = 20
-#        
-#        self._scene.current_scene.root.add_child(self._terrain)
-    
-#        self._camera = self._scene.current_scene.active_camera
-#        
-#        wp = GizmoManager.draw_plane(Vector3(), Vector3.UP())
-        
-        #self._cube = WireCube(min=Vector3(-0.71,-1,-0.71),max=Vector3(0.71,1,0.71))
-        #self._scene.current_scene.root.transform.add_child(self._cube.transform)
-        
-        self._planet = PlanetSphere()
-        self._scene.current_scene.root.transform.add_child(self._planet.transform)
-        # self._planet.add_script(RotateScript())
-#        self._plane = Node()
-#        self._plane.renderer.mesh = MeshFactory.get_mesh(MeshTypes.OCTOHEDRON)
-#        self._plane.transform.position.y = 2.0
-#        self._scene.current_scene.root.transform.add_child(self._plane)
+        #self._planet = PlanetSphere()
+        #self._scene.current_scene.root.transform.add_child(self._planet.transform)
         
     def run(self):
         self._framework.start()
@@ -202,14 +153,14 @@ class EpsilonManager(object):
         
         # Process Events
         self._event_manager.process_events()
-        
-        # Render the Scene
-        #self._render_manager.draw()
-        
+                
         # Update SceneManager
         self._scene.update()
         
-        self._planet.update_sphere()
+        #self._planet.update_sphere()
+
+        # Cull Scene for rendering
+        self._render_manager.cull()
         
         self._frame_end.send()
         
