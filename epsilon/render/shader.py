@@ -9,7 +9,9 @@ from ctypes import byref, c_char, c_char_p, c_int, cast, create_string_buffer, p
 from OpenGL.GL import *
 from OpenGL.GL.shaders import *
 
+from epsilon.geometry.euclid import Vector2, Vector3, Matrix3, Matrix4
 from epsilon.render.colour import Colour
+from epsilon.render.texture import Texture
 
 from epsilon.logging.logger import Logger
 
@@ -148,6 +150,7 @@ class ShaderProgram(object):
         self._uniform_locations = {}
         self._attribute_locations = {}
         self._attribute_locations_valid = False
+        self._name = self.__class__.__name__
 
     def __enter__(self):
         self.use()
@@ -155,6 +158,10 @@ class ShaderProgram(object):
         
     def __exit__(self, type, value, traceback):
         self.disable()
+
+    @property
+    def name(self):
+        return self._name
         
     def get_param(self, param_id):
         outvalue = c_int(0)
@@ -167,18 +174,55 @@ class ShaderProgram(object):
 
     # Helper functions for handling repetitive Shader Code.
     def _configure_properties(self):
+
+        problems_detected = False
+
         # Get the Memory locations of the Shader Uniforms
         for uniform_name in self._uniform_names:
             u_loc = self.get_gl_uniform_location(uniform_name)
             if u_loc is not None:
                 self._uniform_locations[uniform_name] = u_loc
+            else:
+                problems_detected = True
                 
         # Get the Memory locations of the Shader Attributes
         self._attribute_locations_valid = True
         for attribute_name in self._attribute_names:
-            self._attribute_locations[attribute_name] = self.get_gl_attribute_location(attribute_name)
-            if self._attribute_locations[attribute_name] is None:
+            a_loc = self.get_gl_attribute_location(attribute_name)
+            if a_loc is not None:
+                self._attribute_locations[attribute_name] = a_loc                
+            else:
                 self._attribute_locations_valid = False
+                problems_detected = True
+
+        # If problems were detected during configure, display the shader
+        # unforms and attributes
+        if problems_detected:
+            Logger.Log("WARNING: Problems were detected configuring shader: %s\n" % self._name)
+        self.display_shader_inputs()
+            
+    def display_shader_inputs(self):
+        info_text = "Shader Inputs for: %s\n" % self._name
+        num_uniforms = self.get_param(GL_ACTIVE_UNIFORMS)
+        if num_uniforms > 0:
+            info_text += "Shader Uniforms\n"
+            for i in range(num_uniforms):
+                name, size, gltype = glGetActiveUniform(self._id, i)
+                info_text += "u: %s\n" % name
+        else:
+            info_text += "No Shader Uniforms detected\n"
+
+        num_attributes = self.get_param(GL_ACTIVE_ATTRIBUTES)
+        if num_attributes > 0:
+            info_text += "Shader Attributes\n"
+            for i in range(num_attributes):
+                name, size, gltype = glGetActiveAttrib(self._id, i)
+                
+                info_text += "a: %s\n" % name
+        else:
+            info_text += "No Shader Attributes detected\n"
+
+        Logger.Log(info_text)
 
     def get_gl_uniform_location(self, name):
         # Get the Memory locations of the Shader Attributes
@@ -187,7 +231,7 @@ class ShaderProgram(object):
         if not uniform_location_request in [None,-1]:
                 uniform_location = uniform_location_request
         else:
-            Logger.Log("Shader error: uniform not found: %s" % name)
+            Logger.Log("Shader error: %s: uniform not found: %s" % (self._name, name) )
         return uniform_location
 
     def get_uniform_location(self, name):
@@ -203,7 +247,7 @@ class ShaderProgram(object):
         if not attribute_location_request in [None,-1]:
                 attribute_location = attribute_location_request
         else:
-            Logger.Log("Shader error: attribute not found: %s" % name)
+            Logger.Log("Shader error: %s: attribute not found: %s" % (self._name, name) )
         return attribute_location
 
     def get_attribute_location(self, name):
@@ -221,8 +265,34 @@ class ShaderProgram(object):
 
             if type(data) == Colour:
                 glUniform4f(u_loc, data.r, data.g, data.b, data.a)
-                
+
+            elif type(data) == Vector2:
+                glUniform2f(u_loc, 1, GL_FALSE, data.x, data.y)
+
+            elif type(data) == Vector3:
+                glUniform3f(u_loc, 1, GL_FALSE, data.x, data.y, data.z)
+
+            elif type(data) == Matrix3:
+                glUniformMatrix3fv(u_loc, 1, GL_FALSE, data[:])
+
+            elif type(data) == Matrix4:
+                glUniformMatrix4fv(u_loc, 1, GL_FALSE, data[:])
+
+            elif type(data) == Texture:
+                glUniform1i(u_loc, 0)#data.opengl_id)
+
+            elif type(data) == int:
+                glUniform1i(u_loc, data)
+
+            elif type(data) == float:
+                glUniform1f(u_loc, data)
+            
             # TODO: Add other data types here.
+
+            else:
+                Logger.Log("WARNING: Binding an unhanded data type to shader. Shader: %s\nuniform: %s\nDataType: %s \n" % ( self._name, name, type(data).__class__.__name__))
+        # else:
+        #     Logger.Log("WARNING: Unknown uniform on shader. Shader: %s\nuniform: %s\nDataType: %s \n" % ( self._name, name, type(data).__class__.__name__))
 
     # FIXME/TODO: This is hardcoded so that all attributes are treated as arrays.
     #             This is clearly not correct but for now only. Fix to check for types asap.

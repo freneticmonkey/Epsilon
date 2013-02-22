@@ -12,6 +12,8 @@ from epsilon.logging.logger import ClassLogger
 from epsilon.render.shader import *
 from epsilon.core.basemanager import FrameListenerManager
 
+from epsilon.render.shaders.phong3.phong3 import Phong3
+
 _default_shader_path = os.path.join("Render","Shaders")
 
 #_instance = None
@@ -36,6 +38,9 @@ class ShaderManager(FrameListenerManager):
     def init(self):
         self._shaders = {}
         self._smlog = ShaderManagerLog()
+
+        # Set default shader
+        self.add_shader_object('default', Phong3())
         
     def add_shader_object(self, name, new_shader):
         if not name in self._shaders:
@@ -74,10 +79,14 @@ class ShaderManager(FrameListenerManager):
             return self._shaders[name]
         else:
             self._smlog.Log("Requested Shader doesn't exist: " + name)
-        
+
+    def get_default_shader(self):
+        return self._shaders['default']        
         
     def on_frame_start(self):
-        for shader in self._shaders.itervalues():
-            shader.on_frame_start()
+        for shader in self._shaders.values():
+            # using with to ensure that shader is enabled and disabled correctly.
+            with shader as s:
+                s.on_frame_start()
         
     
