@@ -37,6 +37,10 @@ from epsilon.render.glutilities import *
 
 from epsilon.resource.resourcebase import ResourceBase, ResourceType
 
+#from epsilon.render.mesh_utilities import MeshUtilities as MU
+#from epsilon.render.mesh_utilities import _gen_normals
+
+from epsilon.utilities.timer import Timer
 
 class TextureMappingConstants:
     PLANAR = 1
@@ -167,50 +171,16 @@ class GLMesh(object):
             self._normals = None
             self._tex_coords = None
             
-
-            b = datetime.now()
-
-            #a = datetime.now()
-            # self._glvertices = self._get_glvertices(vertices, faces)
             self._get_glvertices(vertices, faces)
-            #print ">> glverts time: %3.5f" % (datetime.now() - a).total_seconds()
-
-            #a = datetime.now()
-            # self._glindices = self._get_glindices(faces)
             self._get_glindices(faces)
-            #print ">> glind time: %3.5f" % (datetime.now() - a).total_seconds()
-
-            #a = datetime.now()
             self._get_glcolours(faces, mesh.face_colours)
-            #print ">> glcolours time: %3.5f" % (datetime.now() - a).total_seconds()
-
-            #self._glcolours = self._get_glcolours(faces, mesh.face_colours)
-            a = datetime.now()
-            # self._glnormals = self._get_glnormals(vertices, faces)
             self._get_glnormals(vertices, faces)
-            #print ">> glnormals time: %3.5f" % (datetime.now() - a).total_seconds()
-            
             self._v_len = len(self._vertices)
-            
-            #np_verts = numpy.array(self._vertices, 'f')#dtype=numpy.float32)
-#            # This needs to be improved to handle multiple types
-##            np_indices = numpy.array(self._indices, dtype=numpy.ushort)
-#            np_colours = numpy.array(self._colours, 'f')#dtype=numpy.byte)
-#            np_normals = numpy.array(self._normals, 'f')#dtype=numpy.float32)
-#            
-#            self._verts_vbo = vbo.VBO(np_verts) 
-##            self._indices_vbo = vbo.VBO(np_indices)
-#            self._colours_vbo = vbo.VBO(np_colours)
-#            self._normals_vbo = vbo.VBO(np_normals)
-            
-            #a = datetime.now()
             self._gen_texture_coords(tex_coords)
-            #print ">> texcoords time: %3.5f" % (datetime.now() - a).total_seconds()
             
             # Configure Vertex Buffer object
-            self._vertex_buffer.setup(self._vertices, self._indices, self._normals,self._colours,self._tex_coords)
+            self._vertex_buffer.setup(self._vertices, self._indices, self._normals, self._colours, self._tex_coords)
             
-            #print ">> vertex buffer time: %3.5f" % (datetime.now() - b).total_seconds()
         else:
             self._num_glvertices = None
             self._glvertices = None
@@ -311,132 +281,40 @@ class GLMesh(object):
     
     def _get_glnormals(self, vertices, faces):
         self._normals = []
+
+        normals = list( MeshUtilities.face_normal(vertices, face) for face in faces )
+
+        # Calculate the normals once for each unique vertex and after calcs done, 
+        # rebuild the vertex list
+        vertex_normals = []
         
-        use_face_normals = False
-
-        new = False
-
-
-        if not use_face_normals:
-            # pass
+        # for each vertex
+        for v_inc in range(len(vertices)):
+            face_normals = []
+            vert_norm = Vector3()
             
-            if new:
-                normals = [Vector3()] * len(vertices)
-
-                for face in faces:
-                    fn = MeshUtilities.face_normal(vertices, face)
-                    for v_inc in face:
-                        normals[v_inc] += fn
-
-                #normals = [vert_norm.normalize() for vert_norm in normals ]
-                self._normals = [normals[self._vert_index[vi]].normalized() for vi in self._vert_index]
-
-                # normals = [Vector3()] * len(vertices)
-                # added_normals = [[]] * len(vertices)
-
-                # face_normals = [MeshUtilities.face_normal(vertices, face) for face in faces]
-
-                # # assign face normals to vertices
-                # for v_inc in range(len(vertices)):
-                #     v_norms = []
-                #     for f_inc in range(len(faces)):
-                #         if v_inc in faces[f_inc]:
-                #             fn = face_normals[f_inc]
-                #             if fn not in v_norms:#added_normals[v_inc]:
-                #                 normals[v_inc] += fn
-                #                 v_norms.append(fn)
-                #         # added_normals[v_inc].append(fn)
-
-
-                # print "Len normals: %d" % len(normals)
-                # print "len added_normals: %d " %  len(added_normals[0])
-
-
-                # for n in normals:
-                #     n.normalize()
-
-                # #normals = [vert_norm.normalize() for vert_norm in normals ]
-                # self._normals = [normals[self._vert_index[vi]].normalized() for vi in self._vert_index]
-
-
-            # --------------------
-
-            #     vertex_normals = [None] * len(vertices)
-
-            #     # for each face
-            #     for f_inc in range(len(faces)):
-            #         vertex_normals[faces[f_inc][0]] += normals[f_inc]
-
-            #     for vert_norm in vertex_normals:
-            #         vert_norm.normalize()
-
-            #     self._normals = [vertex_normals[self._vert_index[vi]] for vi in self._vert_index]
-
-            else:
-                # Normal Generation
+            # for each face
+            for f_inc in range(len(faces)):
                 
-                normals = list( MeshUtilities.face_normal(vertices, face) for face in faces )
-
-                # Calculate the normals once for each unique vertex and after calcs done, 
-                # rebuild the vertex list
-                vertex_normals = []
-                
-                # for each vertex
-                for v_inc in range(len(vertices)):
-                    face_normals = []
-                    vert_norm = Vector3()
-                    
-                    # for each face
-                    for f_inc in range(len(faces)):
-                        
-                        # if the face contains the current vertex
-                        if v_inc in faces[f_inc]:
-                            # and the faces normal isn't already stored i.e. ignore co-planar face normals
-                            if normals[f_inc] not in face_normals:
-                                # Store it
-                                face_normals.append(normals[f_inc])
-                    
-                    # Calculate the average for all of the face normals found
-                 
-                    for f_norm in face_normals:
-                        vert_norm += f_norm
-                    vert_norm.normalize()
-                    
-                    vertex_normals.append(vert_norm)
-                
-                for vi in range(len(self._vert_index)):
-                    v_ind = self._vert_index[vi]
-                    self._normals.append(vertex_normals[v_ind])
-                
-        else:
-            normals = (
-                    MeshUtilities.face_normal(vertices, face)
-                    for face in faces
-                  )
+                # if the face contains the current vertex
+                if v_inc in faces[f_inc]:
+                    # and the faces normal isn't already stored i.e. ignore co-planar face normals
+                    if normals[f_inc] not in face_normals:
+                        # Store it
+                        face_normals.append(normals[f_inc])
             
-            # Just use face normals for the vertex normals
-            for face, normal in izip(faces, normals):
-                for i in range(len(face)):
-                    self._normals.append(normal)
+            # Calculate the average for all of the face normals found
+         
+            for f_norm in face_normals:
+                vert_norm += f_norm
+            vert_norm.normalize()
             
+            vertex_normals.append(vert_norm)
         
-        # glnormals = chain.from_iterable(
-        #                                 repeat(normal, len(face))
-        #                                 for face, normal in izip(faces, normals)
-        #                                )
-        #glnormals = normals
-
-        # norms = [[v[0], v[1], v[2]] for v in normals]
-        # norms = [item for sublist in norms for item in sublist]
+        for vi in range(len(self._vert_index)):
+            v_ind = self._vert_index[vi]
+            self._normals.append(vertex_normals[v_ind])
         
-        # arraytype = GLfloat * (self._num_glvertices * OpenGLConstants.normal_components)
-
-        # norms = arraytype(*norms)
-
-        # print len(norms)
-        # # return CreateGLArray(GLfloat, chain(*glnormals), (self._num_glvertices * OpenGLConstants.normal_components) )
-        # return norms
-    
     def _gen_texture_coords(self, tex_coords=None, mapping_type=TextureMappingConstants.SPHERICAL):
         
         if len(tex_coords) == 0 :
@@ -469,97 +347,6 @@ class GLMesh(object):
                     
         self._tex_coords = tex_coords
         
-        
-    
-    # def draw(self):
-    #     use_vbo = True
-    #     use_master = True
-    #     draw_normals = False
-        
-    #     if use_vbo:
-            
-    #         if use_master and self._master_vbo is not None:
-    #             glEnableClientState(GL_VERTEX_ARRAY)
-    #             glEnableClientState(GL_COLOR_ARRAY)
-    #             glEnableClientState(GL_NORMAL_ARRAY)
-    #             glEnableClientState(GL_TEXTURE_COORD_ARRAY)           
-                
-    #             self._master_vbo.bind()
-                
-    #             glVertexPointer(3, GL_FLOAT, 44, self._master_vbo)
-    #             glColorPointer(3, GL_FLOAT, 44, self._master_vbo+12)
-    #             glNormalPointer(GL_FLOAT, 44, self._master_vbo+24)
-    #             glTexCoordPointer(2, GL_FLOAT, 44, self._master_vbo+36)
-                
-    #             glDrawArrays(GL_TRIANGLES, 0, self._v_len)                
-                
-    #             self._master_vbo.unbind()
-    #         else:
-                
-    #             self._verts_vbo.bind()
-                
-    #             glEnableClientState(GL_VERTEX_ARRAY)
-    #             glEnableClientState(GL_NORMAL_ARRAY)
-    #             glEnableClientState(GL_COLOR_ARRAY)            
-                
-    #             glVertexPointerf( self._verts_vbo )
-                
-    # #            self._indices_vbo.bind()
-                
-    # #            glEnableClientState(GL_INDEX_ARRAY);
-    # #            
-    # #            glIndexPointerf(self._indices_vbo)
-    
-                
-    #             self._normals_vbo.bind()
-                
-    #             glNormalPointerf(self._normals_vbo)
-    
-    #             self._colours_vbo.bind()
-    #             glColorPointerf(self._colours_vbo)
-                
-                
-                
-    #             glDrawArrays(GL_TRIANGLES, 0, self._v_len)
-                
-    #             # Faces are all messed up when using this.  I suspect that it is a problem with the indices
-    #             # which are not used with glDrawArrays - It's not really important until a bug is hit with
-    #             # glDrawArrays
-    # #            glDrawElements( GL_TRIANGLES, len(self._indices), GL_UNSIGNED_SHORT, 0)#self._indices_vbo)
-                
-    #             self._verts_vbo.unbind()
-    # #            self._indices_vbo.unbind()
-    #             self._colours_vbo.unbind()
-    #             self._normals_vbo.unbind()
-            
-    #     else:
-            
-    #         glEnableClientState(GL_VERTEX_ARRAY)
-    #         glEnableClientState(GL_COLOR_ARRAY)
-    #         glEnableClientState(GL_NORMAL_ARRAY)
-            
-    #         glVertexPointer( OpenGLConstants.vertex_components, GL_FLOAT, 0, self._glvertices)
-    #         glColorPointer( OpenGLConstants.color_components, GL_UNSIGNED_BYTE, 0, self._glcolours)
-    #         glNormalPointer( GL_FLOAT, 0, self._glnormals)
-    #         glDrawElements( GL_TRIANGLES, len(self._glindices), OpenGLConstants.type_to_enum[self._glindex_type], self._glindices)
-            
-    #     if draw_normals:
-            
-    #         glDisable(GL_LIGHTING)
-    #         glDisable(GL_BLEND)
-    #         glEnable(GL_COLOR_MATERIAL)
-    #         glBegin(GL_LINES)
-    #         glColor3f(1.0,1.0,1.0)
-    #         for vi in range(len(self._vertices)):
-    #             v = self._vertices[vi]
-    #             e = v + (0.25 * self._normals[vi])
-    #             glVertex3f(*v)
-    #             glVertex3f(*e)
-    #         glEnd()
-    #         glEnable(GL_BLEND)
-    #         glEnable(GL_LIGHTING)
-    #         glDisable(GL_COLOR_MATERIAL)
-            
 class MeshUtilities:
     
     @staticmethod
@@ -654,64 +441,64 @@ class VertexBuffer(object):
                 num_texture_coords = len(texture_coords[0][0])
             
         # If the input data has enough data for each of the vertices
-        if len(normals) == len(vertices):
-            buffer = []
+        #if len(normals) == len(vertices):
+        buffer = []
+        
+        for i in range(0, len(vertices)):
+            vert_data = []
+            with vertices[i] as v:
+                vert_data.append([v.x,v.y,v.z])
+            if has_normals:
+                with normals[i] as n:
+                    vert_data.append([n.x,n.y,n.z])
+            if has_colours:
+                r, g, b, a = colours[i].GetFloatColour()
+                vert_data.append([r, g, b, a])
+            if has_tex_coords:
+                if num_texture_coords > 1:
+                    for t in range(0, num_texture_coords):
+                        tc = texture_coords[i][t]
+                        vert_data.append([tc[0],tc[1]])
+                else:
+                    vert_data.append(texture_coords[i])
+            buffer.append(list(chain(*vert_data)))
+        if using_pypy:
+            try:
+                buf_array = array.array('f', list(chain(*buffer)))
+            except Exception, e:
+                print buffer
+                raise e
             
-            for i in range(0, len(vertices)):
-                vert_data = []
-                with vertices[i] as v:
-                    vert_data.append([v.x,v.y,v.z])
-                if has_normals:
-                    with normals[i] as n:
-                        vert_data.append([n.x,n.y,n.z])
-                if has_colours:
-                    r, g, b, a = colours[i].GetFloatColour()
-                    vert_data.append([r, g, b, a])
-                if has_tex_coords:
-                    if num_texture_coords > 1:
-                        for t in range(0, num_texture_coords):
-                            tc = texture_coords[i][t]
-                            vert_data.append([tc[0],tc[1]])
-                    else:
-                        vert_data.append(texture_coords[i])
-                buffer.append(list(chain(*vert_data)))
-            if using_pypy:
-                try:
-                    buf_array = array.array('f', list(chain(*buffer)))
-                except Exception, e:
-                    print buffer
-                    raise e
-                
-                self._vbo = vbo.VBO(buf_array)
-            else:
-                self._vbo = vbo.VBO(numpy.array(buffer, 'f'))
-            
-            self._has_colours = has_colours
-            self._has_normals = has_normals
-            self._has_tex_coords = has_tex_coords
-            self._num_tex_coords = num_texture_coords
-            
-            
-            self._stride = 3 * self.FLOAT_WIDTH
-            if self._has_normals:
-                self._normal_offset = self._stride
-                self._stride += 3 * self.FLOAT_WIDTH
-            if self._has_colours:
-                self._colour_offset = self._stride
-                self._stride += 4 * self.FLOAT_WIDTH
-            if self._has_tex_coords:
-                self._tex_coord_offset = self._stride
-                self._stride += (2 * self.FLOAT_WIDTH) * num_texture_coords
-                
-            if using_pypy:
-                ind_array = array('H')
-                ind_array.fromlist(indices)
-                self._indices_vbo = vbo.VBO(ind_array,target="GL_ELEMENT_ARRAY_BUFFER")
-            else:
-                self._indices_vbo = vbo.VBO(numpy.array(indices,dtype=numpy.ushort),target="GL_ELEMENT_ARRAY_BUFFER")
-            self._is_setup = True    
+            self._vbo = vbo.VBO(buf_array)
         else:
-            Logger.Log("Vertex Buffer ERROR: vertex and normal data list lengths don't match. Len normals: %d: Len verts: %d" % (len(normals), len(vertices)))
+            self._vbo = vbo.VBO(numpy.array(buffer, 'f'))
+        
+        self._has_colours = has_colours
+        self._has_normals = has_normals
+        self._has_tex_coords = has_tex_coords
+        self._num_tex_coords = num_texture_coords
+        
+        
+        self._stride = 3 * self.FLOAT_WIDTH
+        if self._has_normals:
+            self._normal_offset = self._stride
+            self._stride += 3 * self.FLOAT_WIDTH
+        if self._has_colours:
+            self._colour_offset = self._stride
+            self._stride += 4 * self.FLOAT_WIDTH
+        if self._has_tex_coords:
+            self._tex_coord_offset = self._stride
+            self._stride += (2 * self.FLOAT_WIDTH) * num_texture_coords
+            
+        if using_pypy:
+            ind_array = array('H')
+            ind_array.fromlist(indices)
+            self._indices_vbo = vbo.VBO(ind_array,target="GL_ELEMENT_ARRAY_BUFFER")
+        else:
+            self._indices_vbo = vbo.VBO(numpy.array(indices,dtype=numpy.ushort),target="GL_ELEMENT_ARRAY_BUFFER")
+        self._is_setup = True    
+        # else:
+        #     Logger.Log("Vertex Buffer ERROR: vertex and normal data list lengths don't match. Len normals: %d: Len verts: %d" % (len(normals), len(vertices)))
         
 
     @property
