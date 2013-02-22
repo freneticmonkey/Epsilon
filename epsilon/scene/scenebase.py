@@ -53,9 +53,6 @@ class SceneBase(ResourceBase):
         else:
             if self._root.transform.has_changed_this_frame:
                 self._root.transform.set_unchanged()
-        
-    def cull(self):
-        self._root.cull(self.active_camera)
     
     @property
     def active(self):

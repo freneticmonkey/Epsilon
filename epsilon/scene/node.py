@@ -147,29 +147,6 @@ class Node(object):
 				script.node = None
 				self._scripts.remove(script)
 				break
-			
-	def cull(self, camera):
-
-		if not self.transform.bounds.is_empty:
-			self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1#Frustum.OUTSIDE
-			
-			if not self.renderer.culled:
-				for child in self.transform.children:
-					child.node.cull(camera)
-			else:
-				self.renderer.culled = camera.bounds_inside(self.transform.bounds) == 1
-	
-	def draw(self):
-		if not self.renderer.culled:
-			
-			# Draw this Node
-			if not self.renderer is None:
-				self.renderer.draw()
-				
-			# Draw Children    
-			for child in self.transform.children:
-			    if not child.node is None:
-			    	child.node.draw()
 		    	
 	def on_add(self):
 		self._components_on_add()

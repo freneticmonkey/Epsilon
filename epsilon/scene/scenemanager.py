@@ -67,12 +67,6 @@ class SceneManager(BaseSingleton):
         # Update the scenegraph transforms.
         if not self._current_scene is None:
             self._current_scene.update()
-            
-        # Cull invisible geometry
-        if not self._current_scene is None:
-            self._current_scene.cull()
-        
-        
     
 class SceneManagerListener(ListenerBase):
 
