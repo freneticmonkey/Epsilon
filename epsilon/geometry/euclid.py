@@ -1077,13 +1077,22 @@ class Matrix4:
         return self
     new_identity = classmethod(new_identity)
 
+    @classmethod
     def new_scale(cls, x, y, z):
         self = cls()
         self.a = x
         self.f = y
         self.k = z
         return self
-    new_scale = classmethod(new_scale)
+    
+    @classmethod
+    def new_scale(cls, vec):
+        self = cls()
+        self.a = vec.x
+        self.f = vec.y
+        self.k = vec.z
+        return self    
+
 
     def new_translate(cls, x, y, z):
         self = cls()
@@ -1191,16 +1200,26 @@ class Matrix4:
     new_look_at = classmethod(new_look_at)
     
     def new_perspective(cls, fov_y, aspect, near, far):
-        # from the gluPerspective man page
-        f = 1 / math.tan(fov_y / 2)
         self = cls()
-        assert near != 0.0 and near != far
-        self.a = f / aspect
-        self.f = f
-        self.k = (far + near) / (near - far)
-        self.l = 2 * far * near / (near - far)
-        self.o = -1
-        self.p = 0
+        xymax = near * math.tan(fov_y * ( math.pi / 360.0 ) )
+        ymin = -xymax
+        xmin = -xymax
+
+        width = xymax - xmin
+        height = xymax - ymin
+
+        depth = far - near
+        q = -(far + near) / depth
+        qn = -2 * (far * near) / depth
+        w = 2 * near / width
+        w = w / aspect
+        h = 2 * near / height
+        self.a = w
+        self.f = h
+        self.k = q
+        self.l = -1
+        self.o = qn
+
         return self
     new_perspective = classmethod(new_perspective)
 
@@ -1388,11 +1407,17 @@ class Quaternion:
         return self
 
     def conjugated(self):
-        Q = Quaternion()
-        Q.w = self.w
-        Q.x = -self.x
-        Q.y = -self.y
-        Q.z = -self.z
+        d = self.magnitude()
+        if d > 0.0:
+            invNorm = 1.0 / d
+            print invNorm
+            Q = Quaternion()
+            Q.w = self.w * invNorm
+            Q.x = -self.x * invNorm
+            Q.y = -self.y * invNorm
+            Q.z = -self.z * invNorm
+        else:
+            Q = Quaternion(0,0,0,0)
         return Q
 
     def normalize(self):
