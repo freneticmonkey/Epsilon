@@ -31,6 +31,8 @@ from epsilon.render.renderer import Renderer
 
 from epsilon.render.texturemanager import TextureManager
 
+from epsilon.utilities.timer import Timer
+
 class PlanetSphereDebugWindow(UIBaseWindow):
     def _setup_ui(self):
         self._dialog = Dialogue('Planet Sphere Debug',
@@ -71,7 +73,7 @@ class PlanetSphere(Node):
         self._name = "planet_root"
 
         self.transform.position = pos
-        print "Planet position: %s" % self.transform.position
+
         # The mesh density
         self._density = density
         
@@ -123,9 +125,9 @@ class PlanetSphere(Node):
         self._gen_faces()
 
         # Generate a texture for the plane
-        root_trans = SceneManager.get_instance().current_scene.root.transform
-        test_plane = root_trans.get_child_with_name("test_plane", True).node
-        test_plane.renderer.material.texture = self._generator.get_texture("B", 128)
+        #root_trans = SceneManager.get_instance().current_scene.root.transform
+        #test_plane = root_trans.get_child_with_name("test_plane", True).node
+        #test_plane.renderer.material.texture = self._generator.get_texture("B", 128)
 
         # test_plane = root_trans.get_child_with_name("test_plane_right", True).node
         # test_plane.renderer.material.texture = self._generator.get_texture("R", 128)
@@ -195,6 +197,11 @@ class PlanetSphere(Node):
         
         
     def _gen_faces(self):
+
+        gen_timer = Timer("Gen Timer")
+
+        gen_timer.start()
+
         self._top =     SphereQuad('T', self, self, radius=self._radius, density=self._density, face=CubeSphereMap.TOP)
         self._bottom =  SphereQuad('U', self, self, radius=self._radius, density=self._density, face=CubeSphereMap.BOTTOM)
         self._front =   SphereQuad('F', self, self, radius=self._radius, density=self._density, face=CubeSphereMap.FRONT)
@@ -215,6 +222,9 @@ class PlanetSphere(Node):
         self._back._init_quad()
         self._left._init_quad()
         self._right._init_quad()
+
+        gen_timer.stop()
+        gen_timer.elapsed()
 
     def update_sphere(self):
         
@@ -284,7 +294,7 @@ class PlanetSphere(Node):
             
     def cull(self, camera):
         # Override culling so that it doesn't interfere with the planet
-        pass
+        return [self,]
             
     def draw(self):
         
