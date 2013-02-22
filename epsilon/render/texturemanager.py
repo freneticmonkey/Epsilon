@@ -11,7 +11,6 @@ from epsilon.core.basemanager import BaseSingleton
 
 # This class holds all of the Texture objects
 
-
 class TextureManager(BaseSingleton):
 	
 	def __init__(self):
@@ -20,19 +19,9 @@ class TextureManager(BaseSingleton):
 	def add_texture(self, texture_obj):
 		if isinstance(texture_obj, Texture):
 			self._textures.append(texture_obj)
-			Logger.Log("TextureManager: Added Texture: %s" % texture_obj.name)
 		else:
 			Logger.Log("TextureManager: Not a texture: %s" % texture_obj.__class__.__name__)
 	
-#	def create_texture(self, filename):
-#		if os.path.exists(filename):
-#			self._textures.append(Texture(filename))
-#		else:
-#			Logger.Log("TextureERROR: Texture file %s doesn't exist" % filename)
-#			name = "Load Fail."
-#		
-#		return name
-
 	@property
 	def textures(self):
 		return self._textures
