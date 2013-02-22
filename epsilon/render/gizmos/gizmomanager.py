@@ -51,6 +51,6 @@ class GizmoManager(BaseSingleton):
         
     def _remove_gizmo(self, del_gizmo):
         self._gizmo_root.transform.remove_child(del_gizmo.transform)
-            
-    def draw(self):
-        self._gizmo_root.draw()
+
+    def get_gizmo_root(self):
+        return self._gizmo_root
