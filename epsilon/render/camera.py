@@ -7,6 +7,8 @@ from epsilon.render.frustum import Frustum
 
 from epsilon.scene.node import Node
 
+from epsilon.geometry.euclid import Vector3, Matrix4
+
 # Camera Events
 class CameraAddedEvent(EventBase):
 	def __init__(self, camera):
@@ -72,11 +74,12 @@ class CameraGL(CameraBase):
 	def look_at(self):
 		self.reset()
 		p = self.node_parent.transform.position
-		up = self.node_parent.transform.up
+		up = Vector3(0,1,0)
 		self.reset()
 		lookat = self._look_at_pos
-		gluLookAt(p.x, p.y, p.z, lookat.x, lookat.y, lookat.z, up.x, up.y, up.z )
-			
+
+		self.node_parent.transform.look_at(p, lookat, up)
+
 class Camera(Node):
 	def __init__(self):
 		Node.__init__(self, name="default_camera", camera=CameraGL(), renderer=None)

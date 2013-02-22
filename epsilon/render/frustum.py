@@ -61,15 +61,16 @@ class Frustum(NodeComponent):
         self._width = width
         self._height = height
         
-        self._near_dist = 0.1
+        self._near_dist = 1.0
         self._near_width = 0.0
         self._near_height = 0.0
         self._far_dist = 1000.0
         self._far_width = 0.0
         self._far_height = 0.0
         
-        self._aspect = self._width / self._height
-        self._fov = 75.0
+        self._aspect = self._width / float(self._height)
+        #self._fov = 75.0
+        self._fov = 60.0
         
         self._frustum_planes = []
         
@@ -97,6 +98,11 @@ class Frustum(NodeComponent):
 
         self._gizmos = None
 
+        self._projection_matrix = None
+
+    def __str__(self):
+        return "Frustum:\nfov: %3.2f \naspect: %3.2f \nnear: %5.5f \nfar: %5.5f" % ( self._fov, self._aspect, self._near_dist, self._far_dist)
+
     @property
     def width(self):
         return self._width
@@ -123,6 +129,10 @@ class Frustum(NodeComponent):
     def fov(self, new_fov):
         self._fov = new_fov
         self._calc_near_far()
+
+    @property
+    def projection_matrix(self):
+        return self._projection_matrix
                 
     def resize(self, width, height):
         self._width = width
@@ -156,9 +166,15 @@ class Frustum(NodeComponent):
             if self._update_frustum:
                 #self.calc_frustum()
                 self.calc_frustum_lighthouse()
+
+                self.update_projection_matrix()
             
             # show the frustum visualisation
             self._vis_frustum(not self._update_frustum)
+
+    def update_projection_matrix(self):
+        #print self
+        self._projection_matrix = Matrix4.new_perspective(self._fov, self._aspect, self._near_dist, self._far_dist)
     
     def set_screen(self):
         glMatrixMode(GL_PROJECTION)
