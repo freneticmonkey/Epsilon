@@ -1,4 +1,4 @@
-#!C:\Python27\python.exe
+#!C:\Python27\Scripts\ipython.exe
 import os
 import sys
 import subprocess
